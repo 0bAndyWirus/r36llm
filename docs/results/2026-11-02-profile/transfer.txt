@@ -1,0 +1,19 @@
+Upload:
+scp -O out/profile/profile.tar out/profile/run-profile.sh r36:/data/r36llm/profile-2026-11-02/
+Final regular-file archive: ffcdae4cd13dd332f19f1ff636534438a547d276eb931421842b32abffbdcbe1, 36976640 bytes.
+Runner: cdb3232285c1910f01a5983656d70ce5bfe0a35bfed395273502e0c24ac6bd31, 3368 bytes.
+Both hashes and sizes matched on device after transfer. See method.txt for failed packaging attempts before this final compatible archive.
+
+Launch (after separate successful extraction with tar -xf):
+ssh r36 "nohup sh /data/r36llm/profile-2026-11-02/run-profile.sh </dev/null >/data/r36llm/profile-2026-11-02/runner.log 2>&1 &"
+The process ran detached. Short SSH calls inspected its result files; no blocking remote wait was used.
+
+Retrieval after status=complete:
+ssh r36 "tar -cf /tmp/r36-profile-results.tar --exclude=tools --exclude=profile.tar --exclude=profile.tar.gz -C /data/r36llm/profile-2026-11-02 .; sha256sum /tmp/r36-profile-results.tar; wc -c /tmp/r36-profile-results.tar"
+scp -O r36:/tmp/r36-profile-results.tar out/profile/
+Archive: 7acc10273fd40cd0284b42e0665e0e0fdf9b7665642153a02695825599f26bc5, 2556928 bytes.
+Host SHA-256 and byte count matched before extracting raw text/CSV/JSON results into this directory. The already archived identical run-profile.sh was not overwritten.
+
+Restoration:
+runner.log records config.ini checksum OK, all four original CPU governors verified, and original app PID 251 resumed (State S, sleeping, not stopped). status contains complete.
+After verified retrieval, /data/r36llm/profile-2026-11-02 and /tmp/r36-profile-results.tar were removed. A final short SSH read showed cpu0 governor performance and /proc/251/comm r36llm. No installed binaries, original configuration, devfreq governors, backlight or thermal limits were changed.

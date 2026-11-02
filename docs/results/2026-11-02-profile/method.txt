@@ -1,0 +1,31 @@
+Source: PrismML-Eng/llama.cpp pin 5628c7338963b00a598f2a588fd09a79af6d70db, extracted with git archive.
+Applied package patch: br2-external/package/prism-llama-cpp/0001-arm-neon-armv8.0-bonsai-dot.patch
+Patch SHA-256: 0ad730b263f591339b12432a881b7d61f25ba7150b26187b716e768b3087db47
+Transferred flat tar SHA-256: ffcdae4cd13dd332f19f1ff636534438a547d276eb931421842b32abffbdcbe1 (36976640 bytes)
+Profiler executable SHA-256: c478611392a7efc9f9a1a6633cc3259fe5ae2d08950c747e2403d7b7fe0e75db
+Benchmark executable SHA-256: 8332b20432f1c33337d38adf7111c7dfc9e5f1cdf302b34d79f13024f1ec4cdf
+
+Build command (Windows host):
+docker run --rm --name r36-op-profile-build -v "C:/Users/AndyWirus/Documents/Project/RS36SAI:/src" -v r36llm-br:/home/br/work:ro r36-neon-tools:latest sh /src/out/profile/build.sh
+Only /src/out/profile is a build destination. Buildroot's toolchain/sysroot volume is read-only; no Buildroot make was run.
+GNU C/C++ 13.4.0, Buildroot flags -O2 -g0, -march=armv8-a, OpenMP enabled, shared libraries. See build.sh for full configuration.
+The first attempt failed because ninja could not find ccache on PATH. Adding the toolchain bin directory to PATH fixed that build-environment issue; the next complete build succeeded.
+The generated build-info version string reports an unrelated enclosing-repository commit (74b65d8). The exact source identity is the git-archive pin above, not that string.
+The device's tar has no gzip decompression and /data rejects symbolic/hard links. The initial compressed/symlinked archives could not be extracted. Repackaging with GNU tar --hard-dereference -chf produced regular files and extracted successfully. The final build.sh records that compatible packaging command.
+Transfers use scp -O. Device SHA-256 and byte counts matched the host for the final archive and run-profile.sh (cdb3232285c1910f01a5983656d70ce5bfe0a35bfed395273502e0c24ac6bd31, 3368 bytes).
+
+Why cb_eval:
+This pin has llama_context_params.cb_eval. In ggml/src/ggml-backend.cpp, lines 1974-2002, returning true to the ask callback creates a one-node graph view, computes it, synchronizes the backend, then calls the callback again with ask=false. The profiler measures steady_clock time between those two callbacks and never reads tensor data.
+A search of this pin's ggml found no GGML_PERF/perf_time/perf_cycles implementation. ggml_graph_print (ggml/src/ggml.c:7963) prints graph shapes and operations but no elapsed times. test-backend-ops would measure isolated synthetic operations rather than this model's actual decode graph. perf was therefore unnecessary.
+A persistent four-thread pool matches llama-bench and avoids allocating a disposable threadpool per callback graph. Node-record storage is reserved before measurement. CSV formatting and file output happen after each synchronized step, outside its wall-time interval.
+
+Protocol:
+The runner suspends r36llm, saves CPU governors, verifies config.ini remains unchanged, and restores governors and resumes the app in an EXIT trap. It changes no config, backlight, devfreq or installed engine files. Tools and outputs are isolated under /data/r36llm/profile-2026-11-02.
+Before every plain/profile/bench process, both thermal zones must reach <=55 C under powersave; the runner then selects performance. Temperatures, frequency and cooling states are sampled every two seconds.
+For each model: plain and callback-profile contexts use n_ctx=128, F16 KV, four generation/batch threads, and 128-token batch/ubatch limits. There is one excluded decode warmup, five measured one-token steps at positions 0..4, one excluded prompt warmup and three independent eight-token prompt batches. KV is cleared between prompt trials. Fixed synthetic token IDs, no sampling, match the workload style of llama-bench, not natural-language generation.
+A separately cooled patched llama-bench runs -p 8 -n 8 -t 4 -r 3 -o json, using its normal warmup. Generation benchmark time is divided by eight to compare one token. Prompt time is the complete eight-token batch.
+
+Interpretation:
+Raw *-nodes.csv contains every node per trial, runtime source type, source tensor name and output shape. *-weights.csv reads original GGUF tensor descriptors (not runtime repacked types), with exact quant type, shape and bytes for every tensor. *-steps.csv includes wall time, sum of timed node intervals and node count.
+summary.csv reports median wall/node times and comparison with plain and llama-bench. operations.csv aggregates by ggml op; categories.csv aggregates q/k/v/o, gate/up/down, lm_head, norms, rope, softmax, get_rows and remaining operations. Each aggregate is computed per trial first, then its median is taken. tensors.csv reports median time for each graph tensor/node across trials. Independently taken medians need not sum exactly to the median step.
+The callback forces a backend synchronization and a new CPU graph execution for every node. Its intervals include graph dispatch/planning and OpenMP region overhead, not only arithmetic. It can disable cross-node fusion and strongly inflate tiny operations. This is a profile of instrumented execution, not cycle-accurate attribution of uninstrumented inference. Use the paired plain and llama-bench results to judge the total overhead before acting on small-op differences.

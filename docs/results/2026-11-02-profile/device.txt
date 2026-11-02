@@ -1,0 +1,58 @@
+Mon Nov  2 20:05:47 UTC 2026
+Linux r36llm 4.4.189 #62 SMP Sat Dec 13 08:49:45 CST 2025 aarch64 GNU/Linux
+MemTotal:         916848 kB
+MemFree:           34656 kB
+MemAvailable:     688908 kB
+Buffers:            1020 kB
+Cached:           692084 kB
+SwapCached:          268 kB
+Active:           487720 kB
+Inactive:         320296 kB
+Active(anon):      24752 kB
+Inactive(anon):   140284 kB
+Active(file):     462968 kB
+Inactive(file):   180012 kB
+Unevictable:       24184 kB
+Mlocked:               0 kB
+SwapTotal:      11119376 kB
+SwapFree:       11117656 kB
+Dirty:             11560 kB
+Writeback:             0 kB
+AnonPages:        138896 kB
+Mapped:            10452 kB
+Shmem:             25940 kB
+Slab:              36004 kB
+SReclaimable:      26468 kB
+SUnreclaim:         9536 kB
+KernelStack:        1680 kB
+PageTables:         1336 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    11577800 kB
+Committed_AS:    1115368 kB
+VmallocTotal:   258867136 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+8332b20432f1c33337d38adf7111c7dfc9e5f1cdf302b34d79f13024f1ec4cdf  /data/r36llm/profile-2026-11-02/tools/bin/llama-bench
+c478611392a7efc9f9a1a6633cc3259fe5ae2d08950c747e2403d7b7fe0e75db  /data/r36llm/profile-2026-11-02/tools/bin/profile
+ebe5374af0df0b8d70dc3e3c519961f14a8346e5df913102c93ced2c8f0f9e52  /data/r36llm/profile-2026-11-02/tools/lib/libggml-base.so
+ebe5374af0df0b8d70dc3e3c519961f14a8346e5df913102c93ced2c8f0f9e52  /data/r36llm/profile-2026-11-02/tools/lib/libggml-base.so.0
+ebe5374af0df0b8d70dc3e3c519961f14a8346e5df913102c93ced2c8f0f9e52  /data/r36llm/profile-2026-11-02/tools/lib/libggml-base.so.0.27.0
+371a44b948dba38b051f2ca2cfe2cb0dbc65e205ac351ea8f9301313ee9c2d89  /data/r36llm/profile-2026-11-02/tools/lib/libggml-cpu.so
+371a44b948dba38b051f2ca2cfe2cb0dbc65e205ac351ea8f9301313ee9c2d89  /data/r36llm/profile-2026-11-02/tools/lib/libggml-cpu.so.0
+371a44b948dba38b051f2ca2cfe2cb0dbc65e205ac351ea8f9301313ee9c2d89  /data/r36llm/profile-2026-11-02/tools/lib/libggml-cpu.so.0.27.0
+b588a7f92fcce959e3a8878f9cb6b7583ea890459a15ca681ab035617f574806  /data/r36llm/profile-2026-11-02/tools/lib/libggml.so
+b588a7f92fcce959e3a8878f9cb6b7583ea890459a15ca681ab035617f574806  /data/r36llm/profile-2026-11-02/tools/lib/libggml.so.0
+b588a7f92fcce959e3a8878f9cb6b7583ea890459a15ca681ab035617f574806  /data/r36llm/profile-2026-11-02/tools/lib/libggml.so.0.27.0
+9ee8e4503f67dc275c72173dff8a93d02eba66df67c22f378591db51b2e6de6f  /data/r36llm/profile-2026-11-02/tools/lib/libllama-bench-impl.so
+e4fd2d3494436020886ad4978e15a18bf98d6ca8f0ae562ea3134b712321e111  /data/r36llm/profile-2026-11-02/tools/lib/libllama-common.so
+e4fd2d3494436020886ad4978e15a18bf98d6ca8f0ae562ea3134b712321e111  /data/r36llm/profile-2026-11-02/tools/lib/libllama-common.so.0
+e4fd2d3494436020886ad4978e15a18bf98d6ca8f0ae562ea3134b712321e111  /data/r36llm/profile-2026-11-02/tools/lib/libllama-common.so.0.7.0
+0442d7927749f21b04c26a913de627e4a5e741f1e28c22087fc96d797ee900dc  /data/r36llm/profile-2026-11-02/tools/lib/libllama.so
+0442d7927749f21b04c26a913de627e4a5e741f1e28c22087fc96d797ee900dc  /data/r36llm/profile-2026-11-02/tools/lib/libllama.so.0
+0442d7927749f21b04c26a913de627e4a5e741f1e28c22087fc96d797ee900dc  /data/r36llm/profile-2026-11-02/tools/lib/libllama.so.0.7.0
+0f5e41a462cde146bbc5e0a9d48e3c06166f88806ec065e9652719af4dcdc35b  /usr/bin/llama-bench
+de68ba48a8dacb21979915991e7741b917869d71410a370df951c0c3a237ae50  /data/r36llm/models/Ternary-Bonsai-1.7B-PQ2_0.gguf
+36061ad406df8a4903a6db005be350c50fabfaf717f9ef0acf4b76adcd9929fa  /data/r36llm/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf
+1008000 1200000 1248000 1296000 1416000 1512000 

@@ -1,0 +1,7 @@
+run,start_soc_mC,start_gpu_mC,end_soc_mC,end_gpu_mC
+Ternary-Bonsai-2-2B-PTQ1_0-plain,52500,55909,73333,72083
+Ternary-Bonsai-2-2B-PTQ1_0-profile,55454,54166,74166,72083
+Ternary-Bonsai-2-2B-PTQ1_0-bench,53333,55454,74583,72916
+Ternary-Bonsai-1.7B-PQ2_0-plain,55000,54583,74583,72916
+Ternary-Bonsai-1.7B-PQ2_0-profile,54166,53750,74166,72500
+Ternary-Bonsai-1.7B-PQ2_0-bench,55000,55909,75384,75000
