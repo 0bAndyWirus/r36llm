@@ -24,7 +24,7 @@ Target board: R36S clone `G80CA-MB V1.3-20251212 Panel 8`, 1 GB RAM. The origina
 
 A route to mainline Linux 6.12 is prepared but not yet built or tested on hardware; see [docs/mainline.md](docs/mainline.md). Keep a Linux 4.4 card as fallback.
 
-The PC link uses a USB Ethernet adapter on the R36S OTG port (tested: ASIX AX88179). Drivers for Realtek RTL8152/8153, ASIX AX88772, CDC Ethernet/NCM and SMSC95xx adapters are included too. USB device mode over a plain cable does not work on this board's vendor kernel (see the [session notes](docs/sessions/2026-11-02-01.md)).
+The PC link uses a USB Ethernet adapter on the R36S OTG port (tested: ASIX AX88179). Drivers for Realtek RTL8152/8153, ASIX AX88772, CDC Ethernet/NCM and SMSC95xx adapters are included too. USB device mode over a plain cable does not work on this board's vendor kernel (see the [session notes](docs/sessions/2026-11-02-01.md)). The PC needs an Ethernet port too. Many laptops and small PCs don't have one; then use a second USB Ethernet adapter on the PC, or a USB-C dock with Ethernet.
 
 ## How it works
 
@@ -125,7 +125,16 @@ For diagnosing a different board, `scripts/stage-probe.ps1` and `scripts/backup-
 
 ## Connect from the PC
 
-Plug a USB Ethernet adapter into the R36S OTG port and cable it to a free Ethernet port on the PC. The device serves DHCP (`10.36.0.2`–`10.36.0.10`) and listens on `10.36.0.1`. Add this to `~/.ssh/config`:
+You need two Ethernet ports, one on each end:
+
+- **R36S side:** a USB Ethernet adapter in the R36S OTG port (tested: ASIX AX88179). An OTG adapter or cable may be needed, depending on the adapter's plug.
+- **PC side:** the PC's own Ethernet port. If it doesn't have one (common on laptops), use any USB Ethernet adapter or a USB-C dock with Ethernet.
+
+Connect the two directly with a regular Ethernet cable; a crossover cable isn't needed. The R36S hands the PC an address (`10.36.0.2`–`10.36.0.10`) and listens on `10.36.0.1`, so the PC side needs no network setup.
+
+**Do not plug the R36S into your router or a switch on your home network:** it runs its own DHCP server and would hand out addresses to other devices on your network.
+
+Then add this to `~/.ssh/config`:
 
 ```
 Host r36
