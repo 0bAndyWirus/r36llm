@@ -43,8 +43,8 @@ if ($args.Count -eq 0) {
 }
 & docker build -t r36llm-builder (Join-Path $Repo "docker")
 if ($LASTEXITCODE -ne 0) { throw "Builder image build failed ($LASTEXITCODE)" }
-# BSP containers run as root; Buildroot publishes the final image as user br.
-& docker run --rm --user root -v "${Repo}:/src" r36llm-builder sh -c "mkdir -p /src/out/bsp/artifacts && chown br:br /src/out/bsp/artifacts"
+# BSP containers run as root; Buildroot (user br) writes out/, out/boot and the final image.
+& docker run --rm --user root -v "${Repo}:/src" r36llm-builder sh -c "mkdir -p /src/out/boot /src/out/bsp/artifacts && chown br:br /src/out /src/out/boot /src/out/bsp/artifacts"
 if ($LASTEXITCODE -ne 0) { throw "Artifact directory setup failed ($LASTEXITCODE)" }
 function Invoke-Buildroot([string[]] $Targets) {
     $ReleaseFlag = if ($Release) { "1" } else { "0" }
