@@ -22,6 +22,8 @@ It is a fun proof of concept, not a fast assistant. The default model writes abo
 
 Target board: R36S clone `G80CA-MB V1.3-20251212 Panel 8`, 1 GB RAM. The original vendor-kernel installation was tested on this board. The source-built image requires a separate hardware boot test; do not assume compatibility with other R36S variants.
 
+A route to mainline Linux 6.12 is prepared but not yet built or tested on hardware; see [docs/mainline.md](docs/mainline.md). Keep a Linux 4.4 card as fallback.
+
 The PC link uses a USB Ethernet adapter on the R36S OTG port (tested: ASIX AX88179). Drivers for Realtek RTL8152/8153, ASIX AX88772, CDC Ethernet/NCM and SMSC95xx adapters are included too. USB device mode over a plain cable does not work on this board's vendor kernel (see the [session notes](docs/sessions/2026-11-02-01.md)).
 
 ## How it works

@@ -1,0 +1,29 @@
+# r36llm delta against Arch R 6b4904f99bef3fffab490b5ea70ac7de15735885:
+# projects/ArchR/devices/RK3326/linux/linux.aarch64.conf
+# Baseline SHA256: dbff7a0380d973756d1cff855878c5ded85800457b9149f1333da8681a3e0e63
+# Apply after copying that config, then run olddefconfig in the patched 6.12.114 tree.
+# This is not a standalone defconfig. Unchanged requirements are audited in README-mainline.md.
+
+# Baseline "@INITRAMFS_SOURCE@": use only the external Buildroot uInitrd, not Arch R's embedded rootfs.
+CONFIG_INITRAMFS_SOURCE=""
+# Baseline n: unpack the gzip cpio inside uInitrd after U-Boot removes its legacy image header.
+CONFIG_RD_GZIP=y
+
+# Baseline m: allow built-in USB Ethernet drivers rather than depending on module loading for rescue SSH.
+CONFIG_USB_NET_DRIVERS=y
+# Baseline m: built-in ASIX/SMSC/USB networking needs built-in MII helper routines.
+CONFIG_MII=y
+# Baseline m: provide the common USB network core before any rootfs module loader runs.
+CONFIG_USB_USBNET=y
+# Baseline m: retain the vendor image's ASIX AX88772/AX8817x adapter support without a .ko.
+CONFIG_USB_NET_AX8817X=y
+# Baseline m: retain the tested ASIX AX88179/178A rescue link without a .ko.
+CONFIG_USB_NET_AX88179_178A=y
+# Baseline m: retain Realtek RTL8152/RTL8153 USB Ethernet without a .ko.
+CONFIG_USB_RTL8152=y
+# Baseline m: retain standards-based CDC Ethernet adapters without a .ko.
+CONFIG_USB_NET_CDCETHER=y
+# Baseline m: retain standards-based CDC NCM host adapters without a .ko; this is not the gadget function.
+CONFIG_USB_NET_CDC_NCM=y
+# Baseline m: retain SMSC LAN95xx USB Ethernet adapters without a .ko.
+CONFIG_USB_NET_SMSC95XX=y
