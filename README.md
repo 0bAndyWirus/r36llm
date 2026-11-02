@@ -2,7 +2,7 @@
 
 A minimal Linux OS for the **R36S** retro handheld (RK3326, 4× Cortex-A35, 1 GB RAM) that boots straight into an offline LLM chat app. You type with the gamepad, and the console answers using [PrismML Bonsai](https://huggingface.co/prism-ml) 1-bit and ternary models running on the CPU through PrismML's [llama.cpp fork](https://github.com/PrismML-Eng/llama.cpp).
 
-It is a fun proof of concept, not a fast assistant. The default model is [Ternary-Bonsai-2-2B](https://huggingface.co/prism-ml/Ternary-Bonsai-2-2B-gguf) (file `Ternary-Bonsai-2-2B-PTQ1_0.gguf`, 409 MB). It writes about 0.7 tokens per second (31 words per minute, so a short paragraph takes about 2.5 minutes). The fastest Bonsai, Ternary-Bonsai-1.7B, reaches 1.0 t/s, and every model heats the passively cooled chip to 82–85 °C. Full numbers: [benchmarks](docs/benchmarks.md).
+It is a fun proof of concept, not a fast assistant. The default model is [Ternary-Bonsai-2-2B](https://huggingface.co/prism-ml/Ternary-Bonsai-2-2B-gguf) (file `Ternary-Bonsai-2-2B-PTQ1_0.gguf`, 409 MB). It writes about 0.9 tokens per second (about 41 words per minute, so a 100-token answer takes just under 2 minutes). The fastest Bonsai, Bonsai-1.7B (Q1_0), reaches 1.5 t/s. See [Performance](#performance).
 
 |Home|Chat|Device info|
 |---|---|---|
@@ -17,6 +17,22 @@ It is a fun proof of concept, not a fast assistant. The default model is [Ternar
 - Settings: threads, context size, reply length, temperature, brightness, screen timeout and CPU mode.
 - Power key turns the screen off; holding it opens the shutdown prompt. The device shuts down safely when the battery is critical.
 - SSH over a USB Ethernet adapter on the OTG port, for a PC command line and fast app updates.
+
+## Performance
+
+Measured on the device on 2026-11-02 with 4 threads, `cpu_mode=performance` and the image's NEON patch (`llama-bench -p 64 -n 32`, mean of two rounds, each run started at ≤ 50 °C):
+
+|Model|File|Prompt t/s|Generation t/s|100-token answer|
+|---|---:|---:|---:|---:|
+|Bonsai-1.7B-Q1_0|237 MB|2.04|1.46|68 s|
+|Ternary-Bonsai-1.7B-PQ2_0|442 MB|1.97|1.40|72 s|
+|**Ternary-Bonsai-2-2B-PTQ1_0** (default)|409 MB|1.45|0.92|109 s|
+
+- The NEON patch makes generation 11 % faster for the ternary models and 40 % faster for Q1_0, with bit-identical results.
+- Long answers heat the passively cooled chip to about 83 °C, and the CPU then throttles by about 5 %. `cpu_mode=saver` stays below 73 °C but is about 27 % slower.
+- Bonsai-4B (0.38 t/s) and SmolLM2-135M (10 t/s) were measured only before the patch.
+
+Full methodology and raw data: [benchmarks](docs/benchmarks.md).
 
 ## Hardware
 
