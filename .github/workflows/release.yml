@@ -1,0 +1,108 @@
+name: Release image
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  image:
+    name: Build distributable image and corresponding sources
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Free hosted runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          docker image prune --all --force
+          df -h /
+          available=$(df --output=avail -B1 / | tr -cd '0-9')
+          test "$available" -ge 30000000000
+      - name: Restore Buildroot downloads and compiler cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/r36llm
+          key: buildroot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('docker/Dockerfile', 'scripts/br.sh', 'br2-external/configs/*', 'br2-external/package/**/*.mk', 'br2-external/package/**/*.patch') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            buildroot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('docker/Dockerfile', 'scripts/br.sh', 'br2-external/configs/*', 'br2-external/package/**/*.mk', 'br2-external/package/**/*.patch') }}-
+            buildroot-${{ runner.os }}-${{ runner.arch }}-
+      - name: Import cache into the Buildroot work volume
+        id: cache-import
+        run: |
+          mkdir -p "$HOME/.cache/r36llm/dl" "$HOME/.cache/r36llm/ccache"
+          docker volume create r36llm-br
+          docker run --rm --mount type=volume,source=r36llm-br,target=/work \
+            --mount "type=bind,source=$HOME/.cache/r36llm,target=/cache,readonly" \
+            debian:bookworm sh -ec 'cp -a /cache/. /work/; chown -R 1000:1000 /work'
+      - name: Build the full release image
+        shell: pwsh
+        run: ./scripts/build.ps1 -Release
+      - name: Collect Buildroot corresponding sources and licenses
+        shell: pwsh
+        run: ./scripts/build.ps1 -Release legal-info
+      - name: Package release assets
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/release"
+          xz -T2 -6 -c out/bsp/artifacts/r36llm.img > release/r36llm.img.xz
+          cp out/bsp/artifacts/kernel/linux-source.tar.gz release/
+          cp out/bsp/artifacts/kernel/exfat-source.tar.gz release/
+          cp out/bsp/artifacts/uboot/u-boot-source.tar.gz release/
+          cp out/bsp/artifacts/kernel/.config release/kernel.config
+          cp out/bsp/artifacts/uboot/.config release/u-boot.config
+          tar --exclude='*-source.tar.gz' -czf release/bsp-build-metadata.tar.gz \
+            -C out/bsp/artifacts kernel uboot
+          cp THIRD-PARTY/firmware/NOTICE release/firmware-NOTICE.txt
+          cp THIRD-PARTY/firmware/LICENSE release/firmware-LICENSE.txt
+          git archive --format=tar.gz --prefix=r36llm/ HEAD > release/r36llm-source.tar.gz
+          docker run --rm --user "$(id -u):$(id -g)" --mount type=volume,source=r36llm-br,target=/home/br/work,readonly \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/release,target=/release" \
+            r36llm-builder tar -czf /release/buildroot-legal-info.tar.gz \
+            -C /home/br/work/output legal-info
+          (cd release && sha256sum ./* > SHA256SUMS)
+      - name: Upload manually requested build
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: r36llm-${{ github.sha }}
+          path: release/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+      - name: Publish tagged GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release/* --verify-tag \
+              --title "$RELEASE_TAG" --generate-notes
+          fi
+      - name: Export reusable Buildroot cache
+        if: always() && steps.cache-import.outcome == 'success'
+        run: |
+          docker run --rm --mount type=volume,source=r36llm-br,target=/work,readonly \
+            --mount "type=bind,source=$HOME/.cache/r36llm,target=/cache" \
+            -e "LOCAL_UID=$(id -u)" -e "LOCAL_GID=$(id -g)" \
+            debian:bookworm sh -ec '
+              cp -a /work/dl /work/ccache /cache/
+              chown -R "$LOCAL_UID:$LOCAL_GID" /cache
+            '

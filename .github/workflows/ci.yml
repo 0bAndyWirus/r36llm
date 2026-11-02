@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  app:
+    name: Native Linux application build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build git python3
+      - name: Check out the pinned PrismML engine
+        run: |
+          version=$(python3 -c 'from pathlib import Path; print(next(line.split("=", 1)[1].strip() for line in Path("br2-external/package/prism-llama-cpp/prism-llama-cpp.mk").read_text().splitlines() if line.startswith("PRISM_LLAMA_CPP_VERSION =")))')
+          git init "$RUNNER_TEMP/llama.cpp"
+          git -C "$RUNNER_TEMP/llama.cpp" remote add origin https://github.com/PrismML-Eng/llama.cpp.git
+          git -C "$RUNNER_TEMP/llama.cpp" fetch --depth=1 origin "$version"
+          git -C "$RUNNER_TEMP/llama.cpp" checkout --detach FETCH_HEAD
+          git -C "$RUNNER_TEMP/llama.cpp" apply --check "$GITHUB_WORKSPACE/br2-external/package/prism-llama-cpp/0001-arm-neon-armv8.0-bonsai-dot.patch"
+          git -C "$RUNNER_TEMP/llama.cpp" apply "$GITHUB_WORKSPACE/br2-external/package/prism-llama-cpp/0001-arm-neon-armv8.0-bonsai-dot.patch"
+      # app/ uses portable Linux APIs; native compilation checks its real CMake
+      # target and libllama API without building a target rootfs or running a UI.
+      # The separate NEON job checks the Cortex-A35-specific implementation.
+      - name: Build and install libllama
+        run: |
+          cmake -S "$RUNNER_TEMP/llama.cpp" -B "$RUNNER_TEMP/llama-build" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/llama-install" \
+            -DGGML_NATIVE=OFF -DGGML_OPENMP=ON -DGGML_BACKEND_DL=OFF \
+            -DGGML_CPU_ALL_VARIANTS=OFF -DBUILD_SHARED_LIBS=ON \
+            -DLLAMA_BUILD_COMMON=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF \
+            -DLLAMA_BUILD_TOOLS=OFF -DLLAMA_BUILD_APP=OFF -DLLAMA_OPENSSL=OFF \
+            -DLLAMA_BUILD_UI=OFF -DLLAMA_USE_PREBUILT_UI=OFF -DLLAMA_FATAL_WARNINGS=OFF
+          cmake --build "$RUNNER_TEMP/llama-build" --parallel 2
+          cmake --install "$RUNNER_TEMP/llama-build"
+      - name: Build the framebuffer application
+        run: |
+          cmake -S app -B "$RUNNER_TEMP/app-build" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/llama-install"
+          cmake --build "$RUNNER_TEMP/app-build" --parallel 2
+
+  lint:
+    name: Shell and Python checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Check shell scripts
+        # Baseline warnings: SC1007 (CDPATH), SC2155 (export/assignment), SC2336
+        # (cp -r); SC2086 is informational. Gate every error without code-level
+        # exclusions. Overlay /bin/sh is ash; host scripts retain their shebangs.
+        run: |
+          docker run --rm --mount "type=bind,source=$GITHUB_WORKSPACE,target=/src,readonly" \
+            -w /src --entrypoint sh koalaman/shellcheck-alpine:v0.11.0 -c '
+              shellcheck --severity=error --shell=busybox \
+                br2-external/board/r36llm/overlay/etc/init.d/* \
+                br2-external/board/r36llm/overlay/usr/bin/* \
+                br2-external/board/r36llm/overlay/usr/sbin/* &&
+              shellcheck --severity=error scripts/*.sh scripts/bsp/*.sh
+            '
+      - name: Compile Python tools
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
+        run: python3 -m py_compile tools/*.py
+
+  neon:
+    name: Cortex-A35 bit-identical NEON correctness
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Install cross compiler and QEMU
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends git python3 gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user
+      - name: Check out and patch the pinned PrismML engine
+        run: |
+          version=$(python3 -c 'from pathlib import Path; print(next(line.split("=", 1)[1].strip() for line in Path("br2-external/package/prism-llama-cpp/prism-llama-cpp.mk").read_text().splitlines() if line.startswith("PRISM_LLAMA_CPP_VERSION =")))')
+          git init "$RUNNER_TEMP/llama.cpp"
+          git -C "$RUNNER_TEMP/llama.cpp" remote add origin https://github.com/PrismML-Eng/llama.cpp.git
+          git -C "$RUNNER_TEMP/llama.cpp" fetch --depth=1 origin "$version"
+          git -C "$RUNNER_TEMP/llama.cpp" checkout --detach FETCH_HEAD
+          git -C "$RUNNER_TEMP/llama.cpp" apply --check "$GITHUB_WORKSPACE/br2-external/package/prism-llama-cpp/0001-arm-neon-armv8.0-bonsai-dot.patch"
+          git -C "$RUNNER_TEMP/llama.cpp" apply "$GITHUB_WORKSPACE/br2-external/package/prism-llama-cpp/0001-arm-neon-armv8.0-bonsai-dot.patch"
+      - name: Require bit-identical PASS at every optimization mode
+        run: |
+          sh br2-external/package/prism-llama-cpp/tests/run-bonsai-neon.sh \
+            "$RUNNER_TEMP/llama.cpp" "$RUNNER_TEMP/neon-build"

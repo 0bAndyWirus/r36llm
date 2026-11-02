@@ -1,0 +1,217 @@
+From: r36llm contributors
+Subject: [PATCH] ggml: specialize Bonsai dots for base ARMv8.0 NEON
+
+Use widening int8 multiplies with bounded int16 accumulators for Cortex-A35
+and other NEON CPUs without dotprod. Expand Q1 bits with a vector table
+lookup instead of dependent scalar table loads. Share the 32-element dot
+helper with PQ2 and PTQ1; PQ2/Q8_K reduces 128 products before scaling.
+
+Keep the generic implementation's integer reductions, scale application and
+float accumulation order. The dedicated harness compares all four entry
+points against the generic reference bit-for-bit, including PQ2's Q8_0
+fallback for odd multiples of 128. No Bonsai repack/GEMV path is selected
+on base ARMv8.0 at this revision: Q1 repack requires dotprod or i8mm, PQ2
+repack requires AVX512, and PTQ1 has no repack trait.
+
+The pin already uses NEON on these CPUs: Q1/PQ2 emulate ggml_vdotq_s32
+using vmull/vpaddl, and PTQ1 explicitly widens and pairwise-reduces.
+This patch specializes those fallbacks rather than replacing scalar dots.
+Scalar *_generic implementations remain the correctness references.
+
+Base: PrismML-Eng/llama.cpp 5628c7338963b00a598f2a588fd09a79af6d70db
+Upstream-Status: Not submitted [awaiting Cortex-A35 device measurements]
+
+Reproduce correctness (cross GCC plus qemu-user):
+  sh br2-external/package/prism-llama-cpp/tests/run-bonsai-neon.sh <patched-source>
+Tested on 2026-11-02 with qemu-aarch64 -cpu cortex-a35, compiled with
+-mcpu=cortex-a35 using Debian GCC 12.2 and Buildroot GCC 13.4. Each
+compiler passed 234240 comparisons (8 seeds, 3 optimization/contraction
+modes), including 16 row sizes, every packed byte, isolated sub-blocks,
+Q8 extrema and finite half scales including subnormals. Every result was
+bit-identical to the generic reference: max absolute/relative error = 0.
+Unit-scale cases additionally match an independent integer decoder/dot.
+Device throughput comparison: scripts/bench-neon.sh (two isolated prefixes).
+QEMU timings are not evidence of a hardware speedup.
+
+diff --git a/ggml/src/ggml-cpu/arch/arm/quants.c b/ggml/src/ggml-cpu/arch/arm/quants.c
+index 40e814e23..324f92bab 100644
+--- a/ggml/src/ggml-cpu/arch/arm/quants.c
++++ b/ggml/src/ggml-cpu/arch/arm/quants.c
+@@ -137,6 +137,17 @@ void quantize_row_q8_K(const float * GGML_RESTRICT x, void * GGML_RESTRICT y, in
+ 
+ //===================================== Dot products =================================
+ 
++#if defined(__ARM_NEON) && !defined(__ARM_FEATURE_DOTPROD)
++// Bonsai weights lie in [-1, 2], including PQ2_0's fourth code. Summing four
++// products per int16 lane is safe even for Q8's -128: |lane| <= 1024.
++static inline int16x8_t ggml_bonsai_dot32_neon(int8x16_t w0, int8x16_t w1, int8x16_t y0, int8x16_t y1) {
++    int16x8_t p = vmull_s8(vget_low_s8(w0), vget_low_s8(y0));
++    p = vmlal_s8(p, vget_high_s8(w0), vget_high_s8(y0));
++    p = vmlal_s8(p, vget_low_s8(w1), vget_low_s8(y1));
++    return vmlal_s8(p, vget_high_s8(w1), vget_high_s8(y1));
++}
++#endif
++
+ void ggml_vec_dot_q1_0_q8_0(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc) {
+     const int qk = QK1_0;  // 128
+     const int nb = n / qk;
+@@ -151,7 +162,36 @@ void ggml_vec_dot_q1_0_q8_0(int n, float * GGML_RESTRICT s, size_t bs, const voi
+     const block_q1_0 * GGML_RESTRICT x = vx;
+     const block_q8_0 * GGML_RESTRICT y = vy;
+ 
+-#if defined(__ARM_NEON)
++#if defined(__ARM_NEON) && !defined(__ARM_FEATURE_DOTPROD)
++    static const uint8_t indices0[16] = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1};
++    static const uint8_t indices1[16] = {2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3};
++    static const uint8_t bit_masks[16] = {1,2,4,8,16,32,64,128,1,2,4,8,16,32,64,128};
++    const uint8x16_t idx0 = vld1q_u8(indices0);
++    const uint8x16_t idx1 = vld1q_u8(indices1);
++    const uint8x16_t masks = vld1q_u8(bit_masks);
++    const uint8x16_t one = vdupq_n_u8(1);
++    float sumf = 0.0f;
++
++    for (int i = 0; i < nb; ++i) {
++        float sumi = 0.0f;
++        for (int k = 0; k < 4; ++k) {
++            const block_q8_0 * yb = &y[4*i + k];
++            uint32_t packed;
++            memcpy(&packed, &x[i].qs[4*k], sizeof(packed));
++            const uint8x16_t bits = vreinterpretq_u8_u32(vdupq_n_u32(packed));
++            // OR-NOT maps a set bit to +1 and a clear bit to -1, without
++            // dependent scalar table loads or an int8 negation of -128.
++            const int8x16_t w0 = vreinterpretq_s8_u8(vornq_u8(one, vtstq_u8(ggml_vqtbl1q_u8(bits, idx0), masks)));
++            const int8x16_t w1 = vreinterpretq_s8_u8(vornq_u8(one, vtstq_u8(ggml_vqtbl1q_u8(bits, idx1), masks)));
++            const int16x8_t p = ggml_bonsai_dot32_neon(w0, w1, vld1q_s8(yb->qs), vld1q_s8(yb->qs + 16));
++            const int sumi_block = vaddlvq_s16(p);
++            // Keep the generic path's scale and accumulation order.
++            sumi += GGML_CPU_FP16_TO_FP32(yb->d) * sumi_block;
++        }
++        sumf += GGML_CPU_FP16_TO_FP32(x[i].d) * sumi;
++    }
++    *s = sumf;
++#elif defined(__ARM_NEON)
+     float32x4_t sumv = vdupq_n_f32(0.0f);
+ 
+     for (int i = 0; i < nb; i++) {
+@@ -324,6 +364,23 @@ void ggml_vec_dot_pq2_0_q8_0(int n, float * GGML_RESTRICT s, size_t bs, const vo
+     const uint8x16_t mask2   = vdupq_n_u8(0x03);
+     const int8x16_t  one     = vdupq_n_s8(1);
+ 
++#if !defined(__ARM_FEATURE_DOTPROD)
++    // Horizontal integer reduction before scaling avoids four float lanes and
++    // preserves the scalar reference's per-128-weight accumulation order.
++    for (int i = 0; i < nb; ++i) {
++        float sumi = 0.0f;
++        for (int k = 0; k < 4; ++k) {
++            const block_q8_0 * yb = &y[4*i + k];
++            const uint8x8_t raw = vld1_u8(&x[i].qs[8*k]);
++            const uint8x16_t raw16 = vcombine_u8(raw, raw);
++            const int8x16_t w0 = vsubq_s8(vreinterpretq_s8_u8(vandq_u8(vshlq_u8(ggml_vqtbl1q_u8(raw16, idx_lo), shifts), mask2)), one);
++            const int8x16_t w1 = vsubq_s8(vreinterpretq_s8_u8(vandq_u8(vshlq_u8(ggml_vqtbl1q_u8(raw16, idx_hi), shifts), mask2)), one);
++            const int16x8_t p = ggml_bonsai_dot32_neon(w0, w1, vld1q_s8(yb->qs), vld1q_s8(yb->qs + 16));
++            sumi += GGML_CPU_FP16_TO_FP32(yb->d) * vaddlvq_s16(p);
++        }
++        sumf += GGML_CPU_FP16_TO_FP32(x[i].d) * sumi;
++    }
++#else
+     float32x4_t sumv = vdupq_n_f32(0.0f);
+ 
+     for (int i = 0; i < nb; i++) {
+@@ -357,6 +414,7 @@ void ggml_vec_dot_pq2_0_q8_0(int n, float * GGML_RESTRICT s, size_t bs, const vo
+     }
+ 
+     sumf = vaddvq_f32(sumv);
++#endif
+ #else
+     ggml_vec_dot_pq2_0_q8_0_generic(n, s, bs, vx, bx, vy, by, nrc);
+     return;
+@@ -399,7 +457,12 @@ void ggml_vec_dot_pq2_0_q8_K(int n, float * GGML_RESTRICT s, size_t bs, const vo
+         const block_q8_K * GGML_RESTRICT yb = &y[i >> 1];
+         const int8_t     * GGML_RESTRICT q8 = yb->qs + 128 * (i & 1);
+ 
++#if defined(__ARM_FEATURE_DOTPROD)
+         int32x4_t acc = vdupq_n_s32(0);
++#else
++        // Sixteen products per lane: |lane| <= 4096, including code 3.
++        int16x8_t acc = vdupq_n_s16(0);
++#endif
+ 
+         for (int k = 0; k < 4; k++) {
+             const uint8x8_t  raw   = vld1_u8(&x[i].qs[8 * k]);
+@@ -413,11 +476,20 @@ void ggml_vec_dot_pq2_0_q8_K(int n, float * GGML_RESTRICT s, size_t bs, const vo
+             const int8x16_t y0 = vld1q_s8(q8 + 32 * k);
+             const int8x16_t y1 = vld1q_s8(q8 + 32 * k + 16);
+ 
++#if defined(__ARM_FEATURE_DOTPROD)
+             acc = ggml_vdotq_s32(acc, qv0, y0);
+             acc = ggml_vdotq_s32(acc, qv1, y1);
++#else
++            acc = vaddq_s16(acc, ggml_bonsai_dot32_neon(qv0, qv1, y0, y1));
++#endif
+         }
+ 
+-        sumf += (GGML_CPU_FP16_TO_FP32(x[i].d) * yb->d) * (float) vaddvq_s32(acc);
++#if defined(__ARM_FEATURE_DOTPROD)
++        const int sumi = vaddvq_s32(acc);
++#else
++        const int sumi = vaddlvq_s16(acc);
++#endif
++        sumf += (GGML_CPU_FP16_TO_FP32(x[i].d) * yb->d) * (float) sumi;
+     }
+ #else
+     ggml_vec_dot_pq2_0_q8_K_generic(n, s, bs, vx, bx, vy, by, nrc);
+@@ -1651,6 +1723,7 @@ void ggml_vec_dot_ptq1_0_q8_0(int n, float * GGML_RESTRICT s, size_t bs, const v
+     const block_ptq1_0 * GGML_RESTRICT x = vx;
+     const block_q8_0   * GGML_RESTRICT y = vy;
+ 
++#if defined(__ARM_FEATURE_DOTPROD)
+     float32x4_t sumv = vdupq_n_f32(0.0f);
+ 
+     for (int i = 0; i < nb; ++i) {
+@@ -1661,20 +1734,39 @@ void ggml_vec_dot_ptq1_0_q8_0(int n, float * GGML_RESTRICT s, size_t bs, const v
+ 
+         for (int k = 0; k < 4; ++k) {
+             const block_q8_0 * GGML_RESTRICT yb = &y[4*i + k];
+-#if defined(__ARM_FEATURE_DOTPROD)
+             const int32x4_t p = vdotq_s32(vdotq_s32(vdupq_n_s32(0), e[2*k], vld1q_s8(yb->qs)), e[2*k + 1], vld1q_s8(yb->qs + 16));
++            sumv = vmlaq_n_f32(sumv, vcvtq_f32_s32(p), dx * GGML_CPU_FP16_TO_FP32(yb->d));
++        }
++    }
++
++    *s = vaddvq_f32(sumv);
+ #else
++    float sumf = 0.0f;
++
++    for (int i = 0; i < nb; ++i) {
++        int8x16_t e[8];
++        ggml_ptq1_0_decode_neon(&x[i], e);
++
++        const float dx = GGML_CPU_FP16_TO_FP32(x[i].d);
++        float blocksum = 0.0f;
++
++        for (int k = 0; k < 4; ++k) {
++            const block_q8_0 * GGML_RESTRICT yb = &y[4*i + k];
+             const int8x16_t ya = vld1q_s8(yb->qs);
+             const int8x16_t yc = vld1q_s8(yb->qs + 16);
+-            const int32x4_t p = vaddq_s32(
+-                vaddq_s32(vpaddlq_s16(vmull_s8(vget_low_s8(e[2*k]),     vget_low_s8(ya))), vpaddlq_s16(vmull_s8(vget_high_s8(e[2*k]),     vget_high_s8(ya)))),
+-                vaddq_s32(vpaddlq_s16(vmull_s8(vget_low_s8(e[2*k + 1]), vget_low_s8(yc))), vpaddlq_s16(vmull_s8(vget_high_s8(e[2*k + 1]), vget_high_s8(yc)))));
+-#endif
+-            sumv = vmlaq_n_f32(sumv, vcvtq_f32_s32(p), dx * GGML_CPU_FP16_TO_FP32(yb->d));
++
++            const int16x8_t p = ggml_bonsai_dot32_neon(e[2*k], e[2*k + 1], ya, yc);
++            const int sumi = vaddlvq_s16(p);
++
++            // Match the generic scale and accumulation order, not a vector float sum.
++            blocksum += GGML_CPU_FP16_TO_FP32(yb->d) * sumi;
+         }
++
++        sumf += dx * blocksum;
+     }
+ 
+-    *s = vaddvq_f32(sumv);
++    *s = sumf;
++#endif
+ #else
+     ggml_vec_dot_ptq1_0_q8_0_generic(n, s, bs, vx, bx, vy, by, nrc);
+ #endif
