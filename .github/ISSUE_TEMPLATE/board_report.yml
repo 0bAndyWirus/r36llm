@@ -1,0 +1,40 @@
+name: Board report
+description: Propose or report support for an R36S board variant.
+title: "[Board]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Do not attach harvested vendor binaries. Remove personal information from logs and photos."
+  - type: input
+    id: pcb
+    attributes:
+      label: PCB marking
+      description: Copy the complete marking and revision printed on the board.
+    validations:
+      required: true
+  - type: input
+    id: stock_os
+    attributes:
+      label: Stock OS
+      description: Name and version, if known.
+    validations:
+      required: true
+  - type: input
+    id: dtb
+    attributes:
+      label: Stock DTB name
+      description: Filename used by the stock OS, or unknown.
+    validations:
+      required: true
+  - type: textarea
+    id: works
+    attributes:
+      label: What works and what does not?
+      description: Include image version, boot, display, controls, USB, battery, and any tests you could perform. State what is untested.
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Additional details
+      description: Include relevant logs or PCB photos if available; do not include vendor binaries.

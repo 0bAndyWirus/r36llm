@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a problem with the image, OS, or application.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "For security vulnerabilities, use [private reporting](https://github.com/0bAndyWirus/r36llm/security/advisories/new) instead. Remove passwords, keys, and personal information from attachments."
+  - type: input
+    id: image
+    attributes:
+      label: Image version or tag
+      placeholder: Release tag or commit hash
+    validations:
+      required: true
+  - type: input
+    id: board
+    attributes:
+      label: Board marking
+      description: Copy the name and revision printed on the PCB.
+    validations:
+      required: true
+  - type: input
+    id: kernel
+    attributes:
+      label: Kernel version
+      description: Output of uname -r, if available.
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      description: GGUF filename, or none if the problem does not involve a model.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Include steps to reproduce and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: config.ini
+      description: Paste the relevant configuration, with sensitive information removed.
+      render: ini
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste or attach relevant files from r36llm/logs/ on the data partition, with sensitive information removed.
+      render: text

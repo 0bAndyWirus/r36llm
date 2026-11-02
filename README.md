@@ -84,7 +84,7 @@ The default build creates a personal SSH key when `keys/authorized_keys` is miss
 
 ### 2. Flash and initialize
 
-Use an image writer such as balenaEtcher or Raspberry Pi Imager's **Use custom** option to write `out/bsp/artifacts/r36llm.img` to the whole SD card. Eject it safely, insert it in the handheld, and power on.
+On Windows, run `scripts/flash.ps1 -WhatIf` to list the removable disks it would accept. Then, in PowerShell **as Administrator**, run `scripts/flash.ps1`, pick the SD card, and type its disk number again to confirm the erase. The script writes `out/bsp/artifacts/r36llm.img`, then reads the card back and checks its SHA256. For a release download, keep `SHA256SUMS` next to the image and run `scripts/flash.ps1 -ImagePath .\r36llm.img.xz`. This needs `xz.exe` or `7z.exe` on `PATH` and enough free space in TEMP to unpack the image. Any image writer with verification works too, such as balenaEtcher. Eject the card safely, insert it in the handheld, and power on.
 
 **Boot once before copying models.** The first boot verifies the release disk signature and labels, expands partition 3, and formats its initially empty FAT32 filesystem. It refuses to erase a data partition containing files other than the release marker. The boot-partition marker records interrupted initialization so it can resume. Never copy files onto the card while initialization is pending.
 
@@ -185,6 +185,10 @@ Preset prompts are in `r36llm/prompts.txt`, one per line.
 |`scripts/`|PC-side tooling: build, deploy, models, benchmark, screenshots, app push|
 |`tools/`|Device probe, font converter, boot image generator, image converters|
 |`docs/`|Benchmarks, screenshots and development session notes|
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute and [CHANGELOG.md](CHANGELOG.md) for changes. Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
 ## Licenses and credits
 
