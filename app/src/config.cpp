@@ -65,7 +65,7 @@ bool known_key(const std::string &key) {
     static const std::unordered_set<std::string> keys = {
         "model",      "system",     "usb_gadget_fn",  "threads", "ctx",
         "max_tokens", "top_k",      "swap_p2",        "link",    "temp",
-        "top_p",      "brightness", "screen_timeout", "cpu_mode"};
+        "top_p",      "brightness", "screen_timeout", "cpu_mode", "keymap"};
     return keys.find(key) != keys.end();
 }
 
@@ -103,6 +103,9 @@ void apply(Config &config, const std::string &key, const std::string &value) {
     } else if (key == "cpu_mode") {
         if (value == "performance" || value == "balanced" || value == "saver")
             config.cpu_mode = value;
+    } else if (key == "keymap") {
+        if (value == "auto" || value == "vendor44" || value == "mainline")
+            config.keymap = value;
     } else if (key == "temp")
         parse_float(value, 0.0f, 100.0f, config.temp);
     else if (key == "top_p")
@@ -156,7 +159,8 @@ bool Config::save(const std::string &path) const {
            << "usb_gadget_fn=" << usb_gadget_fn << '\n'
            << "brightness=" << brightness << '\n'
            << "screen_timeout=" << screen_timeout << '\n'
-           << "cpu_mode=" << cpu_mode << '\n';
+           << "cpu_mode=" << cpu_mode << '\n'
+           << "keymap=" << keymap << '\n';
     output.close();
     return !output.fail();
 }

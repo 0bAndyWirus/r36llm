@@ -56,8 +56,11 @@ jobs:
       - name: Build the framebuffer application
         run: |
           cmake -S app -B "$RUNNER_TEMP/app-build" -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/llama-install"
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/llama-install" \
+            -DR36LLM_BUILD_TESTS=ON
           cmake --build "$RUNNER_TEMP/app-build" --parallel 2
+      - name: Test application logic
+        run: ctest --test-dir "$RUNNER_TEMP/app-build" --output-on-failure
 
   lint:
     name: Shell and Python checks

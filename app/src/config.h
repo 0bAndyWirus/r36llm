@@ -13,6 +13,7 @@ struct Config {
     std::string usb_gadget_fn = "ncm";
     std::string link = "ethernet";
     std::string cpu_mode = "performance";
+    std::string keymap = "auto";
     int brightness = 80;
     int screen_timeout = 2;
     int threads = 4;

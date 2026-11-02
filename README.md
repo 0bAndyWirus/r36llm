@@ -171,6 +171,7 @@ Without an adapter: put a shell script at `r36llm/autorun.sh` on the card. It ru
 |`cpu_mode`|`performance`|`performance`, `balanced` or `saver`|
 |`swap_p2`|`1`|Enable the fresh image's preformatted swap partition; on legacy cards, explicitly opting in can format the old p2 rootfs|
 |`link`|`ethernet`|PC link: `ethernet`, `gadget` (experimental) or `off`|
+|`keymap`|`auto`|Gamepad mapping: `auto` picks one from the gamepad's device name, then from the kernel version (6 or newer = mainline). Set `vendor44` or `mainline` to force one|
 
 Preset prompts are in `r36llm/prompts.txt`, one per line.
 

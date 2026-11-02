@@ -10,6 +10,7 @@
 #include <poll.h>
 #include <string>
 #include <sys/ioctl.h>
+#include <sys/utsname.h>
 #include <unistd.h>
 #include <utility>
 
@@ -31,6 +32,8 @@ bool has_keys(int fd) {
 } // namespace
 
 Input::Input() {
+    utsname kernel{};
+    const int major = uname(&kernel) == 0 ? kernel_major(kernel.release) : 0;
     DIR *dir = opendir("/dev/input");
     if (!dir)
         return;
@@ -50,12 +53,13 @@ Input::Input() {
         }
         char name[256]{};
         const bool named = ioctl(fd, EVIOCGNAME(sizeof(name)), name) >= 0;
-        if (named && std::strcmp(name, "GO-Super Gamepad") == 0)
-            preferred.push_back(Device{fd, {}});
-        else if (named && std::strcmp(name, "rk8xx_pwrkey") == 0)
-            power_keys.push_back(Device{fd, {}});
+        const Keymap map = select_keymap("auto", major, named ? name : "");
+        if (named && is_gamepad(name))
+            preferred.push_back(Device{fd, map, map, {}});
+        else if (named && is_power_key(name))
+            power_keys.push_back(Device{fd, map, map, {}});
         else
-            fallback.push_back(Device{fd, {}});
+            fallback.push_back(Device{fd, map, map, {}});
     }
     closedir(dir);
     if (!preferred.empty()) {
@@ -67,6 +71,13 @@ Input::Input() {
     }
     for (auto &device : power_keys)
         devices_.push_back(std::move(device));
+}
+
+void Input::set_keymap(const std::string &setting) {
+    for (auto &device : devices_)
+        device.keymap = setting == "vendor44"   ? Keymap::Vendor44
+                        : setting == "mainline" ? Keymap::Mainline
+                                               : device.detected_keymap;
 }
 
 Input::~Input() {
@@ -113,7 +124,9 @@ std::vector<KeyEvent> Input::poll(int timeout_ms) {
                         if (event.type != EV_KEY || event.code > KEY_MAX ||
                             (event.value != 0 && event.value != 1))
                             continue;
-                        int code = event.code;
+                        const int code = map_key(device.keymap, event.code);
+                        if (code < 0)
+                            continue;
                         bool pressed = event.value == 1;
                         if (device.down[code] == pressed)
                             continue;

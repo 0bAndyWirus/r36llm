@@ -1,5 +1,6 @@
 // Implement the gamepad-driven screens and deterministic render fixtures.
 #include "ui.h"
+#include "chat_text.h"
 #include "config.h"
 #include "device.h"
 #include "fb.h"
@@ -28,6 +29,7 @@ namespace fs = std::filesystem;
 using Clock = std::chrono::steady_clock;
 
 namespace {
+using chat_text::wrap;
 constexpr uint32_t White = 0xffffff, Cyan = 0x50e5f0, Red = 0xff6868, Yellow = 0xffda65,
                    Gray = 0x25282e;
 const std::string Root = "/data/r36llm/";
@@ -65,48 +67,6 @@ std::string shell_quote(const std::string &s) {
     return out + "'";
 }
 
-// Split only at UTF-8 boundaries; the renderer substitutes unsupported codepoints.
-std::vector<std::string> wrap(const std::string &text, size_t width = 53) {
-    std::vector<std::string> result;
-    std::string line;
-    size_t columns = 0, last_space = std::string::npos;
-    for (size_t i = 0; i < text.size();) {
-        unsigned char c = static_cast<unsigned char>(text[i]);
-        if (c == '\n') {
-            result.push_back(line);
-            line.clear();
-            columns = 0;
-            last_space = std::string::npos;
-            ++i;
-            continue;
-        }
-        size_t n = c < 0x80 ? 1 : (c < 0xe0 ? 2 : (c < 0xf0 ? 3 : 4));
-        n = std::min(n, text.size() - i);
-        if (columns == width) {
-            if (last_space != std::string::npos) {
-                result.push_back(line.substr(0, last_space));
-                line.erase(0, last_space + 1);
-                columns = 0;
-                for (unsigned char b : line)
-                    if ((b & 0xc0) != 0x80)
-                        ++columns;
-            } else {
-                result.push_back(line);
-                line.clear();
-                columns = 0;
-            }
-            last_space = line.find_last_of(' ');
-        }
-        if (c == ' ')
-            last_space = line.size();
-        line.append(text, i, n);
-        ++columns;
-        i += n;
-    }
-    if (!line.empty() || result.empty())
-        result.push_back(line);
-    return result;
-}
 
 void add_wrapped(std::vector<Line> &out, const std::string &text, uint32_t color = White) {
     for (auto &line : wrap(text))
@@ -281,6 +241,7 @@ class DeviceUi {
   public:
     DeviceUi() {
         config_.load();
+        input_.set_keymap(config_.keymap);
         if (!apply_brightness(config_.brightness))
             std::fputs("r36llm: could not apply startup brightness\n", stderr);
         if (!apply_cpu_mode(config_.cpu_mode))
@@ -295,14 +256,7 @@ class DeviceUi {
             }
             std::sort(models_.begin(), models_.end(),
                       [](const Model &a, const Model &b) { return a.name < b.name; });
-            std::ifstream prompts(Root + "prompts.txt");
-            std::string line;
-            while (std::getline(prompts, line)) {
-                if (!line.empty() && line.back() == '\r')
-                    line.pop_back();
-                if (!line.empty())
-                    presets_.push_back(line);
-            }
+            presets_ = chat_text::load_prompts(Root + "prompts.txt");
             if (fs::exists("/tmp/r36llm.loading"))
                 notice_ = "Previous load crashed (out of memory?) - pick a smaller model";
             else if (!fs::exists("/tmp/r36llm.noautoload") && !models_.empty())
@@ -861,10 +815,10 @@ class DeviceUi {
     }
 
     void draw_lines(const std::vector<Line> &lines) {
-        int max_scroll = std::max(0, static_cast<int>(lines.size()) - 16);
-        scroll_ = std::clamp(scroll_, 0, max_scroll);
-        int first = std::max(0, static_cast<int>(lines.size()) - 16 - scroll_);
-        for (int i = first; i < static_cast<int>(lines.size()) && i < first + 16; ++i)
+        const auto window = chat_text::visible_window(static_cast<int>(lines.size()), scroll_);
+        scroll_ = window.scroll;
+        const int first = window.first;
+        for (int i = first; i < window.end; ++i)
             fb_.text(0, 1 + i - first, lines[i].text, lines[i].color);
     }
 
