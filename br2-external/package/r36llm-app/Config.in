@@ -1,0 +1,5 @@
+config BR2_PACKAGE_R36LLM_APP
+	bool "r36llm-app"
+	depends on BR2_PACKAGE_PRISM_LLAMA_CPP
+	help
+	  Gamepad-controlled framebuffer chat application for the R36S.

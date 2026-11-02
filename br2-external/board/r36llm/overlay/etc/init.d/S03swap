@@ -1,0 +1,19 @@
+#!/bin/sh
+case "${1:-start}" in stop) exit 0 ;; start) ;; *) exit 1 ;; esac
+[ -e /proc/swaps ] || exit 0
+# Opt-in only: formatting p2 as swap destroys whatever was there (the old OS rootfs).
+[ "$(/usr/sbin/r36-config swap_p2 0)" = 1 ] || exit 0
+P3=$(while read -r device path rest; do
+    [ "$path" = /data ] && { printf '%s' "$device"; break; }
+done < /proc/mounts)
+case "$P3" in /dev/mmcblk*p3) P2=${P3%p3}p2 ;; *) exit 0 ;; esac
+[ -b "$P2" ] || exit 0
+exec >> /data/r36llm/logs/boot.log 2>&1
+echo "r36llm: enabling swap on $P2"
+case "$(blkid "$P2")" in
+    *'TYPE="swap"'*) swapon "$P2" ;;
+    *) mkswap "$P2" && swapon "$P2" ;;
+esac
+RESULT=$?
+[ "$RESULT" -eq 0 ] && echo 10 > /proc/sys/vm/swappiness
+exit "$RESULT"

@@ -1,0 +1,6 @@
+#!/bin/sh
+case "${1:-start}" in
+    start) insmod "$(cat /etc/r36llm/exfat-module.txt)" ;;
+    stop) ;;
+    *) echo "Usage: $0 {start|stop}" >&2; exit 1 ;;
+esac

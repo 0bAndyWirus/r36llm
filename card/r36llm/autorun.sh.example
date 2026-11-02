@@ -1,0 +1,5 @@
+#!/bin/sh
+# Rename to autorun.sh: it runs once at the next boot (then becomes autorun.sh.done).
+# Output goes to logs/autorun.log on the card.
+llama-cli -m /data/r36llm/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf -p "Hello" -n 64 -st < /dev/null
+free -m

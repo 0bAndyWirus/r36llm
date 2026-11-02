@@ -1,0 +1,6 @@
+You: Tell me a joke about handheld game consoles.
+Assistant: Why don't console players ever get lost? Because
+You: Tell me a joke about handheld game consoles.
+Assistant: Why did the game controller break up with the keyboard?
+
+Because it needed more fingers!

@@ -1,0 +1,22 @@
+#!/bin/sh
+case "${1:-start}" in stop) exit 0 ;; start) ;; *) exit 1 ;; esac
+mkdir -p /data
+BOOTLOG=/tmp/r36llm-data-boot.log
+: > "$BOOTLOG"
+echo "r36llm: searching for data partition" >> "$BOOTLOG"
+for device in /dev/mmcblk*p3; do
+    [ -b "$device" ] || continue
+    echo "r36llm: mounting $device as exfat" >> "$BOOTLOG"
+    if mount -t exfat -o noatime "$device" /data >> "$BOOTLOG" 2>&1; then
+        echo "r36llm: mounted $device on /data" >> "$BOOTLOG"
+        break
+    fi
+done
+if ! mountpoint -q /data; then
+    echo "r36llm: data partition not mounted; logs are in RAM" >> "$BOOTLOG"
+fi
+for name in models logs ssh bin; do mkdir -p "/data/r36llm/$name"; done
+chmod 0700 /data/r36llm/ssh 2>/dev/null || :
+cat "$BOOTLOG" >> /data/r36llm/logs/boot.log
+rm -f "$BOOTLOG"
+dmesg > /data/r36llm/logs/dmesg-last.txt

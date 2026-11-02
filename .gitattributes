@@ -1,0 +1,11 @@
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.gz binary
+*.ko binary
+*.dtb binary
+*.bmp binary
+*.png binary
+*.ppm binary
+*.gguf binary
+uInitrd binary
+Image binary

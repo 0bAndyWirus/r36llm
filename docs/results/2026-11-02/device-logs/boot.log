@@ -1,0 +1,27 @@
+r36llm: searching for data partition
+r36llm: mounting /dev/mmcblk0p3 as exfat
+r36llm: mounted /dev/mmcblk0p3 on /data
+r36llm: enabling swap on /dev/mmcblk0p2
+Setting up swapspace version 1, size = 11386242560 bytes
+r36llm: Ethernet interface eth0
+r36llm: carrier=0
+r36llm: USB 1-1 0b95:1790
+r36llm: USB usb1 1d6b:0002
+2: eth0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether xx:xx:xx:xx:xx:xx brd ff:ff:ff:ff:ff:ff
+    inet 10.36.0.1/24 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet 169.254.36.1/16 scope global eth0
+       valid_lft forever preferred_lft forever
+r36llm: Ethernet interface eth0 removed
+r36llm: Ethernet interface eth0
+r36llm: carrier=0
+r36llm: USB 1-1 0b95:1790
+r36llm: USB usb1 1d6b:0002
+4: eth0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast qlen 1000
+    link/ether xx:xx:xx:xx:xx:xx brd ff:ff:ff:ff:ff:ff
+    inet 10.36.0.1/24 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet 169.254.36.1/16 scope global eth0
+       valid_lft forever preferred_lft forever
+Terminated

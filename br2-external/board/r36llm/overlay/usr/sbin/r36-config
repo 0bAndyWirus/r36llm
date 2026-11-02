@@ -1,0 +1,18 @@
+#!/bin/sh
+# r36-config: print the value of <key> from /data/r36llm/config.ini, or <default> if unset.
+# Tolerates CRLF line endings and surrounding blanks (the file is often edited on Windows).
+# Usage: r36-config <key> [default]
+CONFIG=${R36_CONFIG:-/data/r36llm/config.ini}
+[ -n "$1" ] || { echo "usage: r36-config <key> [default]" >&2; exit 64; }
+value=
+found=0
+if [ -r "$CONFIG" ]; then
+	value=$(tr -d '\r' < "$CONFIG" | sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" | tail -n 1)
+	value=$(printf '%s' "$value" | sed 's/[[:space:]]*$//')
+	tr -d '\r' < "$CONFIG" | grep -q "^[[:space:]]*$1[[:space:]]*=" && found=1
+fi
+if [ "$found" = 1 ]; then
+	printf '%s\n' "$value"
+else
+	printf '%s\n' "$2"
+fi

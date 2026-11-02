@@ -1,0 +1,4 @@
+You: hi
+Assistant: Hi! What's on your mind? 🎮
+You:  
+Assistant: I'm ready. What do you need help with?

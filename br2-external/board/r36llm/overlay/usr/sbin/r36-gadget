@@ -1,0 +1,146 @@
+#!/bin/sh
+# r36-gadget: USB network gadget (CDC-NCM or RNDIS) over configfs.
+# Shared by the dArkOS probe (tools/R36LLM-Probe.sh) and the r36llm OS (S40gadget).
+#   r36-gadget up [ncm|rndis]   create + bind gadget, configure 10.36.0.1/24
+#   r36-gadget wait <seconds>   exit 0 once the host has configured the device
+#   r36-gadget down             unbind + remove the gadget
+#   r36-gadget status           UDC name/state + interface addresses
+# R36_MODLIST=<file>: insmod the .ko paths listed in <file> instead of modprobe.
+
+CFG=/sys/kernel/config
+G=$CFG/usb_gadget/r36
+
+log() { echo "r36-gadget: $*"; }
+
+load_modules() {
+	if [ -n "$R36_MODLIST" ] && [ -f "$R36_MODLIST" ]; then
+		while read -r ko; do
+			[ -n "$ko" ] || continue
+			case "$ko" in \#*) continue ;; esac
+			out=$(insmod "$ko" 2>&1) || case "$out" in
+				*"File exists"*) ;;
+				*) log "insmod $ko: $out" ;;
+			esac
+		done < "$R36_MODLIST"
+	else
+		for m in dwc2 libcomposite u_ether usb_f_ncm usb_f_rndis; do
+			modprobe "$m" 2>/dev/null
+		done
+	fi
+}
+
+first_udc() {
+	for u in /sys/class/udc/*; do
+		[ -e "$u" ] || continue
+		basename "$u"
+		return 0
+	done
+	return 1
+}
+
+gadget_down() {
+	[ -d "$G" ] || return 0
+	echo "" > "$G/UDC" 2>/dev/null
+	for l in "$G"/configs/c.1/*.usb0; do
+		[ -L "$l" ] && rm -f "$l"
+	done
+	[ -L "$G/os_desc/c.1" ] && rm -f "$G/os_desc/c.1"
+	[ -d "$G/configs/c.1/strings/0x409" ] && rmdir "$G/configs/c.1/strings/0x409"
+	[ -d "$G/configs/c.1" ] && rmdir "$G/configs/c.1"
+	for f in "$G"/functions/*; do
+		[ -d "$f" ] && rmdir "$f"
+	done
+	[ -d "$G/strings/0x409" ] && rmdir "$G/strings/0x409"
+	rmdir "$G"
+}
+
+gadget_up() {
+	fn=${1:-ncm}
+	case "$fn" in
+		ncm|rndis) ;;
+		*) log "unknown function '$fn' (use ncm or rndis)"; return 1 ;;
+	esac
+
+	load_modules
+
+	grep -q " $CFG configfs " /proc/mounts || mount -t configfs none "$CFG" || {
+		log "cannot mount configfs"; return 1; }
+	[ -d "$CFG/usb_gadget" ] || { log "no usb_gadget in configfs (libcomposite missing?)"; return 1; }
+	[ -d "$G" ] && gadget_down
+
+	mkdir -p "$G" || return 1
+	cd "$G" || return 1
+	echo 0x1d6b > idVendor
+	echo 0x0104 > idProduct
+	echo 0x0200 > bcdUSB
+	echo 0xEF > bDeviceClass
+	echo 0x02 > bDeviceSubClass
+	echo 0x01 > bDeviceProtocol
+	mkdir -p strings/0x409
+	echo r36llm0001 > strings/0x409/serialnumber
+	echo R36LLM > strings/0x409/manufacturer
+	echo "R36S LLM" > strings/0x409/product
+	mkdir -p configs/c.1/strings/0x409
+	echo "$fn" > configs/c.1/strings/0x409/configuration
+	echo 250 > configs/c.1/MaxPower
+
+	mkdir -p "functions/$fn.usb0" || { log "cannot create function $fn (module usb_f_$fn missing?)"; return 1; }
+	echo 02:36:00:00:00:01 > "functions/$fn.usb0/dev_addr"
+	echo 02:36:00:00:00:02 > "functions/$fn.usb0/host_addr"
+
+	if [ "$fn" = rndis ]; then
+		echo 1 > os_desc/use
+		echo 0xcd > os_desc/b_vendor_code
+		echo MSFT100 > os_desc/qw_sign
+		echo RNDIS > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
+		echo 5162001 > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
+	fi
+
+	ln -s "functions/$fn.usb0" configs/c.1/
+	[ "$fn" = rndis ] && ln -s configs/c.1 os_desc/
+
+	udc=$(first_udc) || { log "no UDC"; cd /; return 2; }
+	echo "$udc" > UDC || { log "bind to $udc failed"; cd /; return 1; }
+
+	IF=$(cat "functions/$fn.usb0/ifname")
+	cd /
+	ip link set "$IF" up
+	ip addr add 10.36.0.1/24 dev "$IF" 2>/dev/null
+	ip addr add 169.254.36.1/16 dev "$IF" 2>/dev/null
+	log "up fn=$fn if=$IF udc=$udc"
+	return 0
+}
+
+gadget_wait() {
+	n=${1:-60}
+	i=0
+	while [ "$i" -lt "$n" ]; do
+		for s in /sys/class/udc/*/state; do
+			[ -f "$s" ] && [ "$(cat "$s")" = configured ] && return 0
+		done
+		sleep 1
+		i=$((i + 1))
+	done
+	return 1
+}
+
+gadget_status() {
+	for u in /sys/class/udc/*; do
+		[ -e "$u" ] || { echo "udc: none"; continue; }
+		echo "udc: $(basename "$u") state=$(cat "$u/state" 2>/dev/null)"
+	done
+	for f in "$G"/functions/*.usb0; do
+		[ -f "$f/ifname" ] || continue
+		IF=$(cat "$f/ifname")
+		echo "function: $(basename "$f") if=$IF"
+		ip addr show "$IF"
+	done
+}
+
+case "$1" in
+	up) gadget_up "$2"; exit $? ;;
+	wait) gadget_wait "$2"; exit $? ;;
+	down) gadget_down; exit $? ;;
+	status) gadget_status ;;
+	*) echo "usage: r36-gadget up [ncm|rndis] | wait <seconds> | down | status" >&2; exit 64 ;;
+esac

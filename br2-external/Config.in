@@ -1,0 +1,2 @@
+source "$BR2_EXTERNAL_R36LLM_PATH/package/prism-llama-cpp/Config.in"
+source "$BR2_EXTERNAL_R36LLM_PATH/package/r36llm-app/Config.in"

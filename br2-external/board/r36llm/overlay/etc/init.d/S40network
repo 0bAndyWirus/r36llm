@@ -1,0 +1,146 @@
+#!/bin/sh
+PIDFILE=/run/r36llm-network.pid
+case "${1:-start}" in
+    stop)
+        if [ -f "$PIDFILE" ]; then kill "$(cat "$PIDFILE")" 2>/dev/null || :; rm -f "$PIDFILE"; fi
+        killall udhcpd 2>/dev/null || :
+        /usr/sbin/r36-gadget down
+        exit 0
+        ;;
+    start) ;;
+    *) echo "Usage: $0 {start|stop}" >&2; exit 1 ;;
+esac
+exec >> /data/r36llm/logs/boot.log 2>&1
+# This script replaces Buildroot's S40network (ifup -a), so loopback is brought up here.
+# llama-cli needs it: it talks to an in-process HTTP server on 127.0.0.1.
+ip link set lo up
+LINK=$(/usr/sbin/r36-config link ethernet)
+FUNCTION=$(/usr/sbin/r36-config usb_gadget_fn ncm)
+
+start_dhcp() {
+    cat > /etc/udhcpd.conf <<EOF
+start 10.36.0.2
+end 10.36.0.10
+interface $1
+option subnet 255.255.255.0
+lease_file /tmp/udhcpd.leases
+EOF
+    udhcpd /etc/udhcpd.conf
+}
+
+log_ethernet() {
+    echo "r36llm: Ethernet interface $1"
+    printf 'r36llm: carrier='
+    cat "/sys/class/net/$1/carrier" 2>/dev/null || :
+    for vendor in /sys/bus/usb/devices/*/idVendor; do
+        [ -f "$vendor" ] || continue
+        device=${vendor%/idVendor}
+        echo "r36llm: USB ${device##*/} $(cat "$vendor"):$(cat "$device/idProduct")"
+    done
+    ip addr show dev "$1"
+}
+
+ethernet_monitor() {
+    trap 'killall udhcpd 2>/dev/null; exit 0' TERM INT
+    while IFS= read -r module; do
+        [ -n "$module" ] || continue
+        output=$(insmod "$module" 2>&1)
+        result=$?
+        case "$output" in *"File exists"*) ;; *)
+            [ -z "$output" ] || printf '%s\n' "$output"
+            [ "$result" -eq 0 ] || echo "r36llm: insmod failed: $module"
+            ;;
+        esac
+    done < /etc/r36llm/net-modules.txt
+    configured_if=
+    configured_index=
+    while :; do
+        iface=
+        for path in /sys/class/net/*; do
+            name=${path##*/}
+            case "$name" in lo|usb*|wlan*) continue ;; esac
+            [ -L "$path/device" ] || continue
+            iface=$name
+            break
+        done
+        index=
+        [ -z "$iface" ] || index=$(cat "/sys/class/net/$iface/ifindex" 2>/dev/null)
+        if [ -n "$configured_if" ] && { [ "$iface" != "$configured_if" ] || [ "$index" != "$configured_index" ]; }; then
+            echo "r36llm: Ethernet interface $configured_if removed"
+            killall udhcpd 2>/dev/null || :
+            configured_if=
+            configured_index=
+        fi
+        if [ -n "$iface" ] && [ -z "$configured_if" ]; then
+            if ip link set dev "$iface" up; then
+                ip addr add 10.36.0.1/24 dev "$iface" || :
+                ip addr add 169.254.36.1/16 dev "$iface" || :
+                if start_dhcp "$iface"; then
+                    configured_if=$iface
+                    configured_index=$index
+                else
+                    echo "r36llm: DHCP server failed on $iface; retrying"
+                fi
+                log_ethernet "$iface"
+            fi
+        fi
+        sleep 2
+    done
+}
+
+gadget_diagnostics() {
+    /usr/sbin/r36-gadget wait 30
+    echo "r36llm: USB enumeration wait exited $?"
+    /usr/sbin/r36-gadget status
+    cat /sys/class/udc/*/state 2>/dev/null
+    mkdir -p /sys/kernel/debug
+    if ! grep -q ' /sys/kernel/debug debugfs ' /proc/mounts; then
+        mount -t debugfs debugfs /sys/kernel/debug 2>/dev/null || :
+    fi
+    find /sys/kernel/debug/ff300000.usb -type f 2>/dev/null |
+        while IFS= read -r file; do
+            echo "r36llm: USB debug $file"
+            head -c 8192 "$file" 2>/dev/null || :
+            printf '\n'
+        done
+    PHY=/sys/devices/platform/ff2c0000.syscon/ff2c0000.syscon:usb2-phy@100
+    ls -l "$PHY/" 2>/dev/null || :
+    find "$PHY" -name otg_mode -type f 2>/dev/null |
+        while IFS= read -r file; do
+            echo "r36llm: USB PHY $file"
+            cat "$file" 2>/dev/null || :
+        done
+    dmesg | grep -iE 'dwc2|udc|gadget|usb0|phy' || :
+}
+
+case "$LINK" in
+    off) exit 0 ;;
+    ethernet)
+        ethernet_monitor &
+        echo $! > "$PIDFILE"
+        ;;
+    gadget)
+        MODE=$(tr -d '\000' < /proc/device-tree/usb@ff300000/dr_mode 2>/dev/null)
+        if [ "$MODE" != peripheral ]; then
+            echo "r36llm: gadget mode needs boot.ini to load rk3326-r36s-linux-gadget.dtb (peripheral)"
+        fi
+        OUTPUT=$(R36_MODLIST=/etc/r36llm/gadget-modules.txt /usr/sbin/r36-gadget up "$FUNCTION" 2>&1)
+        RESULT=$?
+        printf '%s\n' "$OUTPUT"
+        gadget_diagnostics &
+        echo $! > "$PIDFILE"
+        if [ "$RESULT" -ne 0 ]; then
+            echo "r36llm: USB gadget failed ($RESULT); continuing boot"
+            exit 0
+        fi
+        IFACE=
+        for word in $OUTPUT; do case "$word" in if=*) IFACE=${word#if=} ;; esac; done
+        if [ -z "$IFACE" ]; then
+            echo "r36llm: gadget returned no network interface; continuing boot"
+            exit 0
+        fi
+        start_dhcp "$IFACE" || echo "r36llm: DHCP server failed; continuing boot"
+        ;;
+    *) echo "r36llm: unknown link mode $LINK; networking disabled" ;;
+esac
+exit 0

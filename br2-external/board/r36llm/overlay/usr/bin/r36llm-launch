@@ -1,0 +1,11 @@
+#!/bin/sh
+if mountpoint -q /data; then
+    mkdir -p /data/r36llm/logs
+    LOG=/data/r36llm/logs/app.log
+else
+    LOG=/tmp/app.log
+fi
+if [ -x /data/r36llm/bin/r36llm ]; then
+    exec /data/r36llm/bin/r36llm >> "$LOG" 2>&1
+fi
+exec /usr/bin/r36llm >> "$LOG" 2>&1

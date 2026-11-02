@@ -1,0 +1,5 @@
+#!/bin/sh
+case "${1:-start}" in stop) exit 0 ;; start) ;; *) exit 1 ;; esac
+for governor in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor /sys/class/devfreq/*/governor; do
+    [ -f "$governor" ] && { echo performance > "$governor"; } 2>/dev/null || :
+done

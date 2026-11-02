@@ -1,0 +1,11 @@
+# Build outputs and downloaded models
+out/
+models/
+__pycache__/
+
+# Device-specific inputs harvested from your own R36S (vendor kernel, DTB, modules); never redistributed
+vendor/
+
+# SSH public key(s) baked into your image; generated locally by scripts/build.ps1
+keys/*
+!keys/README.md
