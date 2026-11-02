@@ -34,7 +34,7 @@ jobs:
           available=$(df --output=avail -B1 / | tr -cd '0-9')
           test "$available" -ge 30000000000
       - name: Restore Buildroot downloads and compiler cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/r36llm
           key: buildroot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('docker/Dockerfile', 'scripts/br.sh', 'br2-external/configs/*', 'br2-external/package/**/*.mk', 'br2-external/package/**/*.patch') }}-${{ github.run_id }}-${{ github.run_attempt }}
