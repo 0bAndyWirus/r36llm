@@ -19,7 +19,7 @@ This patch specializes those fallbacks rather than replacing scalar dots.
 Scalar *_generic implementations remain the correctness references.
 
 Base: PrismML-Eng/llama.cpp 5628c7338963b00a598f2a588fd09a79af6d70db
-Upstream-Status: Not submitted [awaiting Cortex-A35 device measurements]
+Upstream-Status: Not submitted [device measurements support submission]
 
 Reproduce correctness (cross GCC plus qemu-user):
   sh br2-external/package/prism-llama-cpp/tests/run-bonsai-neon.sh <patched-source>
@@ -31,6 +31,9 @@ Q8 extrema and finite half scales including subnormals. Every result was
 bit-identical to the generic reference: max absolute/relative error = 0.
 Unit-scale cases additionally match an independent integer decoder/dot.
 Device throughput comparison: scripts/bench-neon.sh (two isolated prefixes).
+Cortex-A35 device generation t/s (baseline -> patched, four samples each):
+  Q1_0: 1.040 -> 1.459; PQ2_0: 1.258 -> 1.396; PTQ1_0: 0.826 -> 0.918.
+See docs/benchmarks.md for methodology and raw-result links.
 QEMU timings are not evidence of a hardware speedup.
 
 diff --git a/ggml/src/ggml-cpu/arch/arm/quants.c b/ggml/src/ggml-cpu/arch/arm/quants.c

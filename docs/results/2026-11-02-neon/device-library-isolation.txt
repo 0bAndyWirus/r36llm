@@ -1,0 +1,34 @@
+VARIANT=baseline
+57b7b119504d0fdc25cd9229c9f8e061d06b34f02f87172abf8e894a8c30402d  /tmp/neon/baseline/lib/libggml-cpu.so.0.27.0
+	linux-vdso.so.1 (0x0000007fa1b98000)
+	libllama-bench-impl.so => /tmp/neon/baseline/lib/libllama-bench-impl.so (0x0000007fa1b3a000)
+	libllama-common.so.0 => /tmp/neon/baseline/lib/libllama-common.so.0 (0x0000007fa16e9000)
+	libllama.so.0 => /tmp/neon/baseline/lib/libllama.so.0 (0x0000007fa12f2000)
+	libggml.so.0 => /tmp/neon/baseline/lib/libggml.so.0 (0x0000007fa12e8000)
+	libggml-cpu.so.0 => /tmp/neon/baseline/lib/libggml-cpu.so.0 (0x0000007fa11ab000)
+	libggml-base.so.0 => /tmp/neon/baseline/lib/libggml-base.so.0 (0x0000007fa1112000)
+	libstdc++.so.6 => /usr/lib64/libstdc++.so.6 (0x0000007fa0ecd000)
+	libm.so.6 => /lib64/libm.so.6 (0x0000007fa0e3f000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x0000007fa0e25000)
+	libc.so.6 => /lib64/libc.so.6 (0x0000007fa0c96000)
+	/lib/ld-linux-aarch64.so.1 (0x0000007fa1b99000)
+	libgomp.so.1 => /usr/lib64/libgomp.so.1 (0x0000007fa0c4c000)
+VARIANT=patched
+6a3119b0d4acca1301d3888a733bbfa5a0eabe0cbe2d1a25edf0cac984f1582a  /tmp/neon/patched/lib/libggml-cpu.so.0.27.0
+	linux-vdso.so.1 (0x0000007fa6f88000)
+	libllama-bench-impl.so => /tmp/neon/patched/lib/libllama-bench-impl.so (0x0000007fa6f2a000)
+	libllama-common.so.0 => /tmp/neon/patched/lib/libllama-common.so.0 (0x0000007fa6ad9000)
+	libllama.so.0 => /tmp/neon/patched/lib/libllama.so.0 (0x0000007fa66e2000)
+	libggml.so.0 => /tmp/neon/patched/lib/libggml.so.0 (0x0000007fa66d8000)
+	libggml-cpu.so.0 => /tmp/neon/patched/lib/libggml-cpu.so.0 (0x0000007fa659b000)
+	libggml-base.so.0 => /tmp/neon/patched/lib/libggml-base.so.0 (0x0000007fa6502000)
+	libstdc++.so.6 => /usr/lib64/libstdc++.so.6 (0x0000007fa62bd000)
+	libm.so.6 => /lib64/libm.so.6 (0x0000007fa622f000)
+	libgcc_s.so.1 => /lib64/libgcc_s.so.1 (0x0000007fa6215000)
+	libc.so.6 => /lib64/libc.so.6 (0x0000007fa6086000)
+	/lib/ld-linux-aarch64.so.1 (0x0000007fa6f89000)
+	libgomp.so.1 => /usr/lib64/libgomp.so.1 (0x0000007fa603c000)
+version: 0.7.0-dev (build 1, commit d4ef376)
+built with GNU 13.4.0 for Linux aarch64
+version: 0.7.0-dev (build 1, commit d4ef376)
+built with GNU 13.4.0 for Linux aarch64

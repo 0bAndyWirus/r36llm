@@ -1,0 +1,19 @@
+Source: PrismML-Eng/llama.cpp 5628c7338963b00a598f2a588fd09a79af6d70db
+Baseline: git archive of pin; patched: same archive + package 0001 patch
+The build banner reports d4ef376 from the enclosing r36llm checkout, not the
+Prism source revision: upstream CMake discovers parent Git metadata in archive
+trees. The archive pin above and source/dot-function checks establish provenance.
+Toolchain: Buildroot 2025.02.19 GCC 13.4.0
+Docker volume r36llm-br mounted readonly; no Buildroot output builds performed
+Both builds: all prism-llama-cpp.mk CMake options, Release, -O2 -march=armv8-a -fopenmp
+Staging: matching shared libraries copied, build RPATH removed (as for installation)
+Smoke: both staged executables ran --version under qemu-aarch64 -cpu cortex-a35
+No sdot/udot/i8mm instructions in the four disassembled dot functions
+baseline ggml_vec_dot_q1_0_q8_0: instructions=73 smull=4 smlal=0 sha256=2e75640d3795fed8a7516c1c57e4773231fdefbfd6e1f8327c0bbd5abf35033d
+baseline ggml_vec_dot_pq2_0_q8_0: instructions=64 smull=4 smlal=0 sha256=bee86d1730cfea270fa6b6ebf76cd89bf44d3e4748d373bf2aa24dcad2a938a4
+baseline ggml_vec_dot_pq2_0_q8_K: instructions=64 smull=5 smlal=0 sha256=64e9a6539c8e9946d807edf8a6b6134809e7fe7f04b22eed750700e79dbf3419
+baseline ggml_vec_dot_ptq1_0_q8_0: instructions=142 smull=4 smlal=0 sha256=9bb3836addcae4f9c1781d7ee4898901844477debb7ce07d6bdd8003581aa520
+patched ggml_vec_dot_q1_0_q8_0: instructions=53 smull=1 smlal=3 sha256=74bc0257226a46617931c2d9d00e04e19e60e9db8c0108b3e5c8a820a3d45a8d
+patched ggml_vec_dot_pq2_0_q8_0: instructions=56 smull=1 smlal=3 sha256=084320195d17529ca0197dc6db5bf1f2319a50b2530155d5faa4eb370b505492
+patched ggml_vec_dot_pq2_0_q8_K: instructions=58 smull=2 smlal=3 sha256=670c6defec14563fdae77a1401bf5d95fb7617167c4646ed6f84a8ca0c28bedc
+patched ggml_vec_dot_ptq1_0_q8_0: instructions=133 smull=1 smlal=3 sha256=b23169bfadc498509118a9a815c05776475ca1059787d1ff4def305484c086b0

@@ -1,0 +1,41 @@
+[
+  {
+    "model": "Bonsai-1.7B-Q1_0",
+    "baseline_prompt": 1.426485,
+    "baseline_prompt_stddev": 0.017816966632959747,
+    "patched_prompt": 2.0406775,
+    "patched_prompt_stddev": 0.029873075251804795,
+    "prompt_speedup": 1.43056358812045,
+    "baseline_generation": 1.0398525,
+    "baseline_generation_stddev": 0.0070061086441286545,
+    "patched_generation": 1.459405,
+    "patched_generation_stddev": 0.011146268433875079,
+    "generation_speedup": 1.4034730887313345
+  },
+  {
+    "model": "Ternary-Bonsai-1.7B-PQ2_0",
+    "baseline_prompt": 1.76208,
+    "baseline_prompt_stddev": 0.022209567007635822,
+    "patched_prompt": 1.972635,
+    "patched_prompt_stddev": 0.028166672386587176,
+    "prompt_speedup": 1.1194923045491691,
+    "baseline_generation": 1.2580575,
+    "baseline_generation_stddev": 0.005854294008104956,
+    "patched_generation": 1.3963625,
+    "patched_generation_stddev": 0.009722583247265095,
+    "generation_speedup": 1.1099353566907713
+  },
+  {
+    "model": "Ternary-Bonsai-2-2B-PTQ1_0",
+    "baseline_prompt": 1.2913074999999998,
+    "baseline_prompt_stddev": 0.012296930172472634,
+    "patched_prompt": 1.4489450000000001,
+    "patched_prompt_stddev": 0.016591936796729552,
+    "prompt_speedup": 1.1220758804545008,
+    "baseline_generation": 0.8260975,
+    "baseline_generation_stddev": 0.0033584751003989757,
+    "patched_generation": 0.9181455000000001,
+    "patched_generation_stddev": 0.006837052995748006,
+    "generation_speedup": 1.1114251041795915
+  }
+]

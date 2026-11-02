@@ -1,0 +1,763 @@
+
+VARIANT=baseline FUNCTION=ggml_vec_dot_q1_0_q8_0
+
+/src/out/neon/prefix-baseline/lib/libggml-cpu.so.0.27.0:     file format elf64-littleaarch64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+000000000008a6e4 <ggml_vec_dot_q1_0_q8_0>:
+   8a6e4:	7100001f 	cmp	w0, #0x0
+   8a6e8:	1101fc0b 	add	w11, w0, #0x7f
+   8a6ec:	1a80b16b 	csel	w11, w11, w0, lt	// lt = tstop
+   8a6f0:	13077d6b 	asr	w11, w11, #7
+   8a6f4:	7101fc1f 	cmp	w0, #0x7f
+   8a6f8:	5400082d 	b.le	8a7fc <ggml_vec_dot_q1_0_q8_0+0x118>
+   8a6fc:	4f000405 	movi	v5.4s, #0x0
+   8a700:	91004864 	add	x4, x3, #0x12
+   8a704:	0f00e424 	movi	v4.8b, #0x1
+   8a708:	90000083 	adrp	x3, 9a000 <iq2xs_grid+0x330>
+   8a70c:	91380063 	add	x3, x3, #0xe00
+   8a710:	5280000a 	mov	w10, #0x0                   	// #0
+   8a714:	d503201f 	nop
+   8a718:	7c5ee086 	ldur	h6, [x4, #-18]
+   8a71c:	d1004080 	sub	x0, x4, #0x10
+   8a720:	aa0503e2 	mov	x2, x5
+   8a724:	1ee240c6 	fcvt	s6, h6
+   8a728:	39400009 	ldrb	w9, [x0]
+   8a72c:	91001000 	add	x0, x0, #0x4
+   8a730:	385fd008 	ldurb	w8, [x0, #-3]
+   8a734:	385fe007 	ldurb	w7, [x0, #-2]
+   8a738:	385ff006 	ldurb	w6, [x0, #-1]
+   8a73c:	fc697861 	ldr	d1, [x3, x9, lsl #3]
+   8a740:	fc687863 	ldr	d3, [x3, x8, lsl #3]
+   8a744:	fc677860 	ldr	d0, [x3, x7, lsl #3]
+   8a748:	2f0c0421 	ushr	v1.8b, v1.8b, #4
+   8a74c:	fc667862 	ldr	d2, [x3, x6, lsl #3]
+   8a750:	2f0c0463 	ushr	v3.8b, v3.8b, #4
+   8a754:	2f0c0400 	ushr	v0.8b, v0.8b, #4
+   8a758:	3cc02051 	ldur	q17, [x2, #2]
+   8a75c:	2f0c0442 	ushr	v2.8b, v2.8b, #4
+   8a760:	3cc12050 	ldur	q16, [x2, #18]
+   8a764:	0e218421 	add	v1.8b, v1.8b, v1.8b
+   8a768:	0e238463 	add	v3.8b, v3.8b, v3.8b
+   8a76c:	0e208400 	add	v0.8b, v0.8b, v0.8b
+   8a770:	0e228442 	add	v2.8b, v2.8b, v2.8b
+   8a774:	7c422447 	ldr	h7, [x2], #34
+   8a778:	5e180633 	mov	d19, v17.d[1]
+   8a77c:	2e248421 	sub	v1.8b, v1.8b, v4.8b
+   8a780:	2e248463 	sub	v3.8b, v3.8b, v4.8b
+   8a784:	2e248400 	sub	v0.8b, v0.8b, v4.8b
+   8a788:	2e248442 	sub	v2.8b, v2.8b, v4.8b
+   8a78c:	1ee240e7 	fcvt	s7, h7
+   8a790:	5e180612 	mov	d18, v16.d[1]
+   8a794:	0e31c021 	smull	v1.8h, v1.8b, v17.8b
+   8a798:	0e33c063 	smull	v3.8h, v3.8b, v19.8b
+   8a79c:	0e30c000 	smull	v0.8h, v0.8b, v16.8b
+   8a7a0:	0e32c042 	smull	v2.8h, v2.8b, v18.8b
+   8a7a4:	4e602821 	saddlp	v1.4s, v1.8h
+   8a7a8:	1e2608e7 	fmul	s7, s7, s6
+   8a7ac:	4e602863 	saddlp	v3.4s, v3.8h
+   8a7b0:	4e602800 	saddlp	v0.4s, v0.8h
+   8a7b4:	4e602842 	saddlp	v2.4s, v2.8h
+   8a7b8:	4ea38421 	add	v1.4s, v1.4s, v3.4s
+   8a7bc:	4ea28400 	add	v0.4s, v0.4s, v2.4s
+   8a7c0:	4ea18400 	add	v0.4s, v0.4s, v1.4s
+   8a7c4:	4e21d800 	scvtf	v0.4s, v0.4s
+   8a7c8:	4f879000 	fmul	v0.4s, v0.4s, v7.s[0]
+   8a7cc:	4e20d4a5 	fadd	v5.4s, v5.4s, v0.4s
+   8a7d0:	eb00009f 	cmp	x4, x0
+   8a7d4:	54fffaa1 	b.ne	8a728 <ggml_vec_dot_q1_0_q8_0+0x44>  // b.any
+   8a7d8:	1100054a 	add	w10, w10, #0x1
+   8a7dc:	910220a5 	add	x5, x5, #0x88
+   8a7e0:	91004884 	add	x4, x4, #0x12
+   8a7e4:	6b0a017f 	cmp	w11, w10
+   8a7e8:	54fff98c 	b.gt	8a718 <ggml_vec_dot_q1_0_q8_0+0x34>
+   8a7ec:	6e25d4a5 	faddp	v5.4s, v5.4s, v5.4s
+   8a7f0:	6e25d4a5 	faddp	v5.4s, v5.4s, v5.4s
+   8a7f4:	bd000025 	str	s5, [x1]
+   8a7f8:	d65f03c0 	ret
+   8a7fc:	0f000405 	movi	v5.2s, #0x0
+   8a800:	bd000025 	str	s5, [x1]
+   8a804:	d65f03c0 	ret
+
+Disassembly of section .fini:
+
+VARIANT=baseline FUNCTION=ggml_vec_dot_pq2_0_q8_0
+
+/src/out/neon/prefix-baseline/lib/libggml-cpu.so.0.27.0:     file format elf64-littleaarch64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+000000000008a914 <ggml_vec_dot_pq2_0_q8_0>:
+   8a914:	7100001f 	cmp	w0, #0x0
+   8a918:	1101fc06 	add	w6, w0, #0x7f
+   8a91c:	1a80b0c6 	csel	w6, w6, w0, lt	// lt = tstop
+   8a920:	13077cc6 	asr	w6, w6, #7
+   8a924:	7101fc1f 	cmp	w0, #0x7f
+   8a928:	5400070d 	b.le	8aa08 <ggml_vec_dot_pq2_0_q8_0+0xf4>
+   8a92c:	90000040 	adrp	x0, 92000 <__func__.1+0x90>
+   8a930:	91008863 	add	x3, x3, #0x22
+   8a934:	4f000405 	movi	v5.4s, #0x0
+   8a938:	52800004 	mov	w4, #0x0                   	// #0
+   8a93c:	3dc06413 	ldr	q19, [x0, #400]
+   8a940:	90000040 	adrp	x0, 92000 <__func__.1+0x90>
+   8a944:	4f00e467 	movi	v7.16b, #0x3
+   8a948:	3dc06810 	ldr	q16, [x0, #416]
+   8a94c:	90000040 	adrp	x0, 92000 <__func__.1+0x90>
+   8a950:	4f00e426 	movi	v6.16b, #0x1
+   8a954:	3dc06c12 	ldr	q18, [x0, #432]
+   8a958:	d1008062 	sub	x2, x3, #0x20
+   8a95c:	7c5de071 	ldur	h17, [x3, #-34]
+   8a960:	aa0503e0 	mov	x0, x5
+   8a964:	1ee24231 	fcvt	s17, h17
+   8a968:	fc408440 	ldr	d0, [x2], #8
+   8a96c:	3cc02002 	ldur	q2, [x0, #2]
+   8a970:	6e180400 	mov	v0.d[1], v0.d[0]
+   8a974:	3cc12014 	ldur	q20, [x0, #18]
+   8a978:	7c422403 	ldr	h3, [x0], #34
+   8a97c:	4e130001 	tbl	v1.16b, {v0.16b}, v19.16b
+   8a980:	4e120000 	tbl	v0.16b, {v0.16b}, v18.16b
+   8a984:	1ee24063 	fcvt	s3, h3
+   8a988:	6e304421 	ushl	v1.16b, v1.16b, v16.16b
+   8a98c:	6e304400 	ushl	v0.16b, v0.16b, v16.16b
+   8a990:	1e310863 	fmul	s3, s3, s17
+   8a994:	4e271c21 	and	v1.16b, v1.16b, v7.16b
+   8a998:	4e271c00 	and	v0.16b, v0.16b, v7.16b
+   8a99c:	6e268421 	sub	v1.16b, v1.16b, v6.16b
+   8a9a0:	6e268400 	sub	v0.16b, v0.16b, v6.16b
+   8a9a4:	0e22c024 	smull	v4.8h, v1.8b, v2.8b
+   8a9a8:	4e22c021 	smull2	v1.8h, v1.16b, v2.16b
+   8a9ac:	0e34c002 	smull	v2.8h, v0.8b, v20.8b
+   8a9b0:	4e34c000 	smull2	v0.8h, v0.16b, v20.16b
+   8a9b4:	4e602884 	saddlp	v4.4s, v4.8h
+   8a9b8:	4e602821 	saddlp	v1.4s, v1.8h
+   8a9bc:	4e602842 	saddlp	v2.4s, v2.8h
+   8a9c0:	4e602800 	saddlp	v0.4s, v0.8h
+   8a9c4:	4ea18481 	add	v1.4s, v4.4s, v1.4s
+   8a9c8:	4ea08440 	add	v0.4s, v2.4s, v0.4s
+   8a9cc:	4ea18400 	add	v0.4s, v0.4s, v1.4s
+   8a9d0:	4e21d800 	scvtf	v0.4s, v0.4s
+   8a9d4:	4f839000 	fmul	v0.4s, v0.4s, v3.s[0]
+   8a9d8:	4e20d4a5 	fadd	v5.4s, v5.4s, v0.4s
+   8a9dc:	eb02007f 	cmp	x3, x2
+   8a9e0:	54fffc41 	b.ne	8a968 <ggml_vec_dot_pq2_0_q8_0+0x54>  // b.any
+   8a9e4:	11000484 	add	w4, w4, #0x1
+   8a9e8:	910220a5 	add	x5, x5, #0x88
+   8a9ec:	91008863 	add	x3, x3, #0x22
+   8a9f0:	6b0400df 	cmp	w6, w4
+   8a9f4:	54fffb2c 	b.gt	8a958 <ggml_vec_dot_pq2_0_q8_0+0x44>
+   8a9f8:	6e25d4a5 	faddp	v5.4s, v5.4s, v5.4s
+   8a9fc:	6e25d4a5 	faddp	v5.4s, v5.4s, v5.4s
+   8aa00:	bd000025 	str	s5, [x1]
+   8aa04:	d65f03c0 	ret
+   8aa08:	0f000405 	movi	v5.2s, #0x0
+   8aa0c:	bd000025 	str	s5, [x1]
+   8aa10:	d65f03c0 	ret
+
+Disassembly of section .fini:
+
+VARIANT=baseline FUNCTION=ggml_vec_dot_pq2_0_q8_K
+
+/src/out/neon/prefix-baseline/lib/libggml-cpu.so.0.27.0:     file format elf64-littleaarch64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+000000000008aa14 <ggml_vec_dot_pq2_0_q8_K>:
+   8aa14:	7100001f 	cmp	w0, #0x0
+   8aa18:	1101fc08 	add	w8, w0, #0x7f
+   8aa1c:	1a80b108 	csel	w8, w8, w0, lt	// lt = tstop
+   8aa20:	0f000413 	movi	v19.2s, #0x0
+   8aa24:	13077d08 	asr	w8, w8, #7
+   8aa28:	7101fc1f 	cmp	w0, #0x7f
+   8aa2c:	5400070d 	b.le	8ab0c <ggml_vec_dot_pq2_0_q8_K+0xf8>
+   8aa30:	90000040 	adrp	x0, 92000 <__func__.1+0x90>
+   8aa34:	52800004 	mov	w4, #0x0                   	// #0
+   8aa38:	4f00e467 	movi	v7.16b, #0x3
+   8aa3c:	52802489 	mov	w9, #0x124                 	// #292
+   8aa40:	3dc06412 	ldr	q18, [x0, #400]
+   8aa44:	90000040 	adrp	x0, 92000 <__func__.1+0x90>
+   8aa48:	4f00e426 	movi	v6.16b, #0x1
+   8aa4c:	3dc06810 	ldr	q16, [x0, #416]
+   8aa50:	90000040 	adrp	x0, 92000 <__func__.1+0x90>
+   8aa54:	3dc06c11 	ldr	q17, [x0, #432]
+   8aa58:	13017c86 	asr	w6, w4, #1
+   8aa5c:	d3790087 	ubfiz	x7, x4, #7, #1
+   8aa60:	91000862 	add	x2, x3, #0x2
+   8aa64:	4f000404 	movi	v4.4s, #0x0
+   8aa68:	9b297cc6 	smull	x6, w6, w9
+   8aa6c:	8b0600a0 	add	x0, x5, x6
+   8aa70:	91001000 	add	x0, x0, #0x4
+   8aa74:	8b070000 	add	x0, x0, x7
+   8aa78:	91020007 	add	x7, x0, #0x80
+   8aa7c:	fc408440 	ldr	d0, [x2], #8
+   8aa80:	ad401402 	ldp	q2, q5, [x0]
+   8aa84:	91008000 	add	x0, x0, #0x20
+   8aa88:	6e180400 	mov	v0.d[1], v0.d[0]
+   8aa8c:	4e120001 	tbl	v1.16b, {v0.16b}, v18.16b
+   8aa90:	4e110000 	tbl	v0.16b, {v0.16b}, v17.16b
+   8aa94:	6e304421 	ushl	v1.16b, v1.16b, v16.16b
+   8aa98:	6e304400 	ushl	v0.16b, v0.16b, v16.16b
+   8aa9c:	4e271c21 	and	v1.16b, v1.16b, v7.16b
+   8aaa0:	4e271c00 	and	v0.16b, v0.16b, v7.16b
+   8aaa4:	6e268421 	sub	v1.16b, v1.16b, v6.16b
+   8aaa8:	6e268400 	sub	v0.16b, v0.16b, v6.16b
+   8aaac:	0e22c023 	smull	v3.8h, v1.8b, v2.8b
+   8aab0:	4e22c021 	smull2	v1.8h, v1.16b, v2.16b
+   8aab4:	0e25c002 	smull	v2.8h, v0.8b, v5.8b
+   8aab8:	4e25c000 	smull2	v0.8h, v0.16b, v5.16b
+   8aabc:	4e602863 	saddlp	v3.4s, v3.8h
+   8aac0:	4e602821 	saddlp	v1.4s, v1.8h
+   8aac4:	4e602842 	saddlp	v2.4s, v2.8h
+   8aac8:	4e602800 	saddlp	v0.4s, v0.8h
+   8aacc:	4ea18461 	add	v1.4s, v3.4s, v1.4s
+   8aad0:	4ea08440 	add	v0.4s, v2.4s, v0.4s
+   8aad4:	4ea48424 	add	v4.4s, v1.4s, v4.4s
+   8aad8:	4ea08484 	add	v4.4s, v4.4s, v0.4s
+   8aadc:	eb0000ff 	cmp	x7, x0
+   8aae0:	54fffce1 	b.ne	8aa7c <ggml_vec_dot_pq2_0_q8_K+0x68>  // b.any
+   8aae4:	7c422460 	ldr	h0, [x3], #34
+   8aae8:	11000484 	add	w4, w4, #0x1
+   8aaec:	4eb1b884 	addv	s4, v4.4s
+   8aaf0:	bc6668a1 	ldr	s1, [x5, x6]
+   8aaf4:	1ee24000 	fcvt	s0, h0
+   8aaf8:	5e21d884 	scvtf	s4, s4
+   8aafc:	1e210800 	fmul	s0, s0, s1
+   8ab00:	1f044c13 	fmadd	s19, s0, s4, s19
+   8ab04:	6b04011f 	cmp	w8, w4
+   8ab08:	54fffa8c 	b.gt	8aa58 <ggml_vec_dot_pq2_0_q8_K+0x44>
+   8ab0c:	bd000033 	str	s19, [x1]
+   8ab10:	d65f03c0 	ret
+
+Disassembly of section .fini:
+
+VARIANT=baseline FUNCTION=ggml_vec_dot_ptq1_0_q8_0
+
+/src/out/neon/prefix-baseline/lib/libggml-cpu.so.0.27.0:     file format elf64-littleaarch64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+000000000008bb80 <ggml_vec_dot_ptq1_0_q8_0>:
+   8bb80:	d102c3ff 	sub	sp, sp, #0xb0
+   8bb84:	7100001f 	cmp	w0, #0x0
+   8bb88:	d0000144 	adrp	x4, b5000 <_ZN4ggml3cpu6repack6repackI10block_q2_KLl8ELl8EEEiP11ggml_tensorPKvm@@Base+0x8b3c0>
+   8bb8c:	f9475c84 	ldr	x4, [x4, #3768]
+   8bb90:	1101fc02 	add	w2, w0, #0x7f
+   8bb94:	a9097bfd 	stp	x29, x30, [sp, #144]
+   8bb98:	910243fd 	add	x29, sp, #0x90
+   8bb9c:	1a80b042 	csel	w2, w2, w0, lt	// lt = tstop
+   8bba0:	f9400086 	ldr	x6, [x4]
+   8bba4:	f90047e6 	str	x6, [sp, #136]
+   8bba8:	d2800006 	mov	x6, #0x0                   	// #0
+   8bbac:	7101fc1f 	cmp	w0, #0x7f
+   8bbb0:	54000fcd 	b.le	8bda8 <ggml_vec_dot_ptq1_0_q8_0+0x228>
+   8bbb4:	d0000020 	adrp	x0, 91000 <_fini+0x23c0>
+   8bbb8:	0f00e770 	movi	v16.8b, #0x1b
+   8bbbc:	4f000405 	movi	v5.4s, #0x0
+   8bbc0:	13077c46 	asr	w6, w2, #7
+   8bbc4:	4f00e426 	movi	v6.16b, #0x1
+   8bbc8:	910003e7 	mov	x7, sp
+   8bbcc:	4f00e773 	movi	v19.16b, #0x1b
+   8bbd0:	fd47cc11 	ldr	d17, [x0, #3992]
+   8bbd4:	4f02e632 	movi	v18.16b, #0x51
+   8bbd8:	910220a4 	add	x4, x5, #0x88
+   8bbdc:	0f02e627 	movi	v7.8b, #0x51
+   8bbe0:	52800005 	mov	w5, #0x0                   	// #0
+   8bbe4:	fd0053e8 	str	d8, [sp, #160]
+   8bbe8:	7d403062 	ldr	h2, [x3, #24]
+   8bbec:	d1022080 	sub	x0, x4, #0x88
+   8bbf0:	fd400863 	ldr	d3, [x3, #16]
+   8bbf4:	aa0703e2 	mov	x2, x7
+   8bbf8:	3dc00060 	ldr	q0, [x3]
+   8bbfc:	0e020442 	dup	v2.4h, v2.h[0]
+   8bc00:	0e279c76 	mul	v22.8b, v3.8b, v7.8b
+   8bc04:	0f095479 	shl	v25.8b, v3.8b, #1
+   8bc08:	0f0b5461 	shl	v1.8b, v3.8b, #3
+   8bc0c:	0e309c78 	mul	v24.8b, v3.8b, v16.8b
+   8bc10:	2f0f0477 	ushr	v23.8b, v3.8b, #1
+   8bc14:	7d403475 	ldr	h21, [x3, #26]
+   8bc18:	4f095414 	shl	v20.16b, v0.16b, #1
+   8bc1c:	0e319c42 	mul	v2.8b, v2.8b, v17.8b
+   8bc20:	0e238739 	add	v25.8b, v25.8b, v3.8b
+   8bc24:	2f0f06da 	ushr	v26.8b, v22.8b, #1
+   8bc28:	0e238421 	add	v1.8b, v1.8b, v3.8b
+   8bc2c:	2f0f0708 	ushr	v8.8b, v24.8b, #1
+   8bc30:	4f0b5404 	shl	v4.16b, v0.16b, #3
+   8bc34:	2f0f045d 	ushr	v29.8b, v2.8b, #1
+   8bc38:	2e370477 	uhadd	v23.8b, v3.8b, v23.8b
+   8bc3c:	4e208694 	add	v20.16b, v20.16b, v0.16b
+   8bc40:	4e339c03 	mul	v3.16b, v0.16b, v19.16b
+   8bc44:	2f0f073c 	ushr	v28.8b, v25.8b, #1
+   8bc48:	4e208484 	add	v4.16b, v4.16b, v0.16b
+   8bc4c:	2f0f043b 	ushr	v27.8b, v1.8b, #1
+   8bc50:	2e3a06da 	uhadd	v26.8b, v22.8b, v26.8b
+   8bc54:	2e3d0456 	uhadd	v22.8b, v2.8b, v29.8b
+   8bc58:	2e280718 	uhadd	v24.8b, v24.8b, v8.8b
+   8bc5c:	4e329c02 	mul	v2.16b, v0.16b, v18.16b
+   8bc60:	2e3c0739 	uhadd	v25.8b, v25.8b, v28.8b
+   8bc64:	6f0f0688 	ushr	v8.16b, v20.16b, #1
+   8bc68:	2e3b0421 	uhadd	v1.8b, v1.8b, v27.8b
+   8bc6c:	2f0a075a 	ushr	v26.8b, v26.8b, #6
+   8bc70:	6f0f049f 	ushr	v31.16b, v4.16b, #1
+   8bc74:	6f0f047e 	ushr	v30.16b, v3.16b, #1
+   8bc78:	6f0f045d 	ushr	v29.16b, v2.16b, #1
+   8bc7c:	6f0f041c 	ushr	v28.16b, v0.16b, #1
+   8bc80:	2f0a06db 	ushr	v27.8b, v22.8b, #6
+   8bc84:	2f0a0739 	ushr	v25.8b, v25.8b, #6
+   8bc88:	2f0a06f6 	ushr	v22.8b, v23.8b, #6
+   8bc8c:	2f0a0421 	ushr	v1.8b, v1.8b, #6
+   8bc90:	2f0a0718 	ushr	v24.8b, v24.8b, #6
+   8bc94:	0eba1f57 	mov	v23.8b, v26.8b
+   8bc98:	6e280694 	uhadd	v20.16b, v20.16b, v8.16b
+   8bc9c:	6e3f0484 	uhadd	v4.16b, v4.16b, v31.16b
+   8bca0:	6e3e0463 	uhadd	v3.16b, v3.16b, v30.16b
+   8bca4:	6e3d0442 	uhadd	v2.16b, v2.16b, v29.16b
+   8bca8:	6e3c0400 	uhadd	v0.16b, v0.16b, v28.16b
+   8bcac:	6e180777 	mov	v23.d[1], v27.d[0]
+   8bcb0:	6e180736 	mov	v22.d[1], v25.d[0]
+   8bcb4:	6e180701 	mov	v1.d[1], v24.d[0]
+   8bcb8:	6f0a0694 	ushr	v20.16b, v20.16b, #6
+   8bcbc:	6f0a0484 	ushr	v4.16b, v4.16b, #6
+   8bcc0:	6f0a0463 	ushr	v3.16b, v3.16b, #6
+   8bcc4:	6f0a0442 	ushr	v2.16b, v2.16b, #6
+   8bcc8:	6f0a0400 	ushr	v0.16b, v0.16b, #6
+   8bccc:	6e2686f7 	sub	v23.16b, v23.16b, v6.16b
+   8bcd0:	6e2686d6 	sub	v22.16b, v22.16b, v6.16b
+   8bcd4:	6e268421 	sub	v1.16b, v1.16b, v6.16b
+   8bcd8:	6e268694 	sub	v20.16b, v20.16b, v6.16b
+   8bcdc:	6e268484 	sub	v4.16b, v4.16b, v6.16b
+   8bce0:	6e268463 	sub	v3.16b, v3.16b, v6.16b
+   8bce4:	6e268442 	sub	v2.16b, v2.16b, v6.16b
+   8bce8:	ad035fe1 	stp	q1, q23, [sp, #96]
+   8bcec:	1ee242b5 	fcvt	s21, h21
+   8bcf0:	6e268400 	sub	v0.16b, v0.16b, v6.16b
+   8bcf4:	ad010fe4 	stp	q4, q3, [sp, #32]
+   8bcf8:	ad025be2 	stp	q2, q22, [sp, #64]
+   8bcfc:	ad0053e0 	stp	q0, q20, [sp]
+   8bd00:	ad400442 	ldp	q2, q1, [x2]
+   8bd04:	91008042 	add	x2, x2, #0x20
+   8bd08:	3cc02004 	ldur	q4, [x0, #2]
+   8bd0c:	3cc12014 	ldur	q20, [x0, #18]
+   8bd10:	0e24c040 	smull	v0.8h, v2.8b, v4.8b
+   8bd14:	7c422403 	ldr	h3, [x0], #34
+   8bd18:	4e24c042 	smull2	v2.8h, v2.16b, v4.16b
+   8bd1c:	0e34c024 	smull	v4.8h, v1.8b, v20.8b
+   8bd20:	4e34c021 	smull2	v1.8h, v1.16b, v20.16b
+   8bd24:	1ee24063 	fcvt	s3, h3
+   8bd28:	4e602800 	saddlp	v0.4s, v0.8h
+   8bd2c:	4e602842 	saddlp	v2.4s, v2.8h
+   8bd30:	4e602884 	saddlp	v4.4s, v4.8h
+   8bd34:	4e602821 	saddlp	v1.4s, v1.8h
+   8bd38:	4ea28400 	add	v0.4s, v0.4s, v2.4s
+   8bd3c:	4ea18482 	add	v2.4s, v4.4s, v1.4s
+   8bd40:	1e350861 	fmul	s1, s3, s21
+   8bd44:	4ea28400 	add	v0.4s, v0.4s, v2.4s
+   8bd48:	4e21d800 	scvtf	v0.4s, v0.4s
+   8bd4c:	4f819000 	fmul	v0.4s, v0.4s, v1.s[0]
+   8bd50:	4e20d4a5 	fadd	v5.4s, v5.4s, v0.4s
+   8bd54:	eb00009f 	cmp	x4, x0
+   8bd58:	54fffd41 	b.ne	8bd00 <ggml_vec_dot_ptq1_0_q8_0+0x180>  // b.any
+   8bd5c:	110004a5 	add	w5, w5, #0x1
+   8bd60:	91007063 	add	x3, x3, #0x1c
+   8bd64:	91022084 	add	x4, x4, #0x88
+   8bd68:	6b0500df 	cmp	w6, w5
+   8bd6c:	54fff3ec 	b.gt	8bbe8 <ggml_vec_dot_ptq1_0_q8_0+0x68>
+   8bd70:	6e25d4a5 	faddp	v5.4s, v5.4s, v5.4s
+   8bd74:	fd4053e8 	ldr	d8, [sp, #160]
+   8bd78:	6e25d4a5 	faddp	v5.4s, v5.4s, v5.4s
+   8bd7c:	d0000140 	adrp	x0, b5000 <_ZN4ggml3cpu6repack6repackI10block_q2_KLl8ELl8EEEiP11ggml_tensorPKvm@@Base+0x8b3c0>
+   8bd80:	f9475c00 	ldr	x0, [x0, #3768]
+   8bd84:	bd000025 	str	s5, [x1]
+   8bd88:	f94047e2 	ldr	x2, [sp, #136]
+   8bd8c:	f9400001 	ldr	x1, [x0]
+   8bd90:	eb010042 	subs	x2, x2, x1
+   8bd94:	d2800001 	mov	x1, #0x0                   	// #0
+   8bd98:	540000c1 	b.ne	8bdb0 <ggml_vec_dot_ptq1_0_q8_0+0x230>  // b.any
+   8bd9c:	a9497bfd 	ldp	x29, x30, [sp, #144]
+   8bda0:	9102c3ff 	add	sp, sp, #0xb0
+   8bda4:	d65f03c0 	ret
+   8bda8:	0f000405 	movi	v5.2s, #0x0
+   8bdac:	17fffff4 	b	8bd7c <ggml_vec_dot_ptq1_0_q8_0+0x1fc>
+   8bdb0:	fd0053e8 	str	d8, [sp, #160]
+   8bdb4:	97fe257b 	bl	153a0 <__stack_chk_fail@plt>
+
+Disassembly of section .fini:
+
+VARIANT=patched FUNCTION=ggml_vec_dot_q1_0_q8_0
+
+/src/out/neon/prefix-patched/lib/libggml-cpu.so.0.27.0:     file format elf64-littleaarch64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+000000000008a6e4 <ggml_vec_dot_q1_0_q8_0>:
+   8a6e4:	7100001f 	cmp	w0, #0x0
+   8a6e8:	1101fc06 	add	w6, w0, #0x7f
+   8a6ec:	1a80b0c6 	csel	w6, w6, w0, lt	// lt = tstop
+   8a6f0:	13077cc6 	asr	w6, w6, #7
+   8a6f4:	7101fc1f 	cmp	w0, #0x7f
+   8a6f8:	540005ad 	b.le	8a7ac <ggml_vec_dot_q1_0_q8_0+0xc8>
+   8a6fc:	90000040 	adrp	x0, 92000 <__func__.1+0x140>
+   8a700:	0f000413 	movi	v19.2s, #0x0
+   8a704:	4f00e427 	movi	v7.16b, #0x1
+   8a708:	91004863 	add	x3, x3, #0x12
+   8a70c:	3dc03812 	ldr	q18, [x0, #224]
+   8a710:	90000040 	adrp	x0, 92000 <__func__.1+0x140>
+   8a714:	52800004 	mov	w4, #0x0                   	// #0
+   8a718:	3dc03c10 	ldr	q16, [x0, #240]
+   8a71c:	90000040 	adrp	x0, 92000 <__func__.1+0x140>
+   8a720:	3dc04011 	ldr	q17, [x0, #256]
+   8a724:	d503201f 	nop
+   8a728:	0f000406 	movi	v6.2s, #0x0
+   8a72c:	d1004062 	sub	x2, x3, #0x10
+   8a730:	aa0503e0 	mov	x0, x5
+   8a734:	4ddfc841 	ld1r	{v1.4s}, [x2], #4
+   8a738:	3cc02005 	ldur	q5, [x0, #2]
+   8a73c:	4e120022 	tbl	v2.16b, {v1.16b}, v18.16b
+   8a740:	4e110021 	tbl	v1.16b, {v1.16b}, v17.16b
+   8a744:	3cc12004 	ldur	q4, [x0, #18]
+   8a748:	4e308c42 	cmtst	v2.16b, v2.16b, v16.16b
+   8a74c:	7c422403 	ldr	h3, [x0], #34
+   8a750:	4e308c21 	cmtst	v1.16b, v1.16b, v16.16b
+   8a754:	1ee24063 	fcvt	s3, h3
+   8a758:	4ee21ce2 	orn	v2.16b, v7.16b, v2.16b
+   8a75c:	4ee11ce1 	orn	v1.16b, v7.16b, v1.16b
+   8a760:	0e25c040 	smull	v0.8h, v2.8b, v5.8b
+   8a764:	4e258040 	smlal2	v0.8h, v2.16b, v5.16b
+   8a768:	0e248020 	smlal	v0.8h, v1.8b, v4.8b
+   8a76c:	4e248020 	smlal2	v0.8h, v1.16b, v4.16b
+   8a770:	4e703800 	saddlv	s0, v0.8h
+   8a774:	5e21d800 	scvtf	s0, s0
+   8a778:	1f031806 	fmadd	s6, s0, s3, s6
+   8a77c:	eb02007f 	cmp	x3, x2
+   8a780:	54fffda1 	b.ne	8a734 <ggml_vec_dot_q1_0_q8_0+0x50>  // b.any
+   8a784:	7c5ee060 	ldur	h0, [x3, #-18]
+   8a788:	11000484 	add	w4, w4, #0x1
+   8a78c:	910220a5 	add	x5, x5, #0x88
+   8a790:	91004863 	add	x3, x3, #0x12
+   8a794:	1ee24000 	fcvt	s0, h0
+   8a798:	1f004cd3 	fmadd	s19, s6, s0, s19
+   8a79c:	6b0400df 	cmp	w6, w4
+   8a7a0:	54fffc4c 	b.gt	8a728 <ggml_vec_dot_q1_0_q8_0+0x44>
+   8a7a4:	bd000033 	str	s19, [x1]
+   8a7a8:	d65f03c0 	ret
+   8a7ac:	0f000413 	movi	v19.2s, #0x0
+   8a7b0:	bd000033 	str	s19, [x1]
+   8a7b4:	d65f03c0 	ret
+
+Disassembly of section .fini:
+
+VARIANT=patched FUNCTION=ggml_vec_dot_pq2_0_q8_0
+
+/src/out/neon/prefix-patched/lib/libggml-cpu.so.0.27.0:     file format elf64-littleaarch64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+000000000008a8c4 <ggml_vec_dot_pq2_0_q8_0>:
+   8a8c4:	7100001f 	cmp	w0, #0x0
+   8a8c8:	1101fc06 	add	w6, w0, #0x7f
+   8a8cc:	1a80b0c6 	csel	w6, w6, w0, lt	// lt = tstop
+   8a8d0:	13077cc6 	asr	w6, w6, #7
+   8a8d4:	7101fc1f 	cmp	w0, #0x7f
+   8a8d8:	5400060d 	b.le	8a998 <ggml_vec_dot_pq2_0_q8_0+0xd4>
+   8a8dc:	90000040 	adrp	x0, 92000 <__func__.1+0x140>
+   8a8e0:	0f000414 	movi	v20.2s, #0x0
+   8a8e4:	4f00e470 	movi	v16.16b, #0x3
+   8a8e8:	91008863 	add	x3, x3, #0x22
+   8a8ec:	3dc04413 	ldr	q19, [x0, #272]
+   8a8f0:	90000040 	adrp	x0, 92000 <__func__.1+0x140>
+   8a8f4:	4f00e427 	movi	v7.16b, #0x1
+   8a8f8:	52800004 	mov	w4, #0x0                   	// #0
+   8a8fc:	3dc04811 	ldr	q17, [x0, #288]
+   8a900:	90000040 	adrp	x0, 92000 <__func__.1+0x140>
+   8a904:	3dc04c12 	ldr	q18, [x0, #304]
+   8a908:	0f000406 	movi	v6.2s, #0x0
+   8a90c:	d1008062 	sub	x2, x3, #0x20
+   8a910:	aa0503e0 	mov	x0, x5
+   8a914:	fc408440 	ldr	d0, [x2], #8
+   8a918:	3cc02005 	ldur	q5, [x0, #2]
+   8a91c:	6e180400 	mov	v0.d[1], v0.d[0]
+   8a920:	3cc12004 	ldur	q4, [x0, #18]
+   8a924:	7c422403 	ldr	h3, [x0], #34
+   8a928:	4e130002 	tbl	v2.16b, {v0.16b}, v19.16b
+   8a92c:	4e120000 	tbl	v0.16b, {v0.16b}, v18.16b
+   8a930:	1ee24063 	fcvt	s3, h3
+   8a934:	6e314442 	ushl	v2.16b, v2.16b, v17.16b
+   8a938:	6e314400 	ushl	v0.16b, v0.16b, v17.16b
+   8a93c:	4e301c42 	and	v2.16b, v2.16b, v16.16b
+   8a940:	4e301c00 	and	v0.16b, v0.16b, v16.16b
+   8a944:	6e278442 	sub	v2.16b, v2.16b, v7.16b
+   8a948:	6e278400 	sub	v0.16b, v0.16b, v7.16b
+   8a94c:	0e25c041 	smull	v1.8h, v2.8b, v5.8b
+   8a950:	4e258041 	smlal2	v1.8h, v2.16b, v5.16b
+   8a954:	0e248001 	smlal	v1.8h, v0.8b, v4.8b
+   8a958:	4e248001 	smlal2	v1.8h, v0.16b, v4.16b
+   8a95c:	4e703820 	saddlv	s0, v1.8h
+   8a960:	5e21d800 	scvtf	s0, s0
+   8a964:	1f031806 	fmadd	s6, s0, s3, s6
+   8a968:	eb02007f 	cmp	x3, x2
+   8a96c:	54fffd41 	b.ne	8a914 <ggml_vec_dot_pq2_0_q8_0+0x50>  // b.any
+   8a970:	7c5de060 	ldur	h0, [x3, #-34]
+   8a974:	11000484 	add	w4, w4, #0x1
+   8a978:	910220a5 	add	x5, x5, #0x88
+   8a97c:	91008863 	add	x3, x3, #0x22
+   8a980:	1ee24000 	fcvt	s0, h0
+   8a984:	1f0050d4 	fmadd	s20, s6, s0, s20
+   8a988:	6b0400df 	cmp	w6, w4
+   8a98c:	54fffbec 	b.gt	8a908 <ggml_vec_dot_pq2_0_q8_0+0x44>
+   8a990:	bd000034 	str	s20, [x1]
+   8a994:	d65f03c0 	ret
+   8a998:	0f000414 	movi	v20.2s, #0x0
+   8a99c:	bd000034 	str	s20, [x1]
+   8a9a0:	d65f03c0 	ret
+
+Disassembly of section .fini:
+
+VARIANT=patched FUNCTION=ggml_vec_dot_pq2_0_q8_K
+
+/src/out/neon/prefix-patched/lib/libggml-cpu.so.0.27.0:     file format elf64-littleaarch64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+000000000008a9a4 <ggml_vec_dot_pq2_0_q8_K>:
+   8a9a4:	7100001f 	cmp	w0, #0x0
+   8a9a8:	1101fc08 	add	w8, w0, #0x7f
+   8a9ac:	1a80b108 	csel	w8, w8, w0, lt	// lt = tstop
+   8a9b0:	0f000413 	movi	v19.2s, #0x0
+   8a9b4:	13077d08 	asr	w8, w8, #7
+   8a9b8:	7101fc1f 	cmp	w0, #0x7f
+   8a9bc:	5400064d 	b.le	8aa84 <ggml_vec_dot_pq2_0_q8_K+0xe0>
+   8a9c0:	90000040 	adrp	x0, 92000 <__func__.1+0x140>
+   8a9c4:	52800004 	mov	w4, #0x0                   	// #0
+   8a9c8:	4f00e467 	movi	v7.16b, #0x3
+   8a9cc:	52802489 	mov	w9, #0x124                 	// #292
+   8a9d0:	3dc04412 	ldr	q18, [x0, #272]
+   8a9d4:	90000040 	adrp	x0, 92000 <__func__.1+0x140>
+   8a9d8:	4f00e426 	movi	v6.16b, #0x1
+   8a9dc:	3dc04810 	ldr	q16, [x0, #288]
+   8a9e0:	90000040 	adrp	x0, 92000 <__func__.1+0x140>
+   8a9e4:	3dc04c11 	ldr	q17, [x0, #304]
+   8a9e8:	13017c86 	asr	w6, w4, #1
+   8a9ec:	d3790087 	ubfiz	x7, x4, #7, #1
+   8a9f0:	91000862 	add	x2, x3, #0x2
+   8a9f4:	4f000403 	movi	v3.4s, #0x0
+   8a9f8:	9b297cc6 	smull	x6, w6, w9
+   8a9fc:	8b0600a0 	add	x0, x5, x6
+   8aa00:	91001000 	add	x0, x0, #0x4
+   8aa04:	8b070000 	add	x0, x0, x7
+   8aa08:	91020007 	add	x7, x0, #0x80
+   8aa0c:	fc408440 	ldr	d0, [x2], #8
+   8aa10:	ad401005 	ldp	q5, q4, [x0]
+   8aa14:	91008000 	add	x0, x0, #0x20
+   8aa18:	6e180400 	mov	v0.d[1], v0.d[0]
+   8aa1c:	4e120001 	tbl	v1.16b, {v0.16b}, v18.16b
+   8aa20:	4e110000 	tbl	v0.16b, {v0.16b}, v17.16b
+   8aa24:	6e304421 	ushl	v1.16b, v1.16b, v16.16b
+   8aa28:	6e304400 	ushl	v0.16b, v0.16b, v16.16b
+   8aa2c:	4e271c21 	and	v1.16b, v1.16b, v7.16b
+   8aa30:	4e271c00 	and	v0.16b, v0.16b, v7.16b
+   8aa34:	6e268421 	sub	v1.16b, v1.16b, v6.16b
+   8aa38:	6e268400 	sub	v0.16b, v0.16b, v6.16b
+   8aa3c:	0e25c022 	smull	v2.8h, v1.8b, v5.8b
+   8aa40:	4e258022 	smlal2	v2.8h, v1.16b, v5.16b
+   8aa44:	4ea21c41 	mov	v1.16b, v2.16b
+   8aa48:	0e248001 	smlal	v1.8h, v0.8b, v4.8b
+   8aa4c:	4e248001 	smlal2	v1.8h, v0.16b, v4.16b
+   8aa50:	4e618463 	add	v3.8h, v3.8h, v1.8h
+   8aa54:	eb0000ff 	cmp	x7, x0
+   8aa58:	54fffda1 	b.ne	8aa0c <ggml_vec_dot_pq2_0_q8_K+0x68>  // b.any
+   8aa5c:	7c422460 	ldr	h0, [x3], #34
+   8aa60:	11000484 	add	w4, w4, #0x1
+   8aa64:	4e703863 	saddlv	s3, v3.8h
+   8aa68:	bc6668a1 	ldr	s1, [x5, x6]
+   8aa6c:	1ee24000 	fcvt	s0, h0
+   8aa70:	5e21d863 	scvtf	s3, s3
+   8aa74:	1e210800 	fmul	s0, s0, s1
+   8aa78:	1f034c13 	fmadd	s19, s0, s3, s19
+   8aa7c:	6b04011f 	cmp	w8, w4
+   8aa80:	54fffb4c 	b.gt	8a9e8 <ggml_vec_dot_pq2_0_q8_K+0x44>
+   8aa84:	bd000033 	str	s19, [x1]
+   8aa88:	d65f03c0 	ret
+
+Disassembly of section .fini:
+
+VARIANT=patched FUNCTION=ggml_vec_dot_ptq1_0_q8_0
+
+/src/out/neon/prefix-patched/lib/libggml-cpu.so.0.27.0:     file format elf64-littleaarch64
+
+
+Disassembly of section .init:
+
+Disassembly of section .plt:
+
+Disassembly of section .text:
+
+000000000008bb00 <ggml_vec_dot_ptq1_0_q8_0>:
+   8bb00:	d102c3ff 	sub	sp, sp, #0xb0
+   8bb04:	7100001f 	cmp	w0, #0x0
+   8bb08:	d0000144 	adrp	x4, b5000 <_ZN4ggml3cpu6repack6repackI10block_q2_KLl8ELl8EEEiP11ggml_tensorPKvm@@Base+0x8b3c0>
+   8bb0c:	f9475c84 	ldr	x4, [x4, #3768]
+   8bb10:	1101fc02 	add	w2, w0, #0x7f
+   8bb14:	a9097bfd 	stp	x29, x30, [sp, #144]
+   8bb18:	910243fd 	add	x29, sp, #0x90
+   8bb1c:	1a80b042 	csel	w2, w2, w0, lt	// lt = tstop
+   8bb20:	f9400086 	ldr	x6, [x4]
+   8bb24:	f90047e6 	str	x6, [sp, #136]
+   8bb28:	d2800006 	mov	x6, #0x0                   	// #0
+   8bb2c:	7101fc1f 	cmp	w0, #0x7f
+   8bb30:	54000ead 	b.le	8bd04 <ggml_vec_dot_ptq1_0_q8_0+0x204>
+   8bb34:	d0000020 	adrp	x0, 91000 <_fini+0x2470>
+   8bb38:	0f000410 	movi	v16.2s, #0x0
+   8bb3c:	0f00e775 	movi	v21.8b, #0x1b
+   8bb40:	0f02e632 	movi	v18.8b, #0x51
+   8bb44:	4f00e427 	movi	v7.16b, #0x1
+   8bb48:	13077c46 	asr	w6, w2, #7
+   8bb4c:	4f00e774 	movi	v20.16b, #0x1b
+   8bb50:	910003e7 	mov	x7, sp
+   8bb54:	4f02e633 	movi	v19.16b, #0x51
+   8bb58:	fd477411 	ldr	d17, [x0, #3816]
+   8bb5c:	910220a4 	add	x4, x5, #0x88
+   8bb60:	52800005 	mov	w5, #0x0                   	// #0
+   8bb64:	6d0a27e8 	stp	d8, d9, [sp, #160]
+   8bb68:	7d403061 	ldr	h1, [x3, #24]
+   8bb6c:	fd400862 	ldr	d2, [x3, #16]
+   8bb70:	0f000406 	movi	v6.2s, #0x0
+   8bb74:	3dc00060 	ldr	q0, [x3]
+   8bb78:	0e020421 	dup	v1.4h, v1.h[0]
+   8bb7c:	2f0f0445 	ushr	v5.8b, v2.8b, #1
+   8bb80:	0f095457 	shl	v23.8b, v2.8b, #1
+   8bb84:	0f0b5456 	shl	v22.8b, v2.8b, #3
+   8bb88:	0e329c59 	mul	v25.8b, v2.8b, v18.8b
+   8bb8c:	0e359c5a 	mul	v26.8b, v2.8b, v21.8b
+   8bb90:	7d403478 	ldr	h24, [x3, #26]
+   8bb94:	0e319c21 	mul	v1.8b, v1.8b, v17.8b
+   8bb98:	d1022080 	sub	x0, x4, #0x88
+   8bb9c:	0e2286f7 	add	v23.8b, v23.8b, v2.8b
+   8bba0:	2e25045b 	uhadd	v27.8b, v2.8b, v5.8b
+   8bba4:	0e2286d6 	add	v22.8b, v22.8b, v2.8b
+   8bba8:	2f0f073d 	ushr	v29.8b, v25.8b, #1
+   8bbac:	4f095404 	shl	v4.16b, v0.16b, #1
+   8bbb0:	aa0703e2 	mov	x2, x7
+   8bbb4:	4f0b5403 	shl	v3.16b, v0.16b, #3
+   8bbb8:	2f0f0425 	ushr	v5.8b, v1.8b, #1
+   8bbbc:	2f0f0748 	ushr	v8.8b, v26.8b, #1
+   8bbc0:	4e349c02 	mul	v2.16b, v0.16b, v20.16b
+   8bbc4:	2f0f06fc 	ushr	v28.8b, v23.8b, #1
+   8bbc8:	4e208484 	add	v4.16b, v4.16b, v0.16b
+   8bbcc:	4e208463 	add	v3.16b, v3.16b, v0.16b
+   8bbd0:	2e250425 	uhadd	v5.8b, v1.8b, v5.8b
+   8bbd4:	2f0f06c9 	ushr	v9.8b, v22.8b, #1
+   8bbd8:	4e339c01 	mul	v1.16b, v0.16b, v19.16b
+   8bbdc:	2e3d0739 	uhadd	v25.8b, v25.8b, v29.8b
+   8bbe0:	2e3c06f7 	uhadd	v23.8b, v23.8b, v28.8b
+   8bbe4:	2e28075a 	uhadd	v26.8b, v26.8b, v8.8b
+   8bbe8:	6f0f045f 	ushr	v31.16b, v2.16b, #1
+   8bbec:	2e2906d6 	uhadd	v22.8b, v22.8b, v9.8b
+   8bbf0:	2f0a04bc 	ushr	v28.8b, v5.8b, #6
+   8bbf4:	6f0f0489 	ushr	v9.16b, v4.16b, #1
+   8bbf8:	6f0f0468 	ushr	v8.16b, v3.16b, #1
+   8bbfc:	6f0f043e 	ushr	v30.16b, v1.16b, #1
+   8bc00:	6f0f041d 	ushr	v29.16b, v0.16b, #1
+   8bc04:	2f0a06f7 	ushr	v23.8b, v23.8b, #6
+   8bc08:	2f0a0739 	ushr	v25.8b, v25.8b, #6
+   8bc0c:	2f0a0765 	ushr	v5.8b, v27.8b, #6
+   8bc10:	2f0a06d6 	ushr	v22.8b, v22.8b, #6
+   8bc14:	2f0a075a 	ushr	v26.8b, v26.8b, #6
+   8bc18:	1ee24318 	fcvt	s24, h24
+   8bc1c:	6e290484 	uhadd	v4.16b, v4.16b, v9.16b
+   8bc20:	6e280463 	uhadd	v3.16b, v3.16b, v8.16b
+   8bc24:	6e3f0442 	uhadd	v2.16b, v2.16b, v31.16b
+   8bc28:	6e3e0421 	uhadd	v1.16b, v1.16b, v30.16b
+   8bc2c:	6e3d0400 	uhadd	v0.16b, v0.16b, v29.16b
+   8bc30:	6e1806e5 	mov	v5.d[1], v23.d[0]
+   8bc34:	6e180799 	mov	v25.d[1], v28.d[0]
+   8bc38:	6e180756 	mov	v22.d[1], v26.d[0]
+   8bc3c:	6f0a0484 	ushr	v4.16b, v4.16b, #6
+   8bc40:	6f0a0463 	ushr	v3.16b, v3.16b, #6
+   8bc44:	6f0a0442 	ushr	v2.16b, v2.16b, #6
+   8bc48:	6f0a0421 	ushr	v1.16b, v1.16b, #6
+   8bc4c:	6f0a0400 	ushr	v0.16b, v0.16b, #6
+   8bc50:	6e278737 	sub	v23.16b, v25.16b, v7.16b
+   8bc54:	6e2784a5 	sub	v5.16b, v5.16b, v7.16b
+   8bc58:	6e2786d6 	sub	v22.16b, v22.16b, v7.16b
+   8bc5c:	6e278484 	sub	v4.16b, v4.16b, v7.16b
+   8bc60:	6e278463 	sub	v3.16b, v3.16b, v7.16b
+   8bc64:	6e278442 	sub	v2.16b, v2.16b, v7.16b
+   8bc68:	6e278421 	sub	v1.16b, v1.16b, v7.16b
+   8bc6c:	ad035ff6 	stp	q22, q23, [sp, #96]
+   8bc70:	6e278400 	sub	v0.16b, v0.16b, v7.16b
+   8bc74:	ad010be3 	stp	q3, q2, [sp, #32]
+   8bc78:	ad0217e1 	stp	q1, q5, [sp, #64]
+   8bc7c:	ad0013e0 	stp	q0, q4, [sp]
+   8bc80:	ad400c45 	ldp	q5, q3, [x2]
+   8bc84:	91008042 	add	x2, x2, #0x20
+   8bc88:	3cc02004 	ldur	q4, [x0, #2]
+   8bc8c:	3cc12002 	ldur	q2, [x0, #18]
+   8bc90:	0e24c0a0 	smull	v0.8h, v5.8b, v4.8b
+   8bc94:	7c422401 	ldr	h1, [x0], #34
+   8bc98:	1ee24021 	fcvt	s1, h1
+   8bc9c:	4e2480a0 	smlal2	v0.8h, v5.16b, v4.16b
+   8bca0:	0e228060 	smlal	v0.8h, v3.8b, v2.8b
+   8bca4:	4e228060 	smlal2	v0.8h, v3.16b, v2.16b
+   8bca8:	4e703800 	saddlv	s0, v0.8h
+   8bcac:	5e21d800 	scvtf	s0, s0
+   8bcb0:	1f011806 	fmadd	s6, s0, s1, s6
+   8bcb4:	eb00009f 	cmp	x4, x0
+   8bcb8:	54fffe41 	b.ne	8bc80 <ggml_vec_dot_ptq1_0_q8_0+0x180>  // b.any
+   8bcbc:	110004a5 	add	w5, w5, #0x1
+   8bcc0:	1f064310 	fmadd	s16, s24, s6, s16
+   8bcc4:	91007063 	add	x3, x3, #0x1c
+   8bcc8:	91022084 	add	x4, x4, #0x88
+   8bccc:	6b0500df 	cmp	w6, w5
+   8bcd0:	54fff4cc 	b.gt	8bb68 <ggml_vec_dot_ptq1_0_q8_0+0x68>
+   8bcd4:	6d4a27e8 	ldp	d8, d9, [sp, #160]
+   8bcd8:	bd000030 	str	s16, [x1]
+   8bcdc:	d0000140 	adrp	x0, b5000 <_ZN4ggml3cpu6repack6repackI10block_q2_KLl8ELl8EEEiP11ggml_tensorPKvm@@Base+0x8b3c0>
+   8bce0:	f9475c00 	ldr	x0, [x0, #3768]
+   8bce4:	f94047e2 	ldr	x2, [sp, #136]
+   8bce8:	f9400001 	ldr	x1, [x0]
+   8bcec:	eb010042 	subs	x2, x2, x1
+   8bcf0:	d2800001 	mov	x1, #0x0                   	// #0
+   8bcf4:	540000c1 	b.ne	8bd0c <ggml_vec_dot_ptq1_0_q8_0+0x20c>  // b.any
+   8bcf8:	a9497bfd 	ldp	x29, x30, [sp, #144]
+   8bcfc:	9102c3ff 	add	sp, sp, #0xb0
+   8bd00:	d65f03c0 	ret
+   8bd04:	0f000410 	movi	v16.2s, #0x0
+   8bd08:	17fffff4 	b	8bcd8 <ggml_vec_dot_ptq1_0_q8_0+0x1d8>
+   8bd0c:	6d0a27e8 	stp	d8, d9, [sp, #160]
+   8bd10:	97fe25a4 	bl	153a0 <__stack_chk_fail@plt>
+
+Disassembly of section .fini:

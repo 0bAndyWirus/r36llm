@@ -1,0 +1,116 @@
+98fb5f57be665aed5b7554cc43aa22922636c06e39f501ef85fa9c91758bc6a2  /data/neon/results-2026-11-02/metadata.txt
+63acd5e696dea36919cbe595b29abcdec503f714075168b30947601158811882  /data/neon/results-2026-11-02/original-governors.tsv
+3fd73c76dbb0414be1e7f5ad353ae43c89c55454adad30f8d0f0a74d8f702708  /data/neon/results-2026-11-02/paused-app-pids.txt
+63acd5e696dea36919cbe595b29abcdec503f714075168b30947601158811882  /data/neon/results-2026-11-02/restored-governors.tsv
+44226149081d6e7bda24d3e0f249fd53ccce576469bef9deb7ddca5435032528  /data/neon/results-2026-11-02/round-1-baseline-Bonsai-1.7B-Q1_0.cooldown
+598de88b4a426c6b9e6027ad0dd7dece0e9c885701f7e856b2a01d32c67a8c86  /data/neon/results-2026-11-02/round-1-baseline-Bonsai-1.7B-Q1_0.json
+725327ead3a54631141097f8841c623891afcf505e843f1e9798cc9a6ecdb1ec  /data/neon/results-2026-11-02/round-1-baseline-Bonsai-1.7B-Q1_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-1-baseline-Bonsai-1.7B-Q1_0.stderr
+56bf4026d5ec8b783729cdf54185dc4156795a004a2e83ce8ae27a360ef9fa33  /data/neon/results-2026-11-02/round-1-baseline-Bonsai-1.7B-Q1_0.thermal
+6549d0b6dc3433d74a1b0394dbc1dec1c420257c4d8af3767aa736579f056378  /data/neon/results-2026-11-02/round-1-baseline-Ternary-Bonsai-1.7B-PQ2_0.cooldown
+63a650418466604a6d0f0008a1a5e198af959a60f2ea7d6e3599f6e173a38155  /data/neon/results-2026-11-02/round-1-baseline-Ternary-Bonsai-1.7B-PQ2_0.json
+45e1f47f269e422d6a5860115e0fd42cc002fc81f2e1d480196f9ade5e0edef5  /data/neon/results-2026-11-02/round-1-baseline-Ternary-Bonsai-1.7B-PQ2_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-1-baseline-Ternary-Bonsai-1.7B-PQ2_0.stderr
+f042e76c1dbf1ce379ca3e7165b3e7dfafe25fdd16bb454a4328400c7b46ba7d  /data/neon/results-2026-11-02/round-1-baseline-Ternary-Bonsai-1.7B-PQ2_0.thermal
+b5ce68ba977a475591885a858a0119764d91249b97f485c03212c94ec16f38e1  /data/neon/results-2026-11-02/round-1-baseline-Ternary-Bonsai-2-2B-PTQ1_0.cooldown
+207d2a5f0f6065026818676b317456518f71223cde1d81c4b74521d979ec6549  /data/neon/results-2026-11-02/round-1-baseline-Ternary-Bonsai-2-2B-PTQ1_0.json
+5276e78529e2e8025e7ee4bc6df965d3276e2f87ee82e5e0e6ca8e63c73f6c20  /data/neon/results-2026-11-02/round-1-baseline-Ternary-Bonsai-2-2B-PTQ1_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-1-baseline-Ternary-Bonsai-2-2B-PTQ1_0.stderr
+01dfd29afd88a6de599b6f39aac64acdcd841a0fc4e5b43b5a867b4ee725e8fb  /data/neon/results-2026-11-02/round-1-baseline-Ternary-Bonsai-2-2B-PTQ1_0.thermal
+b1d7bbcf7c8b1ce93fc7f602034f974e26a39a4e85b654469bca1fb1cb9d5428  /data/neon/results-2026-11-02/round-1-patched-Bonsai-1.7B-Q1_0.cooldown
+fac889fb65784ef2cfca0a874ddfb9bd0e6ba368c534d39a1c09d2af35c8da53  /data/neon/results-2026-11-02/round-1-patched-Bonsai-1.7B-Q1_0.json
+970f3ec847aa21550bef239b25f7ded54b11acd78e3fa7a6cfa55770b63c9def  /data/neon/results-2026-11-02/round-1-patched-Bonsai-1.7B-Q1_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-1-patched-Bonsai-1.7B-Q1_0.stderr
+fe6ffd15395ffd93d17eb84f186ed7ade0dff6df7d64f8cc0380632b6e159af9  /data/neon/results-2026-11-02/round-1-patched-Bonsai-1.7B-Q1_0.thermal
+276d016afdee0f3f244857175301bec319f336140be6c24da82d8311f26a2357  /data/neon/results-2026-11-02/round-1-patched-Ternary-Bonsai-1.7B-PQ2_0.cooldown
+1eb1f03a84ba79e58541d255ffdb371b649b9af1fb8e4918162779d8ffce0ec3  /data/neon/results-2026-11-02/round-1-patched-Ternary-Bonsai-1.7B-PQ2_0.json
+7b12bb3a341a65c2161207f94d4e35068c8737af914cff7f8b88560ff21c1b94  /data/neon/results-2026-11-02/round-1-patched-Ternary-Bonsai-1.7B-PQ2_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-1-patched-Ternary-Bonsai-1.7B-PQ2_0.stderr
+0914636178860a66be8802a8d99093ffe44c83db0731989ad634cf9b0b1efc27  /data/neon/results-2026-11-02/round-1-patched-Ternary-Bonsai-1.7B-PQ2_0.thermal
+3bc23a0bc41e4f8d828bf26cea1a2e29cbbda19fc91ee268081c91c2e2c74397  /data/neon/results-2026-11-02/round-1-patched-Ternary-Bonsai-2-2B-PTQ1_0.cooldown
+d3a4643c04022aefe9da06f20e5a6b044565adc749d97b3b94616975a47776e4  /data/neon/results-2026-11-02/round-1-patched-Ternary-Bonsai-2-2B-PTQ1_0.json
+ffde30de5e051f84fc2ed4711d328f970e35f547dbebc3f9cd6c5b560d20fbc6  /data/neon/results-2026-11-02/round-1-patched-Ternary-Bonsai-2-2B-PTQ1_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-1-patched-Ternary-Bonsai-2-2B-PTQ1_0.stderr
+7fadbb503789fa60f1ad087c7edd467b7703e33bd75939e8bbe7d347a799c930  /data/neon/results-2026-11-02/round-1-patched-Ternary-Bonsai-2-2B-PTQ1_0.thermal
+e1a8ac655f5d67da3e50bb156a27cf73ef36d44adeb03856bde2353ff7b49c67  /data/neon/results-2026-11-02/round-2-baseline-Bonsai-1.7B-Q1_0.cooldown
+fc2c42444410656f2322e06cbdc47309684d2ab569a96e21bffb2861ac413e26  /data/neon/results-2026-11-02/round-2-baseline-Bonsai-1.7B-Q1_0.json
+cc280f0c475d6b474b30967d0f132faa3b46ff372f54f04a3f8a8869c744df38  /data/neon/results-2026-11-02/round-2-baseline-Bonsai-1.7B-Q1_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-2-baseline-Bonsai-1.7B-Q1_0.stderr
+244b24411f70b852d3312b82ae15ffc4d62a426fea845de0efc662640c8d7c32  /data/neon/results-2026-11-02/round-2-baseline-Bonsai-1.7B-Q1_0.thermal
+389bb8270c9b2717cd0fcf9faf694a8111c5c876ee74959ed8610719d32153c9  /data/neon/results-2026-11-02/round-2-baseline-Ternary-Bonsai-1.7B-PQ2_0.cooldown
+bc7090307489d022cbe2ab56b39a8b513f516d115fd5b4dca64e4bae0ed2b2ef  /data/neon/results-2026-11-02/round-2-baseline-Ternary-Bonsai-1.7B-PQ2_0.json
+c87742504ea7ddd57900ad679c61328f12c42fbf4314d177036a41fd843ee4b9  /data/neon/results-2026-11-02/round-2-baseline-Ternary-Bonsai-1.7B-PQ2_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-2-baseline-Ternary-Bonsai-1.7B-PQ2_0.stderr
+f43c73df635507bfecc8a28350949fe983550c727ca8756505bdb53c080a911b  /data/neon/results-2026-11-02/round-2-baseline-Ternary-Bonsai-1.7B-PQ2_0.thermal
+fdef962c21750abf4d6e9f2ac6d19e8324a3d0778ef8915875983277fee1dc78  /data/neon/results-2026-11-02/round-2-baseline-Ternary-Bonsai-2-2B-PTQ1_0.cooldown
+c79546385315ccc947b7dd4a9cc7a7dbd25a4fc316ad0a43d37a9d3b69be9874  /data/neon/results-2026-11-02/round-2-baseline-Ternary-Bonsai-2-2B-PTQ1_0.json
+87ec2df9dfecef899042cec93ca32b00e37ffb9d80c1770c095e43f859cfa635  /data/neon/results-2026-11-02/round-2-baseline-Ternary-Bonsai-2-2B-PTQ1_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-2-baseline-Ternary-Bonsai-2-2B-PTQ1_0.stderr
+218754800229512e92519bab8b7a73df7709b684a867194b7de051888f4cee9f  /data/neon/results-2026-11-02/round-2-baseline-Ternary-Bonsai-2-2B-PTQ1_0.thermal
+6ff97f0323ddcbe17293e52cb163c698f6d837e900457eb18310c8eb929fd89b  /data/neon/results-2026-11-02/round-2-patched-Bonsai-1.7B-Q1_0.cooldown
+f99c1350b52fff10b27aa0b26449d77a675677b42015a8b81a97c5f1b0cd043a  /data/neon/results-2026-11-02/round-2-patched-Bonsai-1.7B-Q1_0.json
+d925735f4013eb6608711e1d764bdf3814bc861655da164f2ea05cbfb88ad5e8  /data/neon/results-2026-11-02/round-2-patched-Bonsai-1.7B-Q1_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-2-patched-Bonsai-1.7B-Q1_0.stderr
+c73cc2fb720b03bc84a41b4c832ebfdc999dc59578703f65061c4d8a598d00d3  /data/neon/results-2026-11-02/round-2-patched-Bonsai-1.7B-Q1_0.thermal
+a04ad22bc4c0f101813382ec33d6fdf86bce579b0aef27d973ae6cccc21a27c8  /data/neon/results-2026-11-02/round-2-patched-Ternary-Bonsai-1.7B-PQ2_0.cooldown
+935d36bb887c690f43f59ff87b3cad346104ef49443c4e6e66ce606daa1ed09b  /data/neon/results-2026-11-02/round-2-patched-Ternary-Bonsai-1.7B-PQ2_0.json
+6bf6d0e13def9de3eb517f159d85fea923dce6c742206805f7af1dd30e5dcbe0  /data/neon/results-2026-11-02/round-2-patched-Ternary-Bonsai-1.7B-PQ2_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-2-patched-Ternary-Bonsai-1.7B-PQ2_0.stderr
+cbf545f250fd66a546e3ebdb81b93a6a7e598feca8762bbfdd3eac00a0019d2c  /data/neon/results-2026-11-02/round-2-patched-Ternary-Bonsai-1.7B-PQ2_0.thermal
+c8be4bbe56de9fe95ef6e382de3fb066d2d61e71b0c2e83dfe45e75bf2a99666  /data/neon/results-2026-11-02/round-2-patched-Ternary-Bonsai-2-2B-PTQ1_0.cooldown
+998f9eb8dc2b16eebde55d18876d142b1314038643247964afdd510745c6eed8  /data/neon/results-2026-11-02/round-2-patched-Ternary-Bonsai-2-2B-PTQ1_0.json
+239b528d5345f161da44163a757513fd7788d19b53b5f4047c1e3c81a602be75  /data/neon/results-2026-11-02/round-2-patched-Ternary-Bonsai-2-2B-PTQ1_0.meminfo
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  /data/neon/results-2026-11-02/round-2-patched-Ternary-Bonsai-2-2B-PTQ1_0.stderr
+d7fb09f931f69008442972d414bd4d9d7c49d491ce4aa847466bfbdff3aef4a8  /data/neon/results-2026-11-02/round-2-patched-Ternary-Bonsai-2-2B-PTQ1_0.thermal
+71e95aee1604d6cc0ba33032f830511f1cd8d0f988695f03ebde5f732b121d69  /data/neon/bench-console.log
+9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa  /data/neon/bench-status
+RESTORED_APP_STATE=Name:	r36llm
+State:	S (sleeping)
+Tgid:	251
+Ngid:	0
+Pid:	251
+PPid:	1
+TracerPid:	0
+Uid:	0	0	0	0
+Gid:	0	0	0	0
+FDSize:	64
+Groups:	
+NStgid:	251
+NSpid:	251
+NSpgid:	251
+NSsid:	251
+VmPeak:	 1547920 kB
+VmSize:	 1547920 kB
+VmLck:	       0 kB
+VmPin:	       0 kB
+VmHWM:	  555968 kB
+VmRSS:	  147372 kB
+VmData:	 1127560 kB
+VmStk:	     132 kB
+VmExe:	     200 kB
+VmLib:	   10200 kB
+VmPTE:	    1144 kB
+VmPMD:	      20 kB
+VmSwap:	     504 kB
+Threads:	1
+SigQ:	0/3530
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000000000
+SigCgt:	0000000100004002
+CapInh:	0000000000000000
+CapPrm:	0000003fffffffff
+CapEff:	0000003fffffffff
+CapBnd:	0000003fffffffff
+CapAmb:	0000000000000000
+Seccomp:	0
+Speculation_Store_Bypass:	unknown
+Cpus_allowed:	f
+Cpus_allowed_list:	0-3
+Mems_allowed:	1
+Mems_allowed_list:	0
+voluntary_ctxt_switches:	61241
+nonvoluntary_ctxt_switches:	4119
+Filename				Type		Size	Used	Priority
+/dev/mmcblk0p2                          partition	11119376	1720	-1

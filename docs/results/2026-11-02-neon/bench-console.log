@@ -1,0 +1,14 @@
+round=1 variant=baseline model=Bonsai-1.7B-Q1_0.gguf cooldown=30s
+round=1 variant=patched model=Bonsai-1.7B-Q1_0.gguf cooldown=30s
+round=1 variant=baseline model=Ternary-Bonsai-1.7B-PQ2_0.gguf cooldown=30s
+round=1 variant=patched model=Ternary-Bonsai-1.7B-PQ2_0.gguf cooldown=30s
+round=1 variant=baseline model=Ternary-Bonsai-2-2B-PTQ1_0.gguf cooldown=30s
+round=1 variant=patched model=Ternary-Bonsai-2-2B-PTQ1_0.gguf cooldown=30s
+round=2 variant=patched model=Bonsai-1.7B-Q1_0.gguf cooldown=30s
+round=2 variant=baseline model=Bonsai-1.7B-Q1_0.gguf cooldown=30s
+round=2 variant=patched model=Ternary-Bonsai-1.7B-PQ2_0.gguf cooldown=30s
+round=2 variant=baseline model=Ternary-Bonsai-1.7B-PQ2_0.gguf cooldown=30s
+round=2 variant=patched model=Ternary-Bonsai-2-2B-PTQ1_0.gguf cooldown=30s
+round=2 variant=baseline model=Ternary-Bonsai-2-2B-PTQ1_0.gguf cooldown=30s
+Results: /data/neon/results-2026-11-02 (compare JSON avg_ts for matching model, n_prompt and n_gen)
+Original CPU governors restored; app resumed.

@@ -1,0 +1,4 @@
+/src/br2-external/package/prism-llama-cpp/0001-arm-neon-armv8.0-bonsai-dot.patch: unified diff output, ASCII text
+PASS git apply --check against clean LF pinned source outside parent Git repository
+checking file ggml/src/ggml-cpu/arch/arm/quants.c
+PASS actual git application matches patched bench source byte-for-byte

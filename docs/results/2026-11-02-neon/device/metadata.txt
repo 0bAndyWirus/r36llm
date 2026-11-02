@@ -1,0 +1,122 @@
+Mon Nov  2 19:05:49 UTC 2026
+Linux r36llm 4.4.189 #62 SMP Sat Dec 13 08:49:45 CST 2025 aarch64 GNU/Linux
+pin=5628c7338963b00a598f2a588fd09a79af6d70db
+baseline=/tmp/neon/baseline
+patched=/tmp/neon/patched
+threads=4 prompt=64 generate=32 reps=2 rounds=2 cooldown_seconds=30 start_temp_ceiling_mC=50000 governor=performance
+processor	: 0
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x0
+CPU part	: 0xd04
+CPU revision	: 2
+
+processor	: 1
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x0
+CPU part	: 0xd04
+CPU revision	: 2
+
+processor	: 2
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x0
+CPU part	: 0xd04
+CPU revision	: 2
+
+processor	: 3
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x0
+CPU part	: 0xd04
+CPU revision	: 2
+
+Hardware	: G80CA-MB V1.3-20251212 Panel 8
+Revision	: 0000
+Serial		: 58ed5091390e908b
+MemTotal:         916848 kB
+MemFree:          251824 kB
+MemAvailable:     712416 kB
+Buffers:            1064 kB
+Cached:           478292 kB
+SwapCached:            0 kB
+Active:           610124 kB
+Inactive:           9688 kB
+Active(anon):     164868 kB
+Inactive(anon):     1600 kB
+Active(file):     445256 kB
+Inactive(file):     8088 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:      11119376 kB
+SwapFree:       11119376 kB
+Dirty:              8696 kB
+Writeback:             0 kB
+AnonPages:        140532 kB
+Mapped:           418864 kB
+Shmem:             26012 kB
+Slab:              31252 kB
+SReclaimable:      22444 kB
+SUnreclaim:         8808 kB
+KernelStack:        1680 kB
+PageTables:         1352 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    11577800 kB
+Committed_AS:    1116176 kB
+VmallocTotal:   258867136 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+Filename				Type		Size	Used	Priority
+/dev/mmcblk0p2                          partition	11119376	0	-1
+/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq=1512000
+/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq=1512000
+/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq=1008000
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq=1512000
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq=1512000
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq=1008000
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=performance
+b0e7fe1a88932299481864f5fa1d3ea91672d85c723c195ddca09b62948fa9ba  /tmp/neon/baseline/bin/llama-bench
+08ec6d3d3d83b19c008cc0c9c43d9ff933e3500f2dff18368f5b4ae24d23ea9a  /tmp/neon/baseline/lib/libllama-bench-impl.so
+56031b0c0121514c3be94aaf76492cd7002bfb98a4a7957af4e9e998c5c80c22  /tmp/neon/baseline/lib/libllama-common.so
+56031b0c0121514c3be94aaf76492cd7002bfb98a4a7957af4e9e998c5c80c22  /tmp/neon/baseline/lib/libllama-common.so.0
+56031b0c0121514c3be94aaf76492cd7002bfb98a4a7957af4e9e998c5c80c22  /tmp/neon/baseline/lib/libllama-common.so.0.7.0
+69c65fc6813716e30904e386ef6cbb230b17fa6bfbd1ed66cf69a22fecbfa47f  /tmp/neon/baseline/lib/libllama.so
+69c65fc6813716e30904e386ef6cbb230b17fa6bfbd1ed66cf69a22fecbfa47f  /tmp/neon/baseline/lib/libllama.so.0
+69c65fc6813716e30904e386ef6cbb230b17fa6bfbd1ed66cf69a22fecbfa47f  /tmp/neon/baseline/lib/libllama.so.0.7.0
+e3c25eeedf46ac0678d3d64d33a0887457178990380546f0d4b0fa2e5430fa68  /tmp/neon/baseline/lib/libggml-base.so
+e3c25eeedf46ac0678d3d64d33a0887457178990380546f0d4b0fa2e5430fa68  /tmp/neon/baseline/lib/libggml-base.so.0
+e3c25eeedf46ac0678d3d64d33a0887457178990380546f0d4b0fa2e5430fa68  /tmp/neon/baseline/lib/libggml-base.so.0.27.0
+57b7b119504d0fdc25cd9229c9f8e061d06b34f02f87172abf8e894a8c30402d  /tmp/neon/baseline/lib/libggml-cpu.so
+57b7b119504d0fdc25cd9229c9f8e061d06b34f02f87172abf8e894a8c30402d  /tmp/neon/baseline/lib/libggml-cpu.so.0
+57b7b119504d0fdc25cd9229c9f8e061d06b34f02f87172abf8e894a8c30402d  /tmp/neon/baseline/lib/libggml-cpu.so.0.27.0
+bb5ff01558b70af16557b88bc1a409903149838548e0d55ba388221b17500c56  /tmp/neon/baseline/lib/libggml.so
+bb5ff01558b70af16557b88bc1a409903149838548e0d55ba388221b17500c56  /tmp/neon/baseline/lib/libggml.so.0
+bb5ff01558b70af16557b88bc1a409903149838548e0d55ba388221b17500c56  /tmp/neon/baseline/lib/libggml.so.0.27.0
+33c644b4c79504ac550a5b4151ba9d9025156c56ad89c9dd99dbe5fb5a4acc89  /tmp/neon/patched/bin/llama-bench
+f544f578b24f06e454efc71fa8ffd5207af3bac8221c09e7abff4a750a27af75  /tmp/neon/patched/lib/libllama-bench-impl.so
+682300888fcb7295c28f592bd53439d237ecdb657e5cedf635038028dca7caad  /tmp/neon/patched/lib/libllama-common.so
+682300888fcb7295c28f592bd53439d237ecdb657e5cedf635038028dca7caad  /tmp/neon/patched/lib/libllama-common.so.0
+682300888fcb7295c28f592bd53439d237ecdb657e5cedf635038028dca7caad  /tmp/neon/patched/lib/libllama-common.so.0.7.0
+573feafba3444935663f16a1b5c272ea08c3a4dea1b771affafe2da10d8aef19  /tmp/neon/patched/lib/libllama.so
+573feafba3444935663f16a1b5c272ea08c3a4dea1b771affafe2da10d8aef19  /tmp/neon/patched/lib/libllama.so.0
+573feafba3444935663f16a1b5c272ea08c3a4dea1b771affafe2da10d8aef19  /tmp/neon/patched/lib/libllama.so.0.7.0
+df120c460f5dac5df4115554928d29b5ed62cffd521f6aada60e7331a25d9f5f  /tmp/neon/patched/lib/libggml-base.so
+df120c460f5dac5df4115554928d29b5ed62cffd521f6aada60e7331a25d9f5f  /tmp/neon/patched/lib/libggml-base.so.0
+df120c460f5dac5df4115554928d29b5ed62cffd521f6aada60e7331a25d9f5f  /tmp/neon/patched/lib/libggml-base.so.0.27.0
+6a3119b0d4acca1301d3888a733bbfa5a0eabe0cbe2d1a25edf0cac984f1582a  /tmp/neon/patched/lib/libggml-cpu.so
+6a3119b0d4acca1301d3888a733bbfa5a0eabe0cbe2d1a25edf0cac984f1582a  /tmp/neon/patched/lib/libggml-cpu.so.0
+6a3119b0d4acca1301d3888a733bbfa5a0eabe0cbe2d1a25edf0cac984f1582a  /tmp/neon/patched/lib/libggml-cpu.so.0.27.0
+b28bea84b4360d8e1c1311c8b4e6999b4c22b4e4076624f352d7958732fec59f  /tmp/neon/patched/lib/libggml.so
+b28bea84b4360d8e1c1311c8b4e6999b4c22b4e4076624f352d7958732fec59f  /tmp/neon/patched/lib/libggml.so.0
+b28bea84b4360d8e1c1311c8b4e6999b4c22b4e4076624f352d7958732fec59f  /tmp/neon/patched/lib/libggml.so.0.27.0

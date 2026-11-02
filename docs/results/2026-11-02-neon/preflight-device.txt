@@ -1,0 +1,51 @@
+Mon Nov  2 19:04:34 UTC 2026
+rootfs / rootfs rw 0 0
+devtmpfs /dev devtmpfs rw,relatime,size=451924k,nr_inodes=112981,mode=755 0 0
+proc /proc proc rw,relatime 0 0
+devpts /dev/pts devpts rw,relatime,gid=5,mode=620,ptmxmode=666 0 0
+tmpfs /dev/shm tmpfs rw,relatime 0 0
+tmpfs /tmp tmpfs rw,relatime 0 0
+tmpfs /run tmpfs rw,nosuid,nodev,relatime,mode=755 0 0
+sysfs /sys sysfs rw,relatime 0 0
+/dev/mmcblk0p3 /data exfat rw,noatime,fmask=0022,dmask=0022,allow_utime=177777,iocharset=utf8,errors=remount-ro 0 0
+Filesystem                Size      Used Available Use% Mounted on
+/dev/mmcblk0p3          108.3G      1.7G    106.7G   2% /data
+tmpfs                   447.7M    100.0K    447.6M   0% /tmp
+MemTotal:         916848 kB
+MemFree:          287304 kB
+MemAvailable:     737284 kB
+Buffers:            1024 kB
+Cached:           444932 kB
+SwapCached:            0 kB
+Active:           577112 kB
+Inactive:           9388 kB
+Active(anon):     140644 kB
+Inactive(anon):     1228 kB
+Active(file):     436468 kB
+Inactive(file):     8160 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:      11119376 kB
+SwapFree:       11119376 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+AnonPages:        140596 kB
+Mapped:           418988 kB
+Shmem:              1328 kB
+Slab:              29300 kB
+SReclaimable:      20548 kB
+SUnreclaim:         8752 kB
+KernelStack:        1664 kB
+PageTables:         1332 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    11577800 kB
+Committed_AS:    1090796 kB
+VmallocTotal:   258867136 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+251
+performance
+57727
+57272
