@@ -1,0 +1,10 @@
+FROM ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
+ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C TZ=UTC
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bc bison build-essential ca-certificates device-tree-compiler flex git patch \
+    gcc-8-aarch64-linux-gnu libssl-dev python3 xz-utils lib32stdc++6 libc6-i386 \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /usr/bin/aarch64-linux-gnu-gcc-8 /usr/bin/aarch64-linux-gnu-gcc \
+    && mkdir -p /opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu \
+    && ln -s /usr/bin /opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin
+WORKDIR /work

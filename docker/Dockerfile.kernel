@@ -1,0 +1,10 @@
+FROM ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
+ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C TZ=UTC
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc-8-aarch64-linux-gnu gcc make bc bison flex libssl-dev libelf-dev \
+    python2 python3 git rsync cpio kmod device-tree-compiler ca-certificates xz-utils \
+    && ln -s /usr/bin/python2 /usr/local/bin/python \
+    && ln -s /usr/bin/aarch64-linux-gnu-gcc-8 /usr/local/bin/aarch64-linux-gnu-gcc \
+    && rm -rf /var/lib/apt/lists/*
+ENV CROSS_COMPILE=aarch64-linux-gnu- ARCH=arm64
+WORKDIR /repo

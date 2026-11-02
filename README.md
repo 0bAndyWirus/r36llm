@@ -20,7 +20,7 @@ It is a fun proof of concept, not a fast assistant. The default model writes abo
 
 ## Hardware
 
-Tested on an R36S clone with board `G80CA-MB V1.3-20251212 Panel 8`, 1 GB RAM. Other R36S variants share the SoC and likely work, but each board needs its own kernel and device tree from its stock card (see [Harvest the vendor files](#2-harvest-the-vendor-files)).
+Target board: R36S clone `G80CA-MB V1.3-20251212 Panel 8`, 1 GB RAM. The original vendor-kernel installation was tested on this board. The source-built image requires a separate hardware boot test; do not assume compatibility with other R36S variants.
 
 The PC link uses a USB Ethernet adapter on the R36S OTG port (tested: ASIX AX88179). Drivers for Realtek RTL8152/8153, ASIX AX88772, CDC Ethernet/NCM and SMSC95xx adapters are included too. USB device mode over a plain cable does not work on this board's vendor kernel (see the [session notes](docs/sessions/2026-11-02-01.md)).
 
@@ -28,66 +28,98 @@ The PC link uses a USB Ethernet adapter on the R36S OTG port (tested: ASIX AX881
 
 ```mermaid
 flowchart LR
-    U["U-Boot from the stock card"] --> K["Vendor kernel 4.4.189 + DTB"]
+    U["Source-built U-Boot + Rockchip firmware"] --> K["Source-built Linux 4.4.189 + board DTB"]
     K --> I["uInitrd: Buildroot rootfs in RAM"]
     I --> A["r36llm app on tty1"]
     A --> L["libllama: PrismML fork, NEON, CPU only"]
-    I --> D["/data: exFAT partition with models and logs"]
+    I --> D["/data: FAT32 partition with models and logs"]
 ```
 
-- **Root filesystem**: Buildroot 2025.02 (glibc, BusyBox init, dropbear), packed as a 9 MB initramfs (`uInitrd`). The OS runs from RAM, so the SD card is only written for logs, chats and settings.
+- **Root filesystem**: Buildroot 2025.02 (glibc, BusyBox init, dropbear), packed as an approximately 11 MiB initramfs (`uInitrd`). The OS runs from RAM, so the SD card is only written for logs, chats and settings.
 - **Engine**: PrismML llama.cpp fork pinned in `br2-external/package/prism-llama-cpp`, built for plain ARMv8.0 (the A35 has no dotprod or i8mm).
 - **App**: `app/` is C++17 with no UI toolkit. It draws directly to the framebuffer with the [Spleen](https://github.com/fcambus/spleen) 12×24 font and reads the gamepad through evdev.
-- **SD card layout**: partition 1 holds the boot files, partition 2 (the stock OS root filesystem) becomes swap, and partition 3 (exFAT) is `/data` with models, settings and logs.
+- **Fresh image layout**: raw Rockchip bootloader area, 128 MiB FAT32 boot partition, 512 MiB swap partition, and a FAT32 data partition. On first boot the empty data partition grows to fill the card, leaving 1 MiB at the end. No model is included.
 
 ## Build and install
 
-Requirements: Windows with PowerShell, [Docker Desktop](https://www.docker.com/products/docker-desktop/), Python 3, and the R36S stock SD card (ArkOS/dArkOS family).
+Requirements: Windows with PowerShell and Docker Desktop (Linux containers), an SD card of at least 1 GB, and a card writer. Builds also work from a Linux Docker host through the shell entry points. No harvested vendor kernel or modules are needed.
 
-> **Warning:** step 5 erases the stock OS and all ROMs on the card. Back up anything you want to keep.
+> **Warning:** flashing an image replaces the card's partition table and erases its contents. Back up the entire stock card first. Do not flash an internal PC disk.
 
-### 1. Clone
+### 1. Build the image
 
 ```powershell
 git clone https://github.com/0bAndyWirus/r36llm.git
 cd r36llm
+scripts/build.ps1
 ```
 
-### 2. Harvest the vendor files
+The build pins the BSP and U-Boot revisions in `scripts/bsp/`, cross-compiles them with GCC 8 in Docker, builds the Buildroot initramfs, and runs genimage. Linux-volume checkouts avoid Windows reserved filenames in the kernel tree.
 
-The kernel, device tree and a few kernel modules come from **your own** stock card; they are not redistributed here. With the stock card in the PC:
+On Windows, the build enables NTFS case sensitivity for `out/bsp/artifacts/modules/`. This preserves module pairs such as `xt_DSCP.ko` and `xt_dscp.ko`; copying that tree to a case-insensitive directory can silently lose drivers. The raw image itself has no such host-filesystem requirement.
+
+Outputs:
+
+- `out/bsp/artifacts/r36llm.img`: 800 MiB raw disk image, without models.
+- `out/bsp/artifacts/{Image,rk3326-r36s-linux.dtb,idbloader.img,uboot.img,trust.img}`: boot components.
+- `out/bsp/artifacts/modules/`: all source-built kernel modules; the initramfs includes only needed loadable drivers.
+- `out/uInitrd`, `out/r36llm`: initramfs and application for updates.
+
+The image uses 512-byte sectors. Raw loader offsets follow upstream `Clone-u-boot/sd_fuse/sd_fusing.sh`; the SD U-Boot environment at 1 MiB remains reserved.
+
+|Region|Start sector|Size|
+|---|---:|---|
+|MBR|0|512 bytes|
+|idbloader|64|DDR initialization + miniloader|
+|U-Boot environment|2048|32 KiB reserved|
+|U-Boot|16384|`uboot.img`|
+|Trust firmware|24576|`trust.img`|
+|p1: R36BOOT (FAT32)|32768|128 MiB|
+|p2: R36SWAP|294912|512 MiB|
+|p3: R36DATA (FAT32)|1343488|128 MiB before first-boot growth|
+
+The kernel and U-Boot are built from source. DDR initialization, the miniloader, BL31 and BL32 are Rockchip firmware binaries redistributed under the rkbin license; see [firmware notices](THIRD-PARTY/firmware/NOTICE). This is not a blob-free boot chain.
+
+The default build creates a personal SSH key when `keys/authorized_keys` is missing and embeds its public key. Use `scripts/build.ps1 -Release` for a distributable image: it neither generates nor embeds a personal authorization key, even if one already exists. The default login is `root` with password `r36llm`; change it before connecting the device to an untrusted network. Do not publish images containing private credentials or data.
+
+### 2. Flash and initialize
+
+Use an image writer such as balenaEtcher or Raspberry Pi Imager's **Use custom** option to write `out/bsp/artifacts/r36llm.img` to the whole SD card. Eject it safely, insert it in the handheld, and power on.
+
+**Boot once before copying models.** The first boot verifies the release disk signature and labels, expands partition 3, and formats its initially empty FAT32 filesystem. It refuses to erase a data partition containing files other than the release marker. The boot-partition marker records interrupted initialization so it can resume. Never copy files onto the card while initialization is pending.
+
+The fresh image has a preformatted 512 MiB swap partition; no old OS partition needs to be repurposed. The `swap_p2` setting enables it. FAT32 limits individual files to 4 GiB, which exceeds all currently supported models.
+
+Boot-test checklist for a spare card:
+
+1. Verify `r36llm.img` against `r36llm.img.sha256`, then select the **whole removable card** in the image writer and enable write verification.
+2. Boot on the specified Panel 8 board. Check that the display, controls, battery reading, audio, and shutdown work.
+3. Over USB Ethernet, check `uname -r`, `mount`, `cat /proc/swaps`, and `/data/r36llm/logs/boot.log`. Partition 3 should fill the card except for the reserved final MiB; partition 1's `r36-grow.txt` should be gone.
+4. Reboot before adding a model. Confirm data persists and initialization does not run again. Then add a GGUF and test inference and chat logging.
+
+Offline image checks cannot establish that the board boots or that its Panel 8 display and USB hardware work. Those checks remain required on the device.
+
+### 3. Add a model
+
+Download a GGUF model separately from the model publisher, or use:
 
 ```powershell
-scripts/stage-probe.ps1      # copies the probe to the card's ports folder
+scripts/fetch-models.ps1
 ```
 
-Boot the R36S with the stock card and run **Ports → R36LLM-Probe**. It collects hardware facts and the kernel modules (a USB cable test runs at the end and can be ignored). Then put the card back in the PC:
+After the first boot, shut down and put the card in the PC. Copy the desired `.gguf` file to `R36DATA:\r36llm\models\` (use the actual drive letter), or copy it over SSH to `/data/r36llm/models/`. The default model name is `Ternary-Bonsai-2-2B-PTQ1_0.gguf`; edit `r36llm/config.ini` to select another. `scripts/deploy.ps1` updates an initialized card's boot files and copies locally downloaded models; it does not flash U-Boot.
+
+### Source and license bundle
+
+Before distributing an image, run:
 
 ```powershell
-scripts/backup-card.ps1      # saves the boot partition and the harvest to vendor/ (gitignored)
+scripts/build.ps1 legal-info
 ```
 
-### 3. Build
+Ship the Buildroot `legal-info` directory (in the `r36llm-br` Docker volume under `/home/br/work/output/legal-info`), the kernel and U-Boot source archives and configurations from `out/bsp/artifacts`, this repository's build scripts and patches at the matching revision, and `THIRD-PARTY/firmware/{NOTICE,LICENSE}`. Keep the corresponding source available alongside the image; a link to an upstream branch alone is not a complete source bundle.
 
-```powershell
-scripts/build.ps1            # first build ≈ 1 h; output in out/
-```
-
-This also creates an SSH key (`~/.ssh/r36llm`) and bakes its public key into the image.
-
-### 4. Download models
-
-```powershell
-scripts/fetch-models.ps1     # ≈ 1.7 GB into models/; use -Small for 512 MB units
-```
-
-### 5. Install to the card
-
-```powershell
-scripts/deploy.ps1 -Wipe     # erases the stock OS/ROMs, installs the OS, models and config
-```
-
-Insert the card into the R36S and power on. The home screen appears after a few seconds, and the first model load takes about 15 s.
+For diagnosing a different board, `scripts/stage-probe.ps1` and `scripts/backup-card.ps1` still collect stock-card hardware facts into the gitignored `vendor/` directory. Do not redistribute harvested vendor binaries as though they were source-built.
 
 ## Connect from the PC
 
@@ -124,7 +156,7 @@ Without an adapter: put a shell script at `r36llm/autorun.sh` on the card. It ru
 
 ## Configuration
 
-`r36llm/config.ini` on the card (exFAT, editable from any PC):
+`r36llm/config.ini` on the data partition (FAT32 on fresh images, exFAT on legacy cards):
 
 |Key|Default|Meaning|
 |---|---|---|
@@ -137,7 +169,7 @@ Without an adapter: put a shell script at `r36llm/autorun.sh` on the card. It ru
 |`brightness`|`80`|Screen brightness in percent|
 |`screen_timeout`|`2`|Minutes until the screen turns off (0 = never)|
 |`cpu_mode`|`performance`|`performance`, `balanced` or `saver`|
-|`swap_p2`|`1`|Use partition 2 as swap (formats it on first boot)|
+|`swap_p2`|`1`|Enable the fresh image's preformatted swap partition; on legacy cards, explicitly opting in can format the old p2 rootfs|
 |`link`|`ethernet`|PC link: `ethernet`, `gadget` (experimental) or `off`|
 
 Preset prompts are in `r36llm/prompts.txt`, one per line.
@@ -161,6 +193,7 @@ Preset prompts are in `r36llm/prompts.txt`, one per line.
 - [Buildroot](https://buildroot.org) (GPL-2.0), downloaded at build time. `overlay/etc/inittab` is derived from Buildroot's and stays GPL-2.0.
 - [Spleen](https://github.com/fcambus/spleen) font by Frederic Cambus (BSD-2-Clause), embedded in `app/src/font.h` with its notice.
 - Models: [PrismML Bonsai](https://huggingface.co/prism-ml) and [SmolLM2](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct) (Apache-2.0), downloaded separately.
-- The vendor kernel, device tree, kernel modules and U-Boot come from your device's stock card and are **not** part of this repository. A fully source-built release image is planned.
+- Linux BSP and U-Boot: GPL-2.0-family licenses and component-specific notices in their source trees. The release uses source-built binaries, not harvested vendor kernel/modules.
+- Rockchip boot firmware: binary redistribution under the rkbin license; exact filenames, provenance and license text are in [THIRD-PARTY/firmware](THIRD-PARTY/firmware/NOTICE).
 
 R36S is a product of its respective manufacturers; this project is not affiliated with them.

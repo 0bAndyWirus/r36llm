@@ -1,0 +1,73 @@
+#!/bin/sh
+# Repartition only an unmodified release image, never a harvested stock card.
+set -eu
+DISK=${1:?Usage: r36-grow-data /dev/mmcblkN}
+case "$DISK" in /dev/mmcblk[0-9]) ;; *) exit 1 ;; esac
+[ "$(sfdisk --disk-id "$DISK")" = 0x52333653 ] || exit 0
+BOOT=${DISK}p1
+DATA=${DISK}p3
+case "$(blkid "$BOOT")" in *'LABEL="R36BOOT"'*) ;; *) exit 0 ;; esac
+mkdir -p /mnt/r36boot /mnt/r36data
+mount -t vfat -o sync "$BOOT" /mnt/r36boot
+cleanup() { umount /mnt/r36data 2>/dev/null || :; umount /mnt/r36boot 2>/dev/null || :; }
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
+STATE=/mnt/r36boot/r36-grow.txt
+[ -f "$STATE" ] || exit 0
+# genimage fixes p3's start at 656 MiB. Reject a changed card layout.
+START=$(cat "/sys/class/block/${DATA##*/}/start")
+[ "$START" = 1343488 ] || { echo "r36llm: refusing growth: unexpected data start" >&2; exit 1; }
+for geometry in "1 32768 262144" "2 294912 1048576"; do
+    set -- $geometry
+    SYS=/sys/class/block/${DISK##*/}p$1
+    [ "$(cat "$SYS/start")" = "$2" ] && [ "$(cat "$SYS/size")" = "$3" ] || {
+        echo "r36llm: refusing growth: changed boot/swap layout" >&2; exit 1;
+    }
+done
+[ ! -e "/sys/class/block/${DISK##*/}p4" ] || {
+    echo "r36llm: refusing growth: unexpected fourth partition" >&2; exit 1;
+}
+empty_data() {
+    for entry in /mnt/r36data/* /mnt/r36data/.[!.]* /mnt/r36data/..?*; do
+        [ -e "$entry" ] || continue
+        [ "${entry##*/}" = r36-grow.txt ] && [ -f "$entry" ] &&
+        [ "$(cat "$entry")" = 'Empty release data partition; initialized on first boot.' ] || {
+            echo "r36llm: data already populated; growth refused" >&2; exit 1;
+        }
+    done
+}
+case "$(cat "$STATE")" in
+    fresh)
+        mount -t vfat -o ro "$DATA" /mnt/r36data
+        [ -f /mnt/r36data/r36-grow.txt ] || { echo "r36llm: missing empty-data marker" >&2; exit 1; }
+        # Never erase files copied onto the image before its first boot.
+        empty_data
+        umount /mnt/r36data
+        printf 'authorized\n' > "$STATE"
+        sync
+        ;;
+    authorized)
+        # A failed format may leave no mountable FAT. If it is still readable,
+        # never erase files added while the interrupted card was off-device.
+        if mount -t vfat -o ro "$DATA" /mnt/r36data; then
+            empty_data
+            umount /mnt/r36data
+        fi
+        ;;
+    *) echo "r36llm: invalid growth state" >&2; exit 1 ;;
+esac
+SECTORS=$(cat "/sys/class/block/${DISK##*/}/size")
+[ "$SECTORS" -gt "$((START + 262144))" ] || { echo "r36llm: card is too small" >&2; exit 1; }
+# Keep the last MiB unused and use whole-MiB FAT geometry.
+SIZE=$(( (SECTORS / 2048) * 2048 - START - 2048 ))
+umount /mnt/r36boot
+printf 'start=%s, size=%s, type=c\n' "$START" "$SIZE" | sfdisk --no-reread -N 3 "$DISK"
+sync
+blockdev --rereadpt "$DISK"
+# No mounted data filesystem exists at this stage; the initial one contains only a marker.
+mkfs.fat -F 32 -n R36DATA "$DATA"
+sync
+mount -t vfat -o sync "$BOOT" /mnt/r36boot
+rm -f "$STATE"
+sync
+echo "r36llm: data partition expanded to $((SIZE / 2048)) MiB"

@@ -1,0 +1,15 @@
+--- a/Makefile
++++ b/Makefile
+@@ -1301,6 +1301,12 @@
+ tools: prepare
+ # The "tools" are needed early
+ $(filter-out tools, $(u-boot-dirs)): tools
++
++# The EFI hello application links the architecture's startup/relocation
++# objects. Finish their recursive build before descending into lib/.
++ifeq ($(CONFIG_CMD_BOOTEFI_HELLO_COMPILE),y)
++lib: arch/$(ARCH)/lib
++endif
+ # The "examples" conditionally depend on U-Boot (say, when USE_PRIVATE_LIBGCC
+ # is "yes"), so compile examples after U-Boot is compiled.
+ examples: $(filter-out examples, $(u-boot-dirs))

@@ -1,0 +1,265 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * G80CA-MB V1.3-20251212 Panel 8 hardware-data adaptation.
+ * Base: lcdyk0517/arkos.bsp.4.4, 382f9c6ddcb4a8d4f0162228305545e647cca97c.
+ * Hardware values observed in the harvested device DTB, SHA-256:
+ * 5fbba0469fc8560381b2bf37a67d1a785561f09ee783cf2ff5dc7f32c031adf7.
+ * This is a reconstruction, not the original manufacturer DTS.
+ * The license above covers this adaptation and its licensed BSP base; it
+ * does not assert a redistribution license for the harvested vendor binary.
+ */
+#include "rk3326-r36s-type2-panel1-linux.dts"
+
+&{/} {
+	model = "G80CA-MB V1.3-20251212 Panel 8";
+	/delete-node/ arkos4clone-leds;
+	/delete-node/ charge-animation;
+	/delete-node/ vbus_host;
+	vcc18_lcd0 {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		gpio = <&{/pinctrl/gpio3@ff270000} 0x03 0x00>;
+		pinctrl-0 = <&{/pinctrl/vcc18-lcd/vcc18-lcd-n}>;
+		pinctrl-names = "default";
+		regulator-boot-on;
+		regulator-max-microvolt = <0x1b7740>;
+		regulator-min-microvolt = <0x1b7740>;
+		regulator-name = "vcc18_lcd0_n";
+		regulator-state-mem {
+			regulator-off-in-suspend;
+		};
+	};
+	vcc_host {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		gpio = <&{/pinctrl/gpio3@ff270000} 0x04 0x00>;
+		pinctrl-0 = <&{/pinctrl/vcc5-usb/vcc5-usb}>;
+		pinctrl-names = "default";
+		regulator-always-on;
+		regulator-max-microvolt = <0x4c4b40>;
+		regulator-min-microvolt = <0x4c4b40>;
+		regulator-name = "vcc_host";
+		vin-supply = <&{/i2c@ff180000/pmic@20/regulators/BOOST}>;
+	};
+};
+
+&{/aliases} {
+	mmc0 = "/dwmmc@ff370000";
+	mmc1 = "/dwmmc@ff380000";
+};
+
+&{/backlight} {
+	power-supply = <&{/i2c@ff180000/pmic@20/regulators/LDO_REG7}>;
+};
+
+&{/cpu0-opp-table} {
+	rockchip,max-volt = <0x149970>;
+	/delete-node/ opp-1368000000;
+	/delete-node/ opp-1440000000;
+	/delete-node/ opp-1464000000;
+	/delete-node/ opp-1488000000;
+	/delete-node/ opp-1608000000;
+	/delete-node/ opp-408000000;
+	/delete-node/ opp-600000000;
+	/delete-node/ opp-816000000;
+};
+
+&{/dmc-opp-table} {
+	/delete-node/ opp-1040000000;
+	/delete-node/ opp-194000000;
+	/delete-node/ opp-328000000;
+	/delete-node/ opp-450000000;
+	/delete-node/ opp-924000000;
+};
+
+&{/dmc-opp-table/opp-786000000} {
+	status = "disabled";
+};
+
+&{/dsi@ff450000/panel@0} {
+	compatible = "elida,kd35t133\0simple-panel-dsi";
+	/delete-property/ enable-gpios;
+	power-supply = <&{/vcc18_lcd0}>;
+	/delete-property/ uboot-disable-delay-ms;
+	/delete-property/ uboot-enable-delay-ms;
+	/delete-property/ uboot-init-delay-ms;
+	/delete-property/ uboot-prepare-delay-ms;
+	/delete-property/ uboot-reset-delay-ms;
+	/delete-property/ uboot-unprepare-delay-ms;
+};
+
+&{/dsi@ff450000/panel@0/display-timings} {
+	native-mode = <&{/dsi@ff450000/panel@0/display-timings/adjust}>;
+	/delete-node/ original;
+	origin {
+		clock-frequency = <0x1c9c380>;
+		de-active = <0x00>;
+		hactive = <0x280>;
+		hback-porch = <0x96>;
+		hfront-porch = <0x96>;
+		hsync-active = <0x00>;
+		hsync-len = <0x32>;
+		pixelclk-active = <0x00>;
+		vactive = <0x1e0>;
+		vback-porch = <0x0c>;
+		vfront-porch = <0x14>;
+		vsync-active = <0x00>;
+		vsync-len = <0x06>;
+	};
+};
+
+&{/dwmmc@ff370000} {
+	cap-mmc-highspeed;
+	max-frequency = <0x8f0d180>;
+};
+
+&{/dwmmc@ff380000} {
+	cap-mmc-highspeed;
+	max-frequency = <0x8f0d180>;
+	pinctrl-0 = <&{/pinctrl/sdio/sdio-bus4} &{/pinctrl/sdio/sdio-cmd} &{/pinctrl/sdio/sdio-clk}>;
+};
+
+&{/dwmmc@ff390000} {
+	bus-width = <0x08>;
+	cap-mmc-highspeed;
+	clock-names = "biu\0ciu";
+	clocks = <&{/clock-controller@ff2b0000} 0x100 &{/clock-controller@ff2b0000} 0x39>;
+	disable-wp;
+	no-sd;
+	no-sdio;
+	non-removable;
+	num-slots = <0x01>;
+	pinctrl-0 = <&{/pinctrl/emmc/emmc-clk} &{/pinctrl/emmc/emmc-cmd} &{/pinctrl/emmc/emmc-bus8} &{/pinctrl/emmc/emmc-pwren} &{/pinctrl/emmc/emmc-rstnout}>;
+	pinctrl-names = "default";
+	supports-emmc;
+	vmmc-supply = <&{/i2c@ff180000/pmic@20/regulators/DCDC_REG4}>;
+	vqmmc-supply = <&{/i2c@ff180000/pmic@20/regulators/LDO_REG2}>;
+};
+
+&{/gpu-opp-table} {
+	/delete-node/ opp-200000000;
+	/delete-node/ opp-300000000;
+	/delete-node/ opp-560000000;
+	/delete-node/ opp-600000000;
+	/delete-node/ opp-640000000;
+};
+
+&{/i2c@ff180000/pmic@20/battery} {
+	bat_res = <0x64>;
+	compatible = "rk817,battery";
+	dc_det_gpio = <&{/vccsys} 0x05 0x00>;
+	ocv_table = <0xd48 0xd75 0xdae 0xde0 0xe0e 0xe35 0xe5f 0xe95 0xec6 0xeef 0xf19 0xf32 0xf40 0xf59 0xf89 0xfb1 0xfb6 0xfc6 0xfe3 0x101b 0x1051>;
+	/delete-property/ power_dc2otg;
+};
+
+&{/i2c@ff180000/pmic@20/charger} {
+	max_chrg_current = <0x320>;
+	max_input_current = <0x320>;
+};
+
+&{/i2c@ff180000/pmic@20/codec} {
+	/delete-property/ volume-min-db;
+};
+
+&{/i2c@ff180000/pmic@20/regulators} {
+	OTG_SWITCH {
+		regulator-boot-on;
+		regulator-name = "otg_switch";
+	};
+};
+
+&{/i2c@ff180000/pmic@20/regulators/DCDC_REG1} {
+	regulator-max-microvolt = <0x118c30>;
+};
+
+&{/i2c@ff180000/pmic@20/regulators/LDO_REG5} {
+	regulator-max-microvolt = <0x1b7740>;
+};
+
+&{/i2c@ff180000/pmic@20/regulators/LDO_REG5/regulator-state-mem} {
+	regulator-suspend-microvolt = <0x1b7740>;
+};
+
+&{/i2c@ff180000/pmic@20/regulators/LDO_REG6} {
+	regulator-always-on;
+	regulator-boot-on;
+	regulator-max-microvolt = <0x2dc6c0>;
+	regulator-min-microvolt = <0x1b7740>;
+};
+
+&{/i2c@ff180000/pmic@20/regulators/LDO_REG6/regulator-state-mem} {
+	regulator-suspend-microvolt = <0x2dc6c0>;
+};
+
+&{/i2c@ff180000/pmic@20/regulators/LDO_REG7} {
+	regulator-init-microvolt = <0x2dc6c0>;
+	regulator-name = "vcc_backlight";
+};
+
+&{/i2c@ff180000/pmic@20/regulators/LDO_REG7/regulator-state-mem} {
+	regulator-suspend-microvolt = <0x2dc6c0>;
+};
+
+&{/i2c@ff180000/pmic@20/regulators/LDO_REG8} {
+	regulator-name = "vcc3v0_dvp";
+};
+
+&{/odroidgo3-joypad} {
+	/delete-property/ button-adc-max-step;
+	pinctrl-1 = <&{/pinctrl/pwm0/pwm0-pin}>;
+	pwm-names = "enable";
+	pwms = <&{/pwm@ff200000} 0x00 0xbebc200 0x00>;
+	rumble-boost-strong = <0x00>;
+	rumble-boost-weak = <0x00>;
+};
+
+&{/odroidgo3-joypad/sw7} {
+	label = "GPIO BTN-X";
+};
+
+&{/odroidgo3-joypad/sw8} {
+	label = "GPIO BTN-Y";
+};
+
+&{/pinctrl} {
+	vcc18-lcd {
+		vcc18-lcd-n {
+			rockchip,pins = <0x03 0x03 0x00 &{/pinctrl/pcfg-pull-none}>;
+		};
+	};
+	vcc5-usb {
+		vcc5-usb {
+			rockchip,pins = <0x03 0x04 0x00 &{/pinctrl/pcfg-pull-none}>;
+		};
+	};
+};
+
+&{/pinctrl/btns/btn-pins} {
+	rockchip,pins = <0x03 0x0b 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x0c 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x0d 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x0e 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x10 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x11 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x12 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x13 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x14 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x15 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x16 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x17 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x18 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x19 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x0a 0x00 &{/pinctrl/pcfg-pull-up} 0x03 0x0f 0x00 &{/pinctrl/pcfg-pull-up} 0x02 0x0d 0x00 &{/pinctrl/pcfg-pull-up} 0x02 0x0e 0x00 &{/pinctrl/pcfg-pull-up}>;
+};
+
+&{/pinctrl/sdio} {
+	/delete-node/ sdio-det-gpio0-a2;
+	/delete-node/ sdio-det-gpio3-b4;
+	/delete-node/ sdio-det-gpio3-b6;
+};
+
+&{/pwm@ff200000} {
+	status = "okay";
+};
+
+&{/serial@ff178000} {
+	clock-frequency = <0x1c200>;
+};
+
+&{/usb@ff300000} {
+	/delete-property/ vbus-supply;
+};
+
+&{/vccsys} {
+	/delete-property/ regulator-boot-on;
+	regulator-max-microvolt = <0x39fbc0>;
+	regulator-min-microvolt = <0x39fbc0>;
+	regulator-name = "vcc3v8_sys";
+};
+

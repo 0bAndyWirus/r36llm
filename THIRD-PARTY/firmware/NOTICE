@@ -1,0 +1,20 @@
+Rockchip RK3326 boot firmware
+
+The boot images contain these prebuilt firmware components. They are not built
+from source by this project. Each bundled file matches the SHA-256 of the file
+at the following Rockchip repository revision:
+https://github.com/rockchip-linux/rkbin/tree/ca6901476e0561ceabef476b8f0b2dea36ea4aae/bin/rk33
+
+285a87e760a3586953f637b6de0fe80745b0ecf455dfb052bc3ecfc8b756cb7e  rk3326_ddr_333MHz_v2.12.bin
+473aacd5378f356757a71efeb54f4339925db154fbce288df7e3c1177f45bc28  rk3326_miniloader_v1.40.bin
+387aaee716a6753a9e6dd18c72b27783d125a294f6aa817531a5a6f340f16080  rk3326_bl31_v1.34.elf
+2067217f7de6ce438f75cd36c0fcc606a93282837bdcaeb6e2f172ab5e52e996  rk3326_bl32_v2.19.bin
+
+The exact copies used come from Clone-u-boot commit
+4820a715c2977495f5afa4fc92e1ac9c5311f769, tools/rk_tools/bin/rk33.
+Rockchip's repository LICENSE at the matching revision grants permission to
+use, copy and distribute the Software, subject to its terms; the full text is
+in the adjacent LICENSE file. See
+https://github.com/rockchip-linux/rkbin/blob/ca6901476e0561ceabef476b8f0b2dea36ea4aae/LICENSE
+The U-Boot program is separately source-built and separately licensed. Firmware
+source revisions corresponding to these exact binaries have not been verified.

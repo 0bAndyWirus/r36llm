@@ -6,16 +6,25 @@ BOOTLOG=/tmp/r36llm-data-boot.log
 echo "r36llm: searching for data partition" >> "$BOOTLOG"
 for device in /dev/mmcblk*p3; do
     [ -b "$device" ] || continue
-    echo "r36llm: mounting $device as exfat" >> "$BOOTLOG"
-    if mount -t exfat -o noatime "$device" /data >> "$BOOTLOG" 2>&1; then
-        echo "r36llm: mounted $device on /data" >> "$BOOTLOG"
-        break
+    if ! /usr/sbin/r36-grow-data "${device%p3}" >> "$BOOTLOG" 2>&1; then
+        echo "r36llm: data initialization failed; leaving $device unmounted" >> "$BOOTLOG"
+        continue
     fi
+    for fs in exfat vfat; do
+        if mount -t "$fs" -o noatime,fmask=0077,dmask=0077 "$device" /data >> "$BOOTLOG" 2>&1; then
+            echo "r36llm: mounted $device ($fs) on /data" >> "$BOOTLOG"
+            break
+        fi
+    done
+    mountpoint -q /data && break
 done
 if ! mountpoint -q /data; then
     echo "r36llm: data partition not mounted; logs are in RAM" >> "$BOOTLOG"
 fi
 for name in models logs ssh bin; do mkdir -p "/data/r36llm/$name"; done
+for name in config.ini prompts.txt; do
+    [ -e "/data/r36llm/$name" ] || cp "/etc/r36llm/defaults/$name" "/data/r36llm/$name"
+done
 chmod 0700 /data/r36llm/ssh 2>/dev/null || :
 cat "$BOOTLOG" >> /data/r36llm/logs/boot.log
 rm -f "$BOOTLOG"
