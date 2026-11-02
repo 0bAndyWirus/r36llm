@@ -1,4 +1,5 @@
 name: Release image
+run-name: ${{ github.event_name == 'workflow_dispatch' && 'Release test build (artifacts only)' || format('Release {0}', github.ref_name) }}
 
 on:
   push:
