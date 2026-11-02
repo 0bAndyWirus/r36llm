@@ -14,3 +14,4 @@ inline void check(bool condition, const char *expression, const char *file, int 
 void test_config();
 void test_chat_text();
 void test_keymap();
+void test_prompt_cache();

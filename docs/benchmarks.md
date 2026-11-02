@@ -103,6 +103,81 @@ The native run used `/src/models/` instead of `/data/r36llm/models/` and
 `LD_LIBRARY_PATH=/tmp/llama-install/lib`. Variants added `--no-prompt-cache` or
 `--repeat 2`. These are correctness checks, not device performance measurements.
 
+### Device comparison
+
+Measured on 2026-11-02 with the installed `/usr/bin/r36llm` before the change and
+the Buildroot-built `out/r36llm` afterward. The original app process was suspended
+throughout the trials. A byte-identical copy of its executable ran the baseline
+UI; the new executable ran from the `/data/r36llm/bin/r36llm` override used by
+`scripts/push-app.ps1`. Binary transfers used `scp -O`; sizes and SHA-256 hashes
+matched after transfer.
+
+Each UI trial loaded the default 2B model, cooled under `powersave` to at most
+55 °C, selected `performance`, then sent the preset
+`Count from 1 to 100, separated by spaces.` with four threads, context 2048 and
+a 64-token limit. The installed app has no seed argument, so these device trials
+used `temp=0`: greedy sampling makes the distribution sampler's random seed
+irrelevant. The separate native checks above used an explicit seed of 42.
+
+A temporary observer injected evdev button events, sampled the response row every
+100 ms, decoded the app's font from the framebuffer, and read each app thread's
+`/proc/<pid>/task/<tid>/stat` once per second. TTFT below is button submission to
+the first visible response character, with about 0.1-second sampling resolution.
+UI CPU is the mean of the main thread's one-second CPU samples during active
+generation, excluding prompt evaluation; 100% means one full CPU core.
+
+|App / prefix source|Trial start °C|Visible TTFT s|App generation t/s|UI thread CPU|Peak °C|
+|---|---:|---:|---:|---:|---:|
+|Installed original / no cache|54.6|41.4|0.67|26.10%|83|
+|New app / prefix prepared during load|56.4|21.4|0.74|2.33%|83|
+|New process / persisted prefix restored|54.6|20.9|0.74|2.22%|83|
+
+The prefix contained 24 tokens and its serialized sequence occupied 20,497,588
+bytes. Logs reported `prepared` for the first new-app load and `disk hit` for the
+next process. All three displayed the same complete 64-token-limited response,
+including its final partial number. Cache-hit TTFT was **49.4% lower** than the
+original at the same recorded start temperature. Reported app throughput rose
+**10.4%**, while the UI thread consumed about **91% less CPU**. App throughput is
+rounded to two decimals by the existing on-screen statistics.
+
+After each of the first two UI trials, the test UI exited and the same cooldown
+procedure preceded:
+
+```sh
+llama-bench -m /data/r36llm/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf \
+  -p 0 -n 64 -t 4 -r 1 --no-warmup -o json
+```
+
+|Pair|App start °C|Benchmark start °C|App t/s|Benchmark t/s|App below benchmark|
+|---|---:|---:|---:|---:|---:|
+|Before|54.6|55.0|0.67|0.862661|22.3%|
+|After|56.4|55.9|0.74|0.840042|11.9%|
+
+Each pair started within 0.5 °C, but the workloads are not identical: the app
+generates after a real system/user prefix, while `-p 0` starts without that
+prefix. Prompt evaluation also heats the app before its generation phase.
+These single ordered trials therefore do not isolate all remaining overhead or
+establish a precise engine-speed gain. The measured UI CPU reduction is direct;
+the full app/benchmark gap must not be attributed to framebuffer drawing alone.
+
+The native Docker build and CTest passed, and
+`scripts/br.sh r36llm-app-dirclean r36llm-app` built the device executable.
+The tested new app's SHA-256 is
+`6d45f015f4b750eac8a9a5da7d0ebae16a70d19d8110a7ef5f586128cf5db8e9`.
+Raw screen captures, CPU samples, start temperatures, benchmark JSON and hashes
+were retrieved to `out/app-overhead-device-evidence/`; all 31 copied files matched
+their on-device SHA-256 hashes. The detached runner is retained as
+`out/app-overhead-device-runner.sh`. Native cache-check evidence is under
+`out/app-overhead-native-evidence/`.
+
+The original `/usr/bin/r36llm` remains installed, with SHA-256
+`2b78f69a2dd587fc94f56b0c04f73cad99e64d12df8bb61c420ac3eff717dcf3`;
+the temporary data-partition override was removed. The original process was
+resumed, `config.ini` restored byte-for-byte, all four original `performance`
+governors restored, and the original backlight level restored. Input injected
+while the original process was paused also queued in its evdev reader; the
+resulting chat was cleared after resume. Temporary device tools were removed.
+
 ## NEON ARMv8.0 Bonsai patch
 
 Measured 2026-11-02 on the device, comparing clean PrismML pin

@@ -33,6 +33,9 @@ int main(int argc, char **argv) {
         r36::Config config;
         config.load();
         bool headless = false;
+        bool prompt_cache = true;
+        uint32_t seed = UINT32_MAX;
+        int repeat = 1;
         std::string model, prompt, render;
         bool prompt_set = false;
         for (int i = 1; i < argc; ++i) {
@@ -57,9 +60,16 @@ int main(int argc, char **argv) {
                 config.max_tokens = number(value(), 1, 1048576);
             else if (arg == "--render-test")
                 render = value();
+            else if (arg == "--seed")
+                seed = static_cast<uint32_t>(number(value(), 0, 2147483647));
+            else if (arg == "--repeat")
+                repeat = number(value(), 1, 100);
+            else if (arg == "--no-prompt-cache")
+                prompt_cache = false;
             else if (arg == "--help") {
                 std::cout << "r36llm\nr36llm --headless --model <gguf> --prompt <text> [--threads "
-                             "N] [--ctx N] [--max-tokens N]\nr36llm --render-test <dir>\n";
+                             "N] [--ctx N] [--max-tokens N] [--seed N] [--repeat N] "
+                             "[--no-prompt-cache]\nr36llm --render-test <dir>\n";
                 return 0;
             } else
                 throw std::runtime_error("Unknown argument: " + arg);
@@ -75,7 +85,8 @@ int main(int argc, char **argv) {
             throw std::runtime_error("Headless mode requires --model and --prompt");
         std::signal(SIGINT, interrupt);
         std::signal(SIGTERM, interrupt);
-        r36::Llm engine;
+        r36::Llm engine(prompt_cache, seed);
+        const auto load_start = std::chrono::steady_clock::now();
         engine.load(model, config);
         while (engine.state().busy) {
             if (interrupted)
@@ -85,22 +96,32 @@ int main(int argc, char **argv) {
         auto state = engine.state();
         if (!state.loaded)
             throw std::runtime_error(state.error);
-        engine.generate(prompt, config);
-        size_t printed = 0;
-        do {
-            if (interrupted)
-                engine.stop();
-            state = engine.state();
-            if (state.text.size() > printed) {
-                std::cout << state.text.substr(printed) << std::flush;
-                printed = state.text.size();
-            }
-            if (state.busy)
-                std::this_thread::sleep_for(std::chrono::milliseconds(20));
-        } while (state.busy);
-        std::printf("\n[tok/s: %.2f prompt: %.2f]\n", state.generation_tps, state.prompt_tps);
-        if (!state.error.empty())
-            throw std::runtime_error(state.error);
+        std::fprintf(
+            stderr, "[load_seconds: %.3f]\n",
+            std::chrono::duration<double>(std::chrono::steady_clock::now() - load_start).count());
+        for (int run = 0; run < repeat && !interrupted; ++run) {
+            if (run)
+                engine.clear();
+            engine.generate(prompt, config);
+            size_t printed = 0;
+            do {
+                if (interrupted)
+                    engine.stop();
+                state = engine.state();
+                if (state.text.size() > printed) {
+                    std::cout << state.text.substr(printed) << std::flush;
+                    printed = state.text.size();
+                }
+                if (state.busy)
+                    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            } while (state.busy);
+            std::printf("\n[tok/s: %.2f prompt: %.2f]\n", state.generation_tps, state.prompt_tps);
+            std::fprintf(stderr, "[run: %d ttft_seconds: %.3f tokens: %d generation_tps: %.6f]\n",
+                         run + 1, state.first_token_seconds, state.generated_tokens,
+                         state.generation_tps);
+            if (!state.error.empty())
+                throw std::runtime_error(state.error);
+        }
         return interrupted ? 130 : 0;
     } catch (const std::exception &error) {
         std::cerr << "r36llm: " << error.what() << '\n';

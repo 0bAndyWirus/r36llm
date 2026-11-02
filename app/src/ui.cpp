@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <thread>
 #include <unistd.h>
+#include <utility>
 #include <vector>
 
 namespace r36 {
@@ -237,6 +238,10 @@ class DeviceUi {
     bool power_long_press_ = false;
     bool critical_shutdown_attempted_ = false;
     unsigned completed_ = 0;
+    bool redraw_ = true;
+    Clock::time_point last_draw_{};
+    LlmState drawn_state_;
+    size_t drawn_bench_size_ = 0;
 
   public:
     DeviceUi() {
@@ -274,14 +279,46 @@ class DeviceUi {
     void run() {
         while (true) {
             update();
-            for (const auto &event : input_.poll(30))
+            for (const auto &event : input_.poll(30)) {
                 handle_event(event);
-            draw();
-            fb_.present();
+                if (event.pressed)
+                    redraw_ = true;
+            }
+            const auto now = Clock::now();
+            const bool streaming_due = now - last_draw_ >= std::chrono::milliseconds(100);
+            if (redraw_ || streaming_due) {
+                auto state = llm_.state();
+                if (streaming_due && visible_state_changed(state))
+                    redraw_ = true;
+                if (streaming_due && screen_ == Screen::Benchmark) {
+                    std::lock_guard<std::mutex> lock(bench_mutex_);
+                    if (bench_output_.size() != drawn_bench_size_)
+                        redraw_ = true;
+                }
+                if (redraw_) {
+                    draw(state);
+                    fb_.present();
+                    drawn_state_ = std::move(state);
+                    last_draw_ = Clock::now();
+                    redraw_ = false;
+                }
+            }
         }
     }
 
   private:
+    bool visible_state_changed(const LlmState &state) const {
+        if (state.loaded != drawn_state_.loaded || state.model != drawn_state_.model ||
+            decimal(state.generation_tps) != decimal(drawn_state_.generation_tps) ||
+            state.loading != drawn_state_.loading ||
+            (state.loading && static_cast<int>(state.progress * 100) !=
+                                  static_cast<int>(drawn_state_.progress * 100)))
+            return true;
+        return screen_ == Screen::Chat && exchange_ &&
+               (state.text != drawn_state_.text ||
+                reply_stats(state, peak_temperature_) != reply_stats(drawn_state_, peak_temperature_));
+    }
+
     void flush_brightness_save() {
         if (!pending_brightness_)
             return;
@@ -301,6 +338,7 @@ class DeviceUi {
             screen_off_ = off;
         else {
             notice_ = "Could not change the backlight";
+            redraw_ = true;
             std::fputs("r36llm: could not change the backlight\n", stderr);
         }
         last_activity_ = Clock::now();
@@ -358,6 +396,7 @@ class DeviceUi {
                 power_long_press_ = false;
                 power_pressed_at_ = now;
             } else if (!event.pressed && power_pressed_) {
+                redraw_ = true;
                 if (!power_long_press_) {
                     if (now - power_pressed_at_ >= std::chrono::milliseconds(1500))
                         confirm_power_off();
@@ -431,10 +470,35 @@ class DeviceUi {
         const auto now = Clock::now();
         auto state = llm_.state();
         if (now - last_info_ >= std::chrono::seconds(1)) {
+            const auto previous_link = link_status_;
+            const auto previous_info = info_;
             link_status_ = link_status();
             info_ = read_device_info();
+            if ((screen_ == Screen::Home && previous_link != link_status_) ||
+                previous_info.battery_percent != info_.battery_percent ||
+                previous_info.charging != info_.charging ||
+                temperature_text(previous_info.temperature_millic) !=
+                    temperature_text(info_.temperature_millic) ||
+                (previous_info.temperature_millic >= 70000) != (info_.temperature_millic >= 70000) ||
+                (previous_info.temperature_millic >= 80000) != (info_.temperature_millic >= 80000) ||
+                previous_info.available_kb / 1024 != info_.available_kb / 1024)
+                redraw_ = true;
+            if (screen_ == Screen::About) {
+                const auto before = device_lines(previous_info);
+                const auto after = device_lines(info_);
+                if (before.size() != after.size() ||
+                    !std::equal(before.begin(), before.end(), after.begin(),
+                                [](const Line &a, const Line &b) {
+                                    return a.text == b.text && a.color == b.color;
+                                }))
+                    redraw_ = true;
+            }
+            const int previous_peak = peak_temperature_;
             if (exchange_)
                 peak_temperature_ = std::max(peak_temperature_, info_.temperature_millic);
+            if (screen_ == Screen::Chat && exchange_ &&
+                temperature_text(previous_peak) != temperature_text(peak_temperature_))
+                redraw_ = true;
             const bool critical =
                 !info_.charging && info_.battery_percent >= 0 && info_.battery_percent <= 2;
             if (critical && !critical_battery_since_)
@@ -445,12 +509,15 @@ class DeviceUi {
             }
             last_info_ = now;
         }
-        if (pending_brightness_ && now - brightness_changed_at_ >= std::chrono::milliseconds(750))
+        if (pending_brightness_ && now - brightness_changed_at_ >= std::chrono::milliseconds(750)) {
             flush_brightness_save();
+            redraw_ = true;
+        }
         if (power_pressed_ && !power_long_press_ &&
             now - power_pressed_at_ >= std::chrono::milliseconds(1500)) {
             power_long_press_ = true;
             confirm_power_off();
+            redraw_ = true;
         }
         if (!screen_off_ && !power_pressed_ && config_.screen_timeout > 0 &&
             now - last_activity_ >= std::chrono::minutes(config_.screen_timeout))
@@ -461,8 +528,10 @@ class DeviceUi {
             std::fprintf(stderr, "r36llm: battery at %d%% for 30 seconds; powering off\n",
                          info_.battery_percent);
             power_off();
+            redraw_ = true;
         }
         if (state.completed != completed_) {
+            redraw_ = true;
             completed_ = state.completed;
             if (!state.error.empty())
                 notice_ = state.error;
@@ -822,8 +891,7 @@ class DeviceUi {
             fb_.text(0, 1 + i - first, lines[i].text, lines[i].color);
     }
 
-    void draw() {
-        auto state = llm_.state();
+    void draw(const LlmState &state) {
         std::string hint = "UP/DOWN choose  A select";
         if (screen_ == Screen::Chat)
             hint = "A type Y presets B stop/back L/R page SEL+START new";
@@ -890,6 +958,7 @@ class DeviceUi {
             {
                 std::lock_guard<std::mutex> lock(bench_mutex_);
                 output = bench_output_;
+                drawn_bench_size_ = bench_output_.size();
             }
             std::vector<Line> lines;
             add_wrapped(lines, output);

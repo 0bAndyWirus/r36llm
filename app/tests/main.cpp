@@ -6,7 +6,7 @@
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::cerr << "Usage: r36llm-tests config|chat_text|keymap\n";
+        std::cerr << "Usage: r36llm-tests config|chat_text|keymap|prompt_cache\n";
         return 2;
     }
     const std::string suite = argv[1];
@@ -17,6 +17,8 @@ int main(int argc, char **argv) {
             test_chat_text();
         else if (suite == "keymap")
             test_keymap();
+        else if (suite == "prompt_cache")
+            test_prompt_cache();
         else {
             std::cerr << "Unknown test suite: " << suite << '\n';
             return 2;
