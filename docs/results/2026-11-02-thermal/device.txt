@@ -1,0 +1,76 @@
+Mon Nov  2 18:24:20 UTC 2026
+Linux r36llm 4.4.189 #62 SMP Sat Dec 13 08:49:45 CST 2025 aarch64 GNU/Linux
+MemTotal:         916848 kB
+MemFree:          287740 kB
+MemAvailable:     737268 kB
+Buffers:            1024 kB
+Cached:           444708 kB
+SwapCached:            0 kB
+Active:           165780 kB
+Inactive:         420796 kB
+Active(anon):     140932 kB
+Inactive(anon):     1228 kB
+Active(file):      24848 kB
+Inactive(file):   419568 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:      11119376 kB
+SwapFree:       11119376 kB
+Dirty:                16 kB
+Writeback:             0 kB
+AnonPages:        140796 kB
+Mapped:           418988 kB
+Shmem:              1316 kB
+Slab:              28812 kB
+SReclaimable:      20308 kB
+SUnreclaim:         8504 kB
+KernelStack:        1680 kB
+PageTables:         1332 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    11577800 kB
+Committed_AS:    1092092 kB
+VmallocTotal:   258867136 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+Filename				Type		Size	Used	Priority
+/dev/mmcblk0p2                          partition	11119376	0	-1
+0f5e41a462cde146bbc5e0a9d48e3c06166f88806ec065e9652719af4dcdc35b  /usr/bin/llama-bench
+36061ad406df8a4903a6db005be350c50fabfaf717f9ef0acf4b76adcd9929fa  /data/r36llm/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf
+fbf7b25dce57a7b61623bc2e332b251f704e3d40d8d505956ec3db698fcc467c  /data/r36llm/config.ini
+version: 0.7.0-dev (build 0, commit unknown)
+built with GNU 13.4.0 for Linux aarch64
+#!/bin/sh
+case "${1:-start}" in stop) exit 0 ;; start) ;; *) exit 1 ;; esac
+for governor in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor /sys/class/devfreq/*/governor; do
+    [ -f "$governor" ] && { echo performance > "$governor"; } 2>/dev/null || :
+done
+/sys/class/thermal/thermal_zone0/type
+soc-thermal
+/sys/class/thermal/thermal_zone1/type
+gpu-thermal
+/sys/class/thermal/thermal_zone0/trip_point_0_hyst
+2000
+/sys/class/thermal/thermal_zone0/trip_point_0_temp
+70000
+/sys/class/thermal/thermal_zone0/trip_point_0_type
+passive
+/sys/class/thermal/thermal_zone0/trip_point_1_hyst
+2000
+/sys/class/thermal/thermal_zone0/trip_point_1_temp
+85000
+/sys/class/thermal/thermal_zone0/trip_point_1_type
+passive
+/sys/class/thermal/thermal_zone0/trip_point_2_hyst
+2000
+/sys/class/thermal/thermal_zone0/trip_point_2_temp
+115000
+/sys/class/thermal/thermal_zone0/trip_point_2_type
+critical
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
+1008000 1200000 1248000 1296000 1416000 1512000 
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+interactive conservative ondemand userspace powersave performance schedutil 
+/sys/class/backlight/backlight/brightness
+0

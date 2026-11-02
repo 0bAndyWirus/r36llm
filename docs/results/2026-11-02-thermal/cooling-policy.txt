@@ -1,0 +1,18 @@
+Read over ssh r36 on 2026-11-02, during the sweep.
+
+/sys/class/thermal/cooling_device0/type: thermal-cpufreq-0
+/sys/class/thermal/cooling_device0/max_state: 5
+/sys/class/thermal/cooling_device1/type: thermal-devfreq-0
+/sys/class/thermal/cooling_device1/max_state: 2
+/sys/class/thermal/cooling_device2/type: thermal-devfreq-1
+/sys/class/thermal/cooling_device2/max_state: 1
+
+/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq: 1008000 kHz
+/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq: 1512000 kHz
+/sys/class/devfreq/dmc/governor: performance
+/sys/class/devfreq/ff400000.gpu/governor: performance
+
+Telemetry cooling_state columns concatenate cooling_device0, 1, 2 states,
+separated by semicolons. A nonzero first state is CPU thermal cooling;
+a powersave-governor frequency of 1008000 kHz alone is not throttling.
+Both soc-thermal and gpu-thermal are sampled every 2 seconds.
