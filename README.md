@@ -2,7 +2,7 @@
 
 A minimal Linux OS for the **R36S** retro handheld (RK3326, 4× Cortex-A35, 1 GB RAM) that boots straight into an offline LLM chat app. You type with the gamepad, and the console answers using [PrismML Bonsai](https://huggingface.co/prism-ml) 1-bit and ternary models running on the CPU through PrismML's [llama.cpp fork](https://github.com/PrismML-Eng/llama.cpp).
 
-It is a fun proof of concept, not a fast assistant. The default model writes about 0.7 tokens per second (31 words per minute, so a short paragraph takes about 2.5 minutes). The fastest Bonsai, Ternary-Bonsai-1.7B, reaches 1.0 t/s, and every model heats the passively cooled chip to 82–85 °C. Full numbers: [benchmarks](docs/benchmarks.md).
+It is a fun proof of concept, not a fast assistant. The default model is [Ternary-Bonsai-2-2B](https://huggingface.co/prism-ml/Ternary-Bonsai-2-2B-gguf) (file `Ternary-Bonsai-2-2B-PTQ1_0.gguf`, 409 MB). It writes about 0.7 tokens per second (31 words per minute, so a short paragraph takes about 2.5 minutes). The fastest Bonsai, Ternary-Bonsai-1.7B, reaches 1.0 t/s, and every model heats the passively cooled chip to 82–85 °C. Full numbers: [benchmarks](docs/benchmarks.md).
 
 |Home|Chat|Device info|
 |---|---|---|
