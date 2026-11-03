@@ -2,15 +2,15 @@
 
 ## Status and scope
 
-This is a **source-audited preparation plan**, not a working mainline image. The target is `G80CA-MB V1.3-20251212 Panel 8`, RK3326, 1 GiB RAM. No kernel build, panel-overlay generation, SD write, device connection, or hardware test was performed for this preparation. The existing Linux 4.4 image and its bootloader remain the fallback.
+The opt-in `scripts/build-mainline.ps1` builds a separate experimental image for `G80CA-MB V1.3-20251212 Panel 8`, RK3326, 1 GiB RAM. It uses Linux 6.12.114 with Arch R's patches, a generated Panel 8 overlay, the matching external joypad, mainline U-Boot and the existing Buildroot initramfs. **No hardware boot, SD write or device connection is part of this build.** The default Linux 4.4 build remains unchanged and is the fallback.
 
 The prepared files are in [`br2-external/board/r36llm-mainline/`](../br2-external/board/r36llm-mainline/):
 
 - `linux.fragment`: 11 justified changes to the pinned Arch R config.
-- `boot.ini`: source for a mainline U-Boot `boot.scr`, with explicit Panel 8 overlay application and external `uInitrd` loading.
+- `boot.ini`: source for the compiled mainline U-Boot `boot.scr`, with explicit Panel 8 overlay application and external `uInitrd` loading.
 - `README-mainline.md`: baseline values, unchanged requirements, source checksum, and merge instructions.
 
-The existing build/deploy scripts still target the vendor 4.4 route. Do not use them to install these draft files onto the fallback card.
+Use `scripts/build-mainline.ps1` only for the experimental output under `out/mainline/`. `scripts/build.ps1` and the default BSP artifacts still target Linux 4.4. Do not install mainline files onto the preserved fallback card.
 
 ## Source lock
 
@@ -26,12 +26,125 @@ Use these revisions together; do not replace them with branch heads:
 |Clone base DTS|[`rk3326-gameconsole-eeclone.dts`](https://github.com/archr-linux/Arch-R/blob/6b4904f99bef3fffab490b5ea70ac7de15735885/projects/ArchR/devices/RK3326/linux/dts/rockchip/rk3326-gameconsole-eeclone.dts)|
 |Generic panel driver|[`generic-dsi` package](https://github.com/archr-linux/Arch-R/blob/6b4904f99bef3fffab490b5ea70ac7de15735885/projects/ArchR/packages/linux-drivers/generic-dsi/package.mk) and the [in-tree source copy](https://github.com/archr-linux/Arch-R/blob/6b4904f99bef3fffab490b5ea70ac7de15735885/projects/ArchR/packages/linux-drivers/generic-dsi/sources/panel-generic-dsi.c)|
 |External joypad|[Arch R package](https://github.com/archr-linux/Arch-R/blob/6b4904f99bef3fffab490b5ea70ac7de15735885/projects/ArchR/packages/linux-drivers/archr-joypad/package.mk), pin [`4a8392c1a15a9cf2cab43750c3246d53d6410301`](https://github.com/archr-linux/archr-joypad/tree/4a8392c1a15a9cf2cab43750c3246d53d6410301)|
-|Mainline U-Boot integration|[RK3326 package](https://github.com/archr-linux/Arch-R/blob/6b4904f99bef3fffab490b5ea70ac7de15735885/projects/ArchR/devices/RK3326/packages/u-boot/package.mk), upstream **v2025.10**, with its pinned Arch R patch, defconfig, and source overlays|
+|Mainline U-Boot integration|[RK3326 package](https://github.com/archr-linux/Arch-R/blob/6b4904f99bef3fffab490b5ea70ac7de15735885/projects/ArchR/devices/RK3326/packages/u-boot/package.mk), upstream **v2025.10**, commit [`e50b1e8715011def8aff1588081a2649a2c6cd47`](https://github.com/u-boot/u-boot/tree/e50b1e8715011def8aff1588081a2649a2c6cd47), with its pinned Arch R patch, defconfig and source overlays|
 |Boot firmware|[rkbin package](https://github.com/archr-linux/Arch-R/blob/6b4904f99bef3fffab490b5ea70ac7de15735885/projects/ArchR/packages/tools/rkbin/package.mk), pin [`74213af1e952c4683d2e35952507133b61394862`](https://github.com/rockchip-linux/rkbin/tree/74213af1e952c4683d2e35952507133b61394862)|
 |Panel generator|[`generator.sh`](https://github.com/loddv/Arch-R-R36S/blob/fe8aa3d3497e0937ea27123749fcf1a306f84dec/config/mipi-generator/generator.sh) and [`archr-dtbo.py`](https://github.com/loddv/Arch-R-R36S/blob/fe8aa3d3497e0937ea27123749fcf1a306f84dec/config/mipi-generator/archr-dtbo.py), commit **fe8aa3d3497e0937ea27123749fcf1a306f84dec**|
 |Exact board's vendor input|[`G80CA-MB V1.3-20251212 Panel 8/rk3326-r36s-linux.dtb`](https://github.com/loddv/Arch-R-R36S/blob/fe8aa3d3497e0937ea27123749fcf1a306f84dec/config/archr-dts/clone/G80CA-MB%20V1.3-20251212%20Panel%208/rk3326-r36s-linux.dtb)|
 
 The baseline config header says Linux 6.12.79. That is not the selected kernel version: the recipe selects 6.12.114 for RK3326. Keep a manifest with archive hashes, patch application order, final `.config`, DTBs, overlay, module hashes, firmware hashes, and toolchain version for each experimental image.
+
+## Offline build
+
+Requirements: Docker Desktop with Linux containers, PowerShell, internet access for the first source/package download, and an existing Buildroot `uInitrd`. “Offline” here means no handheld or SD card is used; it does not mean an air-gapped first build.
+
+From a clean checkout, first build the existing userspace and then the opt-in image:
+
+```powershell
+.\scripts\build.ps1 -Release
+.\scripts\build-mainline.ps1 -Jobs 6
+```
+
+If the existing initramfs is already available, only the second command is needed. `-Initramfs C:\path\to\uInitrd` accepts another existing build. The repacker verifies the input wrapper/payload CRCs, removes all vendor modules, stages the mainline module dependency closure, adds an early joypad load, changes the serial getty to `ttyS2`, and sets the image's default `keymap=mainline`. It retains the application and other userspace from that input. Existing `/data` settings still override defaults; use an empty spare card for bring-up.
+
+The default image preserves the pinned DTS's disabled OTG PHY and **cannot provide the known USB-Ethernet SSH path**. To build the separate, untested host-only overlay variant, use `.\scripts\build-mainline.ps1 -Jobs 6 -UsbHost`. This enables the DWC2 OTG PHY and forces host mode; it is not gadget mode. See the USB evidence and electrical caveats below before any spare-card boot.
+
+The mainline builder has its own pinned Debian base image and Linux work volume, `r36llm-mainline-work`; it never writes the vendor kernel work volume. Sources, patched kernel and module trees stay in that case-sensitive volume. This avoids Windows reserved filenames and case-colliding module names. Downloaded sources are cached, revisions are checked, and the build records the resolved `.config`, ordered patches, source archives, toolchain package versions, firmware licenses and hashes under `out/mainline/metadata/`. The base-image digest and Python `fdt==0.3.3` wheel hash are pinned; Debian package versions are recorded, not frozen to a snapshot repository.
+
+Outputs:
+
+```text
+out/mainline/artifacts/r36llm-mainline.img  # 800 MiB whole-card image
+out/mainline/artifacts/SHA256SUMS
+out/mainline/artifacts/clone_uboot.bin.ddr333
+out/mainline/artifacts/modules.tar.gz      # complete kernel module export
+out/mainline/boot/                         # exact boot partition contents
+out/mainline/metadata/                     # source/config/DT/check evidence
+out/mainline/logs/build.log
+```
+
+The image uses the existing MBR/disk-ID/labels/first-boot marker contract: p1 starts at 16 MiB (128 MiB FAT32), p2 at 144 MiB (512 MiB swap), p3 at 656 MiB (128 MiB FAT32, grown on first boot). Only the combined DDR333 loader is written at sector 64. The default-UART firmware is deliberately not retuned to 666 MHz.
+
+### Offline checks
+
+The build runs checks as hard failure gates, not as a hardware certification:
+
+- Kernel `olddefconfig` resolution followed by exact comparison of all fragment settings; `scripts/diffconfig` output is retained.
+- External joypad `modinfo` vermagic against the built kernel release; `depmod` against the matching module tree. This is metadata/dependency validation, **not an actual module insertion/load test** on ARM hardware.
+- `dtc -I dtb -O dts` of the generated overlay and merged final DTB; `fdtoverlay` application and node/property checks for the 640×480 panel, single-ADC joypad, SARADC, battery/charger and USB nodes.
+- Required U-Boot configuration plus `mkimage -l boot.scr`; legacy initramfs header/payload CRC validation.
+- File-load address bounds, loader size, `sfdisk --verify`, FAT consistency, boot files read back from the final image, MBR/disk ID and raw-loader byte comparison.
+
+For individual stages in the same Linux container, after building its image:
+
+```powershell
+docker build -f docker/Dockerfile.mainline -t r36llm-mainline .
+docker run --rm -v "${PWD}:/repo" -v r36llm-mainline-work:/work -e JOBS=6 r36llm-mainline bash /repo/scripts/mainline/build.sh /repo/out/uInitrd
+```
+
+The integrated log and the per-stage metadata contain the exact invoked checks and their output. First-boot acceptance below remains mandatory.
+
+### Observed build and checks — 2026-11-03
+
+This command completed successfully, producing the 800 MiB image and the `-UsbHost` boot files:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-mainline.ps1 -Jobs 6 -UsbHost
+```
+
+The same pipeline also completed in a **new, empty Linux work volume**, including fresh source downloads and full compilation. A portable form of that clean-volume command is:
+
+```powershell
+docker run --rm -v "${PWD}:/repo" -v "${PWD}/out/uInitrd:/input/uInitrd:ro" `
+  -v r36llm-mainline-clean-20261103:/work -e JOBS=6 -e R36LLM_USB_HOST=1 `
+  r36llm-mainline bash /repo/scripts/mainline/build.sh /input/uInitrd
+```
+
+The temporary clean-build volume was removed afterward; normal builds retain `r36llm-mainline-work`. The full image SHA256 matched the earlier cached build:
+
+```text
+ba895137ff53e29875f69ba87f9ee7622d34d90085b69ec4f3b21aa73f1ae5e8  r36llm-mainline.img
+```
+
+This demonstrates repeatability for the existing input initramfs and this builder image, not across future Debian package updates. The complete `modules.tar.gz` export retains file timestamps, so its archive hash can differ even when its module contents and the final image match. Each build overwrites `out/mainline/`; the current image includes the explicitly selected, untested USB host overlay.
+
+The build applied **48 pinned Arch R patches** and compiled Linux **6.12.114** plus `archr-singleadc-joypad.ko` with `DEVICE=RK3326`. All **11 fragment settings** survived `olddefconfig`. The kernel `Image` is 17,362,952 bytes; the base DTB is 72,480 bytes; the generated Panel 8 overlay is 2,678 bytes; and the optional USB host overlay is 378 bytes. The repacked `uInitrd` is 11,493,429 bytes, including its legacy header.
+
+These exact checks ran inside the container as part of that command:
+
+```sh
+python3 /work/linux-6.12.114/scripts/diffconfig \
+  /work/archr/projects/ArchR/devices/RK3326/linux/linux.aarch64.conf \
+  /work/kernel-build/.config
+modinfo -F vermagic /work/modules/lib/modules/6.12.114/extra/archr-singleadc-joypad.ko
+depmod -b /work/modules 6.12.114
+fdtoverlay -i /repo/out/mainline/artifacts/rk3326-gameconsole-eeclone.dtb \
+  -o /repo/out/mainline/metadata/panel/rk3326-gameconsole-eeclone-panel8.dtb \
+  /repo/out/mainline/artifacts/mipi-panel.dtbo
+dtc -I dtb -O dts \
+  -o /repo/out/mainline/metadata/panel/rk3326-gameconsole-eeclone-panel8.dts \
+  /repo/out/mainline/metadata/panel/rk3326-gameconsole-eeclone-panel8.dtb
+/work/uboot-build/tools/mkimage -l /work/uboot-build/boot.scr
+mkimage -l /repo/out/mainline/artifacts/uInitrd
+sfdisk --verify /repo/out/mainline/artifacts/r36llm-mainline.img
+fsck.fat -n /work/boot.vfat
+```
+
+|Check|Observed result|
+|---|---|
+|Fragment comparison|11/11 exact matches, including `INITRAMFS_SOURCE=""` and `RD_GZIP=y`; resolved config and full diff retained|
+|Joypad module|Vermagic `6.12.114 SMP preempt mod_unload modversions aarch64`; no modular dependencies; `depmod` succeeded|
+|Final Panel 8 DT|`fdtoverlay` succeeded; 12 generated modes are 640×480, with default clock 30 MHz; panel, joypad, SARADC, ADC keys, battery and RK817 charger present/enabled|
+|USB nodes|Base DT: DWC2 enabled but OTG PHY disabled; host PHY enabled but EHCI/OHCI disabled. Optional overlay: OTG PHY enabled and DWC2 forced to host; not tested electrically|
+|U-Boot/script|Mainline v2025.10 compiled; required config checks passed; `boot.scr` is an AArch64 Linux uncompressed script with a 2,663-byte data section|
+|Initramfs|Input header/payload CRCs passed; repacked output is an AArch64 gzip legacy ramdisk; only matching mainline module closure staged, with joypad startup before the application|
+|Image|`sfdisk`: no errors, disk ID `0x52333653`; FAT check passed; all boot files and raw loader read back byte-identically|
+|Partition geometry|p1 start 32768 / size 262144 sectors; p2 start 294912 / size 1048576; p3 start 1343488 / size 262144|
+
+The pinned DTS emits structural `dtc` warnings; the overlay-only decompile also warns about unresolved external phandles before application. Both merged DTs apply and decompile successfully. The generator logs a caught audio-property exception, and both audio presets remain disabled as documented below. `mkswap` warns that the temporary regular-file payload is sparse; it is copied into the raw p2 region, not activated as a sparse swapfile. Hardware swap activation remains untested.
+
+No mainline hardware boot, module insertion, display/input exercise, charging test, USB enumeration or performance measurement was performed. Kernel module metadata and an offline DT merge do not replace those tests.
+
+
 
 ## Kernel and panel preparation
 
@@ -54,7 +167,7 @@ Work in a new Linux filesystem/build directory, not the active vendor-kernel Doc
 6. Later, build `Image`, DTBs with symbol support (`DTC_FLAGS=-@`), and modules. Confirm `__symbols__` in the clone DTB; the generated panel overlay references labels including `joypad` and may reference `saradc`.
 7. Build `archr-singleadc-joypad.ko` from the pinned external driver using that kernel's build tree. Arch R's driver Makefile builds it as a module; setting an unrelated `JOYSTICK_*` option will not provide it. Run `depmod` on the staged module tree and include this module and its dependencies in the initramfs, with an explicit load before the app starts. Never reuse 4.4 modules (`MODVERSIONS=y` in the baseline).
 
-This preparation verified all 11 fragment symbols against the actual pinned file: **11 changed values, zero absent symbols**. It also checked **67 unchanged requirement symbols**, all already `y`. This is a text-level source comparison; `olddefconfig` resolution and compilation remain future gates, not completed checks.
+The build checks all 11 fragment settings again after `olddefconfig`; the earlier baseline audit also checked 67 unchanged requirement symbols, all `y`. See `metadata/kernel/fragment-check.txt`, `.config`, and `config.diff` in each output for the resolved build evidence.
 
 ### 3. Generate the exact Panel 8 overlay — 2–4 hours
 
@@ -62,12 +175,14 @@ The clone DTS's default `panel_description` describes a 720×720 mode. It is **n
 
 1. Check out loddv/Arch-R-R36S at the pinned commit. Install the generator's dependencies in an isolated environment: `dtc`, Python 3, and the Python `fdt` package. Record the dependency versions.
 2. Compare the preserved stock DTB with the exact-board input listed above. If they differ, use the preserved board DTB in a separate local copy of that board directory and retain both hashes. Do not choose an overlay merely because another board also says “Panel 8”.
-3. Run `bash config/mipi-generator/generator.sh` from that checkout. It scans board directories and generates six joypad/audio variants per board. Require the log to show no failures; the script uses `set +e`, so process exit status alone is not a sufficient check.
+3. The builder invokes `archr-dtbo.py` directly for this one DTB with no option flags, exactly as `generator.sh` does for the default clone variant. It does not scan all boards or generate the five alternative joypad/audio variants. Require a nonempty result and successful offline application; the upstream generator can catch exceptions without failing its process.
 4. Select the default clone result:
    `config/mipi-generator/output/clone/G80CA-MB_V1.3-20251212_Panel_8.dtbo`.
    The generator replaces spaces with underscores. Clone defaults to the K36/single-ADC joypad. Do not select `JPmm` unless hardware evidence proves a different ADC layout; the alternative flags also change input/audio behavior, not just the panel.
 5. Decompile the output and inspect its panel timings/initialization, GPIO/reset polarity, rotation, and joypad/audio overrides. Apply it offline with `fdtoverlay` to the newly built `rk3326-gameconsole-eeclone.dtb`. Require success and inspect the merged result; this also checks generator/base-DTS compatibility across the two pinned repositories.
 6. Copy the chosen overlay to `/overlays/mipi-panel.dtbo` on the experimental FAT partition. Keep its original filename and input/output checksums in the manifest. Do not copy the legacy vendor DTB into `/dtbs/` as the mainline base tree.
+
+The unmodified generator does not recognize this vendor DTB's `simple-audio-card,hp-det-gpio` as its expected `hp-det-gpio`; its caught exception leaves both mainline audio presets disabled. The build records and checks that state instead of choosing a different audio variant. Audio remains untested and needs separate investigation.
 
 ## U-Boot, firmware, and boot flow
 
@@ -125,7 +240,7 @@ The command line uses `rdinit=/init`, verbose logs, `console=ttyS2,115200`, `con
 
 ## Spare-card layout
 
-The current [`genimage.cfg`](../br2-external/board/r36llm/genimage.cfg) is a reference only. Prepare a **separate** mainline image definition when implementing the build:
+The mainline image follows this separate layout; the default [`genimage.cfg`](../br2-external/board/r36llm/genimage.cfg) remains unchanged:
 
 |Region|Existing 4.4 image|Proposed mainline spare card|
 |---|---|---|
@@ -146,7 +261,7 @@ Current `S02data` scans `/dev/mmcblk*p3` and `S03swap` derives p2 from the mount
 
 ## Application and userspace changes
 
-Allow **0.5–1 day** for these changes and tests after basic boot. They are identified here, not implemented by this board-preparation change.
+The initramfs repack supplies the mainline module tree, joypad startup, serial getty and default keymap. The remaining app/sysfs and hardware checks below are not established by an offline build.
 
 |Area|Current code / behavior|Mainline action|
 |---|---|---|
@@ -160,20 +275,29 @@ Allow **0.5–1 day** for these changes and tests after basic boot. They are ide
 |Early tuning|`S05perf` writes performance to CPU and every devfreq governor before app settings|The CPU paths can remain compatible; mainline devfreq devices and DDR control differ. Check each target's available governors, leave unsupported devices alone, and do not assume this script raises DDR speed. The later app-selected CPU mode still needs checking.|
 |Configuration helper|`r36-config` reads config.ini and has no hardware paths|No direct sysfs port is required. Keep its config/default behavior and set `keymap=mainline` in this image's configuration without changing the 4.4 card's profile.|
 |Init/console|Buildroot initramfs; current inittab starts app on tty1 and vendor getty on `ttyFIQ0`|Preserve generated `/init` and explicit devtmpfs/proc/sysfs mounts. Replace the vendor serial getty with the verified mainline UART (`ttyS2` for the pinned clone DTS); tty1 still hosts the app.|
-|Module staging|Current post-build hook consumes `out/bsp/artifacts/modules`, selects vendor networking/gadget/exFAT modules|Give mainline its own artifact input. Built-in networking/exFAT must not require absent `.ko` files; include/load the external joypad. Do not mix module trees or overwrite 4.4 artifacts.|
+|Module staging|The default post-build hook consumes `out/bsp/artifacts/modules`|Mainline has a separate module archive and initramfs repack; no 4.4 modules are retained. Its dependency closure includes and explicitly loads the external joypad.|
 |Network naming|App displays eth0; startup scripts configure Ethernet and experimental gadget|Keep the draft's `net.ifnames=0` initially. Verify the actual adapter/interface, DHCP, SSH keys, and reboot persistence. Gadget support being compiled in does not establish a usable UDC.|
 
 ### USB host first, gadget later
 
-The clone DTS enables the PHY host port but explicitly disables `u2phy_otg`; `usb20_otg` itself is enabled. Therefore even the known ASIX adapter on the physically labeled OTG connector must be tested under mainline. Built-in adapter support cannot fix a disabled PHY or incorrect VBUS wiring.
+The 4.4 boot log records ASIX `0b95:1790` at USB `1-1` ([captured log](results/2026-11-02/device-logs/boot.log)). Live 4.4 sysfs inspection by the operator on **2026-11-03** confirmed:
 
-If host mode on that connector does not probe, inspect the merged DT, controller/PHY links, board ID/VBUS pins, dmesg, and USB topology. A board-specific DT change enabling the correct PHY and choosing safe host mode may be required. Do not blindly enable the OTG port or force peripheral mode while powered by a host adapter. Establish the power wiring first and avoid back-feeding either PC or handheld.
+```text
+/sys/bus/usb/devices/1-1 -> /sys/devices/platform/ff300000.usb/usb1/1-1
+root-hub product: DWC OTG Controller
+```
 
-Only after stable host SSH should device mode be attempted: enable the correctly wired OTG PHY in a reviewed board DT/overlay, verify role/VBUS handling, confirm a UDC under `/sys/class/udc`, mount configfs, and bind NCM/RNDIS using `r36-gadget`. The required kernel options are already `y`; DTS/electrical behavior is the unresolved prerequisite. The first mainline milestone does not claim plain-cable networking.
+The adapter therefore uses **DWC2 at `ff300000` in host mode**, not EHCI/OHCI. The harvested vendor DT agrees: `usb@ff300000` is enabled and references the OTG PHY; `usb@ff340000` and `usb@ff350000` are disabled. The vendor's disabled OTG PHY did not prevent its 4.4 controller path from operating; that does not establish equivalent behavior with mainline's PHY framework.
+
+The unmodified mainline clone DTS enables `usb20_otg` but disables its `u2phy_otg`. Its enabled `u2phy_host` is the other PHY port; it does not rescue this connector. EHCI/OHCI are also disabled. Thus the default mainline DT leaves the known adapter's PHY unavailable, preventing this SSH path despite built-in DWC2 and AX88179 drivers. **This blocks a mainline boot test that relies on SSH.** The `vcc_host` regulator is already boot-on/always-on, so these source facts do not prove VBUS is unpowered; power routing still requires measurement.
+
+The opt-in `-UsbHost` build compiles [`usb-host-experimental.dts`](../br2-external/board/r36llm-mainline/usb-host-experimental.dts), installs `/overlays/usb-host-experimental.dtbo`, and applies it after the mandatory Panel 8 overlay. The minimal proposal sets `u2phy_otg.status = "okay"` and `usb20_otg.dr_mode = "host"` (with the controller enabled). It changes no regulator, GPIO or other DTS behavior. Offline overlay application and decompilation check the resulting properties. **The overlay has not been hardware-tested and does not establish safe VBUS or successful enumeration.** The boot script refuses to boot if an installed USB overlay cannot be applied.
+
+Use the known USB-Ethernet adapter arrangement, establish the power wiring, and avoid back-feeding either PC or handheld. Never connect this forced-host variant as a PC-to-handheld gadget. Only after stable host SSH should a separate, reviewed device-mode variant be attempted: remove the host-only overlay, verify role/VBUS handling and a UDC under `/sys/class/udc`, then test configfs/NCM/RNDIS. This build does not claim plain-cable networking.
 
 ## Hardware acceptance on the spare card
 
-Allow **1–2 days** of bring-up and repeat testing; panel or USB wiring faults can add several days. The total first-pass engineering estimate is **3–5 working days**, excluding long builds/downloads and unknown hardware faults. These are planning estimates, not measured completion times.
+Bring-up and repeat testing require a spare card. Successful compilation, overlay application and image checks do not establish bootability, USB operation, charging behavior or performance.
 
 1. **Offline gate:** check source hashes, final config, matching module vermagic, initramfs contents/`/init`, legacy ramdisk metadata, DTB symbols, offline overlay application, combined-loader offsets/length, partition table/signature, and boot file hashes. Check the exact removable-card identity and image size before flashing; verify the written image afterward.
 2. **First boot:** only the spare TF1 card is inserted. Capture UART5 if safely accessible with 3.3 V-compatible equipment and known pinout; do not assume vendor FIQ console behavior. Stop on boot loops, a hot blank screen, or repeated DDR resets. No inference yet.

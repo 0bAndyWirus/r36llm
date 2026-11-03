@@ -1,0 +1,13 @@
+FROM debian:bookworm@sha256:d74df7598108a173a621eda4d58a2adbf850b2d9a9d81bc2cca1a6c21174a880
+ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C TZ=UTC
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc-aarch64-linux-gnu bc bison flex libssl-dev libelf-dev \
+    libncurses-dev swig python3-dev python3-setuptools python3-pyelftools python3-pip \
+    device-tree-compiler u-boot-tools git curl ca-certificates xz-utils rsync cpio \
+    kmod file dosfstools mtools fdisk \
+    && rm -rf /var/lib/apt/lists/*
+ENV ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
+RUN printf '%s\n' 'fdt==0.3.3 --hash=sha256:6b2fae2e8dfa38e9b0f9666aa001dd25be74e893d293a8d60001438f732e9e47' > /tmp/requirements.txt \
+    && python3 -m pip install --break-system-packages --no-deps --require-hashes -r /tmp/requirements.txt \
+    && rm /tmp/requirements.txt
+WORKDIR /repo

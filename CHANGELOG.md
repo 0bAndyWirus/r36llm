@@ -7,6 +7,7 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - Source-built Linux 4.4 kernel, U-Boot, and image build pipeline. The resulting image still needs a hardware boot test.
+- Opt-in Linux 6.12.114/Arch R image build with mainline U-Boot, Panel 8 overlay, matching joypad module, and offline image checks. Hardware boot is untested; the optional DWC2 host overlay is experimental.
 - FAT32 data partition with first-boot growth on fresh images; hardware verification is pending. Release images contain no model or personal SSH authorization key.
 - ARMv8.0 NEON Bonsai dot-product paths for the pinned PrismML fork. Bit-identical results were checked under QEMU; on-device speed measurements are pending.
 - CI for native application builds, shell and Python checks, and Cortex-A35 NEON correctness; release workflow for image and source artifacts; Dependabot for GitHub Actions.

@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: MIT
+/dts-v1/;
+/plugin/;
+
+// Untested: the ASIX rescue adapter uses DWC2 ff300000, not EHCI/OHCI.
+// Opt in only after checking the power/cable arrangement. Never use this
+// host-only variant for a PC-to-handheld gadget connection.
+&u2phy_otg {
+    status = "okay";
+};
+
+&usb20_otg {
+    status = "okay";
+    dr_mode = "host";
+};

@@ -81,7 +81,7 @@ jobs:
                 br2-external/board/r36llm/overlay/etc/init.d/* \
                 br2-external/board/r36llm/overlay/usr/bin/* \
                 br2-external/board/r36llm/overlay/usr/sbin/* &&
-              shellcheck --severity=error scripts/*.sh scripts/bsp/*.sh
+              shellcheck -x --severity=error scripts/*.sh scripts/bsp/*.sh scripts/mainline/*.sh
             '
       - name: Compile Python tools
         env:

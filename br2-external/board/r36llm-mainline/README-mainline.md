@@ -1,6 +1,6 @@
 # Mainline RK3326 board preparation
 
-These files prepare a separate Linux 6.12 experiment. They are not wired into `scripts/build.ps1`, do not replace the 4.4 board, and have not been boot-tested. See [the migration plan](../../../docs/mainline.md) before building or flashing anything.
+These files define a separate Linux 6.12 experiment, built with `scripts/build-mainline.ps1`. They do not replace the default 4.4 board and have not been boot-tested. See [the build and migration guide](../../../docs/mainline.md) before building or flashing anything.
 
 ## Pinned inputs
 
@@ -53,7 +53,7 @@ These required options already equal `y` and therefore **do not appear in the fr
 
 The clone uses `archr-singleadc-joypad.ko`, not one of the enabled `JOYSTICK_ODROIDGO*` drivers. Use Arch R's [external driver package](https://github.com/archr-linux/Arch-R/blob/6b4904f99bef3fffab490b5ea70ac7de15735885/projects/ArchR/packages/linux-drivers/archr-joypad/package.mk), which pins [`4a8392c1a15a9cf2cab43750c3246d53d6410301`](https://github.com/archr-linux/archr-joypad/tree/4a8392c1a15a9cf2cab43750c3246d53d6410301). Compile against this kernel's generated headers and `Module.symvers`; stage it and load it before launching the app. The config enables `MODVERSIONS`, so a 4.4 or stock Arch R module cannot be substituted.
 
-Before a future build, merge in a separate Linux build directory using the patched kernel's own tools:
+The opt-in builder performs this merge in its separate Linux work volume. To reproduce configuration manually:
 
 ```sh
 # ARCHR is a checkout at the exact commit above; KERNEL is the patched 6.12.114 source.
@@ -65,10 +65,12 @@ mkdir -p "$KOUT"
 make -C "$KERNEL" O="$KOUT" olddefconfig
 ```
 
-Then inspect the resolved `.config` for dropped settings. This preparation did **not** run `olddefconfig`, compile a kernel, generate an overlay, or boot hardware. The comparison establishes a nonredundant fragment against the requested baseline, not dependency closure after configuration or hardware support.
+The builder checks every fragment setting after `olddefconfig`, compiles the kernel and external joypad, generates and applies the Panel 8 overlay offline, and records the resolved config under `out/mainline/metadata/kernel/`. These checks establish dependency closure and DT compatibility, not hardware operation.
 
 ## Boot script
 
-`boot.ini` is source for a **compiled `boot.scr`**. Mainline U-Boot's pinned default runs `bootmeth order script; bootflow scan -b`; copying an uncompiled `boot.ini` is not sufficient. The draft directly loads `/Image`, the fixed clone DTB, `/overlays/mipi-panel.dtbo`, and `/uInitrd`; it grows the DTB, applies the overlay, then calls `booti`. No Arch R squashfs/root partition arguments are used.
+`boot.ini` is source for a **compiled `boot.scr`**. Mainline U-Boot's pinned default runs `bootmeth order script; bootflow scan -b`; copying an uncompiled `boot.ini` is not sufficient. The builder compiles this script, which directly loads `/Image`, the fixed clone DTB, `/overlays/mipi-panel.dtbo`, and `/uInitrd`; it grows the DTB, applies the overlay, then calls `booti`. No Arch R squashfs/root partition arguments are used.
 
 The alternative upstream flow compiles `clone_boot.ini` to `boot.scr`, selects a DTB by ADC, then invokes extlinux with `FDTOVERLAYS`. Our explicit script avoids that ADC fallback and makes the mandatory overlay and legacy initrd handling visible. Check U-Boot's resolved configuration for `CMD_BOOTI`, `CMD_FDT`, `OF_LIBFDT_OVERLAY`, `LEGACY_IMAGE_FORMAT`, FAT loading, and script bootflow support before using it. Keep the script source, generated script, DTB, overlay, firmware, and hashes together with each experiment.
+
+The default mainline DT disables the OTG PHY used by the working 4.4 USB-Ethernet adapter, so it blocks that SSH path. `scripts/build-mainline.ps1 -UsbHost` additionally builds and installs `usb-host-experimental.dts`, which enables that PHY and forces DWC2 host mode. The script applies this overlay only when its file is installed. This is an **untested host-only proposal**, not a hardware or VBUS-safety guarantee; do not use it for a PC-to-handheld gadget cable. See the USB evidence in the mainline guide.
