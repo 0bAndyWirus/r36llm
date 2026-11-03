@@ -4,7 +4,23 @@ BINARIES_DIR=${1:?Usage: post-image.sh BINARIES_DIR}
 REPO=$(CDPATH= cd -- "$(dirname -- "$0")/../../.." && pwd)
 BOARD="$REPO/br2-external/board/r36llm"
 ARTIFACTS="$REPO/out/bsp/artifacts"
-for file in Image rk3326-r36s-linux.dtb idbloader.img uboot.img trust.img; do
+# Both supported U-Boot revisions accept this vendor-style plaintext boot.ini.
+# The newer clone revision additionally inspects its DTB load before cfgload.
+python3 - "$BOARD/boot.ini" <<'PY'
+from pathlib import Path
+import sys
+
+for number, line in enumerate(Path(sys.argv[1]).read_text().splitlines(), 1):
+    if not line.strip():
+        sys.exit(f"r36llm: boot.ini:{number}: blank line before DTB load; U-Boot stops parsing here")
+    if line.startswith("load") and ".dtb" in line:
+        if line.rstrip().rsplit(" ", 1)[-1] != "rk3326-r36s-linux.dtb":
+            sys.exit("r36llm: boot.ini must select rk3326-r36s-linux.dtb for early U-Boot DTB loading")
+        break
+else:
+    sys.exit("r36llm: boot.ini has no DTB load command for early U-Boot initialization")
+PY
+for file in Image rk3326-r36s-linux.dtb rg351v-uboot.dtb idbloader.img uboot.img trust.img; do
     [ -f "$ARTIFACTS/$file" ] || { echo "r36llm: missing source-build artifact $file; run scripts/build.ps1" >&2; exit 1; }
     cp "$ARTIFACTS/$file" "$BINARIES_DIR/$file"
 done

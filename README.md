@@ -72,14 +72,22 @@ cd r36llm
 scripts/build.ps1
 ```
 
-The build pins the BSP and U-Boot revisions in `scripts/bsp/`, cross-compiles them with GCC 8 in Docker, builds the Buildroot initramfs, and runs genimage. Linux-volume checkouts avoid Windows reserved filenames in the kernel tree.
+The build pins the BSP and U-Boot revisions in `scripts/bsp/`, builds Linux with GCC 8 and the default U-Boot with Linaro GCC 6.3-2017.05 in Docker, builds the Buildroot initramfs, and runs genimage. Linux-volume checkouts avoid Windows reserved filenames in the kernel tree.
+
+The default `R36LLM_UBOOT=vendor5606e80` rebuilds the working card's U-Boot commit `5606e804ffe8f9e5427d55c8da04c638f01a9391`, using `./make.sh odroidgoa`, its original packing tools, and the recorded build time (`SOURCE_DATE_EPOCH=1770327932`, `TZ=UTC-11`, February 6, 2026 at 08:45:32 +1100). The timestamp patch only lets reproducible builds retain that timezone. Rockchip DDR v1.10, miniloader v1.12, BL31 v1.14 and BL32 v1.10 come from pinned rkbin `a92d5e7`. R36BOOT includes a separate display tree, `rg351v-uboot.dtb`, rebuilt from `scripts/bsp/rg351v-uboot.dts`; Linux still loads `rk3326-r36s-linux.dtb`. The display DTS is a GPL-2.0+ decompilation of the working vendor DTB, attributed to the vendor U-Boot / `rg351mp-uboot.dts` lineage rather than claimed as the vendor's original source. These changes do not establish a successful hardware boot of this project's kernel/initramfs.
+
+Both U-Boot revisions apply a dependency-only EFI build-order patch so parallel builds finish the architecture startup objects before linking the EFI hello application. It does not change the proven default loader bytes.
+
+To select the previous source revision, set `$env:R36LLM_UBOOT = "clone4820a71"` before `scripts/build.ps1`. Only that option uses `R36LLM_FIRMWARE_VARIANT=A` or `B` (default B). Its early DTB parser requires no blank lines before the Linux DTB load in `boot.ini`; the image build preserves and checks that constraint. Clear the environment override to return to the vendor-matching default.
+
+This reproduces the working vendor card's boot chain byte for byte: sectors 64–32767 of the image (idbloader, U-Boot and trust, including redundant copies and reserved gaps) have SHA-256 `ebd1848bd7c2a03620b5ebaf2acfdef0ec0ef2a11ebd1610a45c5ff527508063`, identical to a raw backup of a working G80CA-MB V1.3 Panel 8 card.
 
 On Windows, the build enables NTFS case sensitivity for `out/bsp/artifacts/modules/`. This preserves module pairs such as `xt_DSCP.ko` and `xt_dscp.ko`; copying that tree to a case-insensitive directory can silently lose drivers. The raw image itself has no such host-filesystem requirement.
 
 Outputs:
 
 - `out/bsp/artifacts/r36llm.img`: 800 MiB raw disk image, without models.
-- `out/bsp/artifacts/{Image,rk3326-r36s-linux.dtb,idbloader.img,uboot.img,trust.img}`: boot components.
+- `out/bsp/artifacts/{Image,rk3326-r36s-linux.dtb,rg351v-uboot.dtb,idbloader.img,uboot.img,trust.img}`: boot components.
 - `out/bsp/artifacts/modules/`: all source-built kernel modules; the initramfs includes only needed loadable drivers.
 - `out/uInitrd`, `out/r36llm`: initramfs and application for updates.
 
@@ -96,7 +104,7 @@ The image uses 512-byte sectors. Raw loader offsets follow upstream `Clone-u-boo
 |p2: R36SWAP|294912|512 MiB|
 |p3: R36DATA (FAT32)|1343488|128 MiB before first-boot growth|
 
-The kernel and U-Boot are built from source. DDR initialization, the miniloader, BL31 and BL32 are Rockchip firmware binaries redistributed under the rkbin license; see [firmware notices](THIRD-PARTY/firmware/NOTICE). This is not a blob-free boot chain.
+The kernel and U-Boot are built from source. DDR initialization, the miniloader, BL31 and BL32 are Rockchip firmware binaries; see [firmware notices](THIRD-PARTY/firmware/NOTICE). Rockchip's repository license permits binary redistribution, but its applicability to the selected historical, removed binaries remains unconfirmed. Resolve that question before publishing a rebuilt image. This is not a blob-free boot chain.
 
 The default build creates a personal SSH key when `keys/authorized_keys` is missing and embeds its public key. Use `scripts/build.ps1 -Release` for a distributable image: it neither generates nor embeds a personal authorization key, even if one already exists. The default login is `root` with password `r36llm`; change it before connecting the device to an untrusted network. Do not publish images containing private credentials or data.
 
@@ -226,6 +234,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute and [CHANGELOG.md](
 - [Spleen](https://github.com/fcambus/spleen) font by Frederic Cambus (BSD-2-Clause), embedded in `app/src/font.h` with its notice.
 - Default model: PrismML's [Ternary-Bonsai-2-2B](https://huggingface.co/prism-ml/Ternary-Bonsai-2-2B-gguf), based on [Qwen/Qwen3.5-2B](https://huggingface.co/Qwen/Qwen3.5-2B) (Apache-2.0). No model is shipped; models, including [SmolLM2](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct) (Apache-2.0), are downloaded separately.
 - Linux BSP and U-Boot: GPL-2.0-family licenses and component-specific notices in their source trees. The release uses source-built binaries, not harvested vendor kernel/modules.
-- Rockchip boot firmware: binary redistribution under the rkbin license; exact filenames, provenance and license text are in [THIRD-PARTY/firmware](THIRD-PARTY/firmware/NOTICE).
+- Rockchip boot firmware: exact filenames, provenance, retained license text and the unresolved historical redistribution question are in [THIRD-PARTY/firmware](THIRD-PARTY/firmware/NOTICE).
 
 R36S is a product of its respective manufacturers; this project is not affiliated with them.

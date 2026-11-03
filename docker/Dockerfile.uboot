@@ -7,4 +7,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ln -s /usr/bin/aarch64-linux-gnu-gcc-8 /usr/bin/aarch64-linux-gnu-gcc \
     && mkdir -p /opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu \
     && ln -s /usr/bin /opt/toolchains/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin
+# The vendor binary identifies this exact GCC/binutils release. The original
+# releases.linaro.org URL now redirects to HTML; use its pinned source mirror.
+RUN python3 -c "import urllib.request; urllib.request.urlretrieve('https://codeload.github.com/rockchip-android/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/tar.gz/f96f76d6be89a6e28d4dac1f233f9aca9921f69b', '/tmp/linaro.tar.gz')" \
+    && echo 'cef4350a728a41c20eb9eba0d90e636702feb0b9f81d0db8d46c2721d5c7146f  /tmp/linaro.tar.gz' | sha256sum -c - \
+    && mkdir -p /opt/vendor-linaro \
+    && tar -xzf /tmp/linaro.tar.gz --strip-components=1 -C /opt/vendor-linaro \
+    && rm /tmp/linaro.tar.gz
 WORKDIR /work

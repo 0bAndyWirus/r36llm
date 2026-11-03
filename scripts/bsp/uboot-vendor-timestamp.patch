@@ -1,0 +1,19 @@
+--- a/Makefile
++++ b/Makefile
+@@ -1376,11 +1376,11 @@ define filechk_timestamp.h
+ 			$${date} -u -d "$${SOURCE_DATE}" >/dev/null 2>&1 && DATE="$${date}"; \
+ 		done; \
+ 		if test -n "$${DATE}"; then \
+-			LC_ALL=C $${DATE} -u -d "$${SOURCE_DATE}" +'#define U_BOOT_DATE "%b %d %C%y"'; \
+-			LC_ALL=C $${DATE} -u -d "$${SOURCE_DATE}" +'#define U_BOOT_TIME "%T"'; \
+-			LC_ALL=C $${DATE} -u -d "$${SOURCE_DATE}" +'#define U_BOOT_TZ "%z"'; \
+-			LC_ALL=C $${DATE} -u -d "$${SOURCE_DATE}" +'#define U_BOOT_DMI_DATE "%m/%d/%Y"'; \
+-			LC_ALL=C $${DATE} -u -d "$${SOURCE_DATE}" +'#define U_BOOT_BUILD_DATE 0x%Y%m%d'; \
++			LC_ALL=C $${DATE} -d "$${SOURCE_DATE}" +'#define U_BOOT_DATE "%b %d %C%y"'; \
++			LC_ALL=C $${DATE} -d "$${SOURCE_DATE}" +'#define U_BOOT_TIME "%T"'; \
++			LC_ALL=C $${DATE} -d "$${SOURCE_DATE}" +'#define U_BOOT_TZ "%z"'; \
++			LC_ALL=C $${DATE} -d "$${SOURCE_DATE}" +'#define U_BOOT_DMI_DATE "%m/%d/%Y"'; \
++			LC_ALL=C $${DATE} -d "$${SOURCE_DATE}" +'#define U_BOOT_BUILD_DATE 0x%Y%m%d'; \
+ 		else \
+ 			return 42; \
+ 		fi; \

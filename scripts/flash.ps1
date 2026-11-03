@@ -124,7 +124,8 @@ function Assert-FlashDisk {
         foreach ($volume in $volumes) {
             foreach ($item in $encrypted) {
                 if ($item.DeviceID.TrimEnd('\') -ieq $volume.Path.TrimEnd('\')) {
-                    $status = Invoke-CimMethod -InputObject $item -MethodName GetConversionStatus -ErrorAction Stop
+                    # Read-only query: run it even under -WhatIf, or the preflight fails closed.
+                    $status = Invoke-CimMethod -InputObject $item -MethodName GetConversionStatus -ErrorAction Stop -WhatIf:$false -Confirm:$false
                     if ($status.ReturnValue -ne 0 -or $status.ConversionStatus -ne 0 -or $item.ProtectionStatus -ne 0) {
                         throw 'The disk contains a BitLocker volume (or its state is unknown).'
                     }

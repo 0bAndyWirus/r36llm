@@ -39,6 +39,7 @@ Copy-Item (Join-Path $root 'out/uInitrd') "$boot\uInitrd" -Force
 Copy-Item (Join-Path $root 'out/rk3326-r36s-linux-gadget.dtb') "$boot\" -Force
 Copy-Item (Join-Path $root 'out/bsp/artifacts/Image') "$boot\Image" -Force
 Copy-Item (Join-Path $root 'out/bsp/artifacts/rk3326-r36s-linux.dtb') "$boot\rk3326-r36s-linux.dtb" -Force
+Copy-Item (Join-Path $root 'out/bsp/artifacts/rg351v-uboot.dtb') "$boot\rg351v-uboot.dtb" -Force
 Copy-Item (Join-Path $root 'br2-external/board/r36llm/boot.ini') "$boot\boot.ini" -Force
 Copy-Item (Join-Path $root 'out/boot/*.bmp') "$boot\" -Force
 

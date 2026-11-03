@@ -1,20 +1,41 @@
 Rockchip RK3326 boot firmware
 
-The boot images contain these prebuilt firmware components. They are not built
-from source by this project. Each bundled file matches the SHA-256 of the file
-at the following Rockchip repository revision:
-https://github.com/rockchip-linux/rkbin/tree/ca6901476e0561ceabef476b8f0b2dea36ea4aae/bin/rk33
+The boot images contain prebuilt firmware, not firmware built from source.
+The default R36LLM_UBOOT=vendor5606e80 uses the working card's set:
+DDR v1.10, miniloader v1.12, BL31 v1.14, BL32 v1.10.
+The optional R36LLM_UBOOT=clone4820a71 build selects one of two sets:
+A (R36LLM_FIRMWARE_VARIANT=A): DDR v1.10, miniloader v1.40, BL31 v1.34, BL32 v2.19.
+B (default): DDR v1.10, miniloader v1.12, BL31 v1.14, BL32 v1.10.
+B matches the working G80CA-MB Panel 8 card's firmware payloads.
+U-Boot itself is built from source in both modes.
 
-285a87e760a3586953f637b6de0fe80745b0ecf455dfb052bc3ecfc8b756cb7e  rk3326_ddr_333MHz_v2.12.bin
+Historical firmware comes from bin/rk33 at:
+https://github.com/rockchip-linux/rkbin/tree/a92d5e7df36cd1fac4bab24bc953b145fc0159a1
+
+d1f4dacf707d6737876788e02483a4db10c02b6ce9973ad07dd7bc6a80db369b  rk3326_ddr_333MHz_v1.10.bin
+e1f5b69a63a80af2d795f2f12bbe65d83712deb54e5dbfcf5b98958adec824af  rk3326_miniloader_v1.12.bin
+372d717c4965842f73f24279569fcfa3bd00b3a0a442e1d592c081393bfb2927  rk3326_bl31_v1.14.elf
+8ca2812707e3b08c765fe2a569c5b672b9d2c0417f1209e5156e1e3938bcba51  rk3326_bl32_v1.10.bin
+
+A retains these files from Clone-u-boot commit
+4820a715c2977495f5afa4fc92e1ac9c5311f769, tools/rk_tools/bin/rk33.
+Their hashes match bin/rk33 at:
+https://github.com/rockchip-linux/rkbin/tree/ca6901476e0561ceabef476b8f0b2dea36ea4aae
+
 473aacd5378f356757a71efeb54f4339925db154fbce288df7e3c1177f45bc28  rk3326_miniloader_v1.40.bin
 387aaee716a6753a9e6dd18c72b27783d125a294f6aa817531a5a6f340f16080  rk3326_bl31_v1.34.elf
 2067217f7de6ce438f75cd36c0fcc606a93282837bdcaeb6e2f172ab5e52e996  rk3326_bl32_v2.19.bin
 
-The exact copies used come from Clone-u-boot commit
-4820a715c2977495f5afa4fc92e1ac9c5311f769, tools/rk_tools/bin/rk33.
-Rockchip's repository LICENSE at the matching revision grants permission to
-use, copy and distribute the Software, subject to its terms; the full text is
-in the adjacent LICENSE file. See
+The adjacent LICENSE is Rockchip's repository license from ca6901476e0561ceabef476b8f0b2dea36ea4aae:
 https://github.com/rockchip-linux/rkbin/blob/ca6901476e0561ceabef476b8f0b2dea36ea4aae/LICENSE
+It grants permission to use, copy and distribute the Software under its terms.
+Rockchip introduced this repository-wide license in commit
+b4558da0860ca48bf1a571dd33ccba580b9abe23 ("Add license file for the repository"),
+whose message states "Cover binary release and source code tools":
+https://github.com/rockchip-linux/rkbin/commit/b4558da0860ca48bf1a571dd33ccba580b9abe23
+The historical firmware revision predates LICENSE. Neither the license text nor
+that commit explicitly addresses older, removed binaries; applicability to those
+historical files is not independently confirmed. Obtain clarification from
+Rockchip before treating that historical redistribution question as settled.
 The U-Boot program is separately source-built and separately licensed. Firmware
 source revisions corresponding to these exact binaries have not been verified.

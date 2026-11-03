@@ -38,7 +38,7 @@ if ($args.Count -eq 0) {
     if ($LASTEXITCODE -ne 0) { throw "Kernel build failed ($LASTEXITCODE)" }
     & docker build -f (Join-Path $Repo "docker/Dockerfile.uboot") -t r36llm-uboot $Repo
     if ($LASTEXITCODE -ne 0) { throw "U-Boot builder image failed ($LASTEXITCODE)" }
-    & docker run --rm -v "${Repo}:/src" r36llm-uboot bash /src/scripts/bsp/build-uboot.sh
+    & docker run --rm -v "${Repo}:/src" -e R36LLM_UBOOT -e R36LLM_FIRMWARE_VARIANT r36llm-uboot bash /src/scripts/bsp/build-uboot.sh
     if ($LASTEXITCODE -ne 0) { throw "U-Boot build failed ($LASTEXITCODE)" }
 }
 & docker build -t r36llm-builder (Join-Path $Repo "docker")
