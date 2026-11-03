@@ -37,8 +37,10 @@ jobs:
           git -C "$RUNNER_TEMP/llama.cpp" remote add origin https://github.com/PrismML-Eng/llama.cpp.git
           git -C "$RUNNER_TEMP/llama.cpp" fetch --depth=1 origin "$version"
           git -C "$RUNNER_TEMP/llama.cpp" checkout --detach FETCH_HEAD
-          git -C "$RUNNER_TEMP/llama.cpp" apply --check "$GITHUB_WORKSPACE/br2-external/package/prism-llama-cpp/0001-arm-neon-armv8.0-bonsai-dot.patch"
-          git -C "$RUNNER_TEMP/llama.cpp" apply "$GITHUB_WORKSPACE/br2-external/package/prism-llama-cpp/0001-arm-neon-armv8.0-bonsai-dot.patch"
+          for patch in "$GITHUB_WORKSPACE"/br2-external/package/prism-llama-cpp/*.patch; do
+            git -C "$RUNNER_TEMP/llama.cpp" apply --check "$patch"
+            git -C "$RUNNER_TEMP/llama.cpp" apply "$patch"
+          done
       # app/ uses portable Linux APIs; native compilation checks its real CMake
       # target and libllama API without building a target rootfs or running a UI.
       # The separate NEON job checks the Cortex-A35-specific implementation.
@@ -107,9 +109,17 @@ jobs:
           git -C "$RUNNER_TEMP/llama.cpp" remote add origin https://github.com/PrismML-Eng/llama.cpp.git
           git -C "$RUNNER_TEMP/llama.cpp" fetch --depth=1 origin "$version"
           git -C "$RUNNER_TEMP/llama.cpp" checkout --detach FETCH_HEAD
-          git -C "$RUNNER_TEMP/llama.cpp" apply --check "$GITHUB_WORKSPACE/br2-external/package/prism-llama-cpp/0001-arm-neon-armv8.0-bonsai-dot.patch"
-          git -C "$RUNNER_TEMP/llama.cpp" apply "$GITHUB_WORKSPACE/br2-external/package/prism-llama-cpp/0001-arm-neon-armv8.0-bonsai-dot.patch"
+          for patch in "$GITHUB_WORKSPACE"/br2-external/package/prism-llama-cpp/*.patch; do
+            git -C "$RUNNER_TEMP/llama.cpp" apply --check "$patch"
+            git -C "$RUNNER_TEMP/llama.cpp" apply "$patch"
+          done
       - name: Require bit-identical PASS at every optimization mode
         run: |
           sh br2-external/package/prism-llama-cpp/tests/run-bonsai-neon.sh \
             "$RUNNER_TEMP/llama.cpp" "$RUNNER_TEMP/neon-build"
+      - name: Require bit-identical two-row outputs
+        env:
+          TEST_SOURCE: ${{ github.workspace }}/br2-external/package/prism-llama-cpp/tests/test-bonsai-rows.c
+        run: |
+          sh br2-external/package/prism-llama-cpp/tests/run-bonsai-neon.sh \
+            "$RUNNER_TEMP/llama.cpp" "$RUNNER_TEMP/neon-rows-build"

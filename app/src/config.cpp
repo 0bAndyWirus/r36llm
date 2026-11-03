@@ -65,7 +65,7 @@ bool known_key(const std::string &key) {
     static const std::unordered_set<std::string> keys = {
         "model",      "system",     "usb_gadget_fn",  "threads", "ctx",
         "max_tokens", "top_k",      "swap_p2",        "link",    "temp",
-        "top_p",      "brightness", "screen_timeout", "cpu_mode", "keymap"};
+        "top_p",      "brightness", "screen_timeout", "cpu_mode", "keymap", "output_keep"};
     return keys.find(key) != keys.end();
 }
 
@@ -73,7 +73,9 @@ void apply(Config &config, const std::string &key, const std::string &value) {
     if (key == "model") {
         if (!value.empty())
             config.model = value;
-    } else if (key == "system")
+    } else if (key == "output_keep")
+        config.output_keep = value;
+    else if (key == "system")
         config.system = value;
     else if (key == "usb_gadget_fn") {
         if (!value.empty())
@@ -128,6 +130,14 @@ void Config::load(const std::string &path) {
     }
 }
 
+std::string Config::output_keep_for_model(const std::string &path) const {
+    const auto slash = path.find_last_of("/\\");
+    const auto start = slash == std::string::npos ? 0 : slash + 1;
+    return path.compare(start, std::string::npos, "Ternary-Bonsai-2-2B-PTQ1_0.gguf") == 0
+               ? output_keep
+               : std::string{};
+}
+
 bool Config::save(const std::string &path) const {
     std::vector<std::string> preserved;
     {
@@ -147,6 +157,7 @@ bool Config::save(const std::string &path) const {
     for (const auto &line : preserved)
         output << line << '\n';
     output << "model=" << model << '\n'
+           << "output_keep=" << output_keep << '\n'
            << "threads=" << threads << '\n'
            << "ctx=" << ctx << '\n'
            << "max_tokens=" << max_tokens << '\n'

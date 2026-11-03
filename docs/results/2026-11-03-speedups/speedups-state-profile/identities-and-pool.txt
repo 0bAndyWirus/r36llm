@@ -1,0 +1,6 @@
+d1fb4ec3417ba63d694157417d9437cbedcd9013acd170546fa4044a950fce7a  /tmp/speedups/state/lib/libggml-cpu.so.0
+d1fb4ec3417ba63d694157417d9437cbedcd9013acd170546fa4044a950fce7a  /tmp/speedups/rows/lib/libggml-cpu.so.0
+cd022a66c6c4909591f125bcfbcc280402e9c4741cc6ac2ecb3ca3ad2fccf7f5  /tmp/speedups/state/lib/libllama.so.0
+573feafba3444935663f16a1b5c272ea08c3a4dea1b771affafe2da10d8aef19  /data/r36llm/lib/libllama.so.0
+6a3119b0d4acca1301d3888a733bbfa5a0eabe0cbe2d1a25edf0cac984f1582a  /data/r36llm/lib/libggml-cpu.so.0
+OpenMP disposable_pool pairs=100000 seconds=0.202524583 microseconds_per_new_free=2.025246

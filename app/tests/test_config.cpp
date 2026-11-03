@@ -46,6 +46,7 @@ std::string read_file(const std::string &path) {
 
 void check_equal(const r36::Config &a, const r36::Config &b) {
     CHECK(a.model == b.model);
+    CHECK(a.output_keep == b.output_keep);
     CHECK(a.system == b.system);
     CHECK(a.usb_gadget_fn == b.usb_gadget_fn);
     CHECK(a.link == b.link);
@@ -77,11 +78,25 @@ void test_config() {
         defaults.ctx = 1024;
     check_equal(config, defaults);
     CHECK(config.keymap == "auto");
+    CHECK(config.output_keep.empty());
+    CHECK(config.output_keep_for_model("/data/r36llm/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf").empty());
+
+    write_file(path, "output_keep = /data/r36llm/output-keep-en-fr.txt # opt in\n");
+    config.load(path);
+    CHECK(config.output_keep == "/data/r36llm/output-keep-en-fr.txt");
+    CHECK(config.output_keep_for_model("/data/r36llm/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf") == config.output_keep);
+    CHECK(config.output_keep_for_model("Ternary-Bonsai-2-2B-PTQ1_0.gguf") == config.output_keep);
+    CHECK(config.output_keep_for_model("/data/r36llm/models/SmolLM2-135M-Instruct-Q4_0.gguf").empty());
+    CHECK(config.output_keep_for_model("/data/r36llm/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf.other").empty());
+    write_file(path, "output_keep=/old/list.txt\noutput_keep=\n");
+    config.load(path);
+    CHECK(config.output_keep.empty());
 
     write_file(path,
         " # comment with threads=99\r\n"
         "unknown = ignored\r\n"
         "model = custom.gguf # comment\r\n"
+        "output_keep = /data/r36llm/output-keep-en-fr.txt\r\n"
         "system = hello = world # trailing comment\r\n"
         "usb_gadget_fn = ecm\r\n"
         "link = gadget\r\n"
@@ -93,6 +108,7 @@ void test_config() {
         "temp = 100\r\ntop_p = 1\r\n");
     config.load(path);
     CHECK(config.model == "custom.gguf");
+    CHECK(config.output_keep == "/data/r36llm/output-keep-en-fr.txt");
     CHECK(config.system == "hello = world");
     CHECK(config.usb_gadget_fn == "ecm");
     CHECK(config.link == "gadget");
@@ -142,13 +158,16 @@ void test_config() {
     write_file(path, "keymap=invalid\n");
     config.load(path);
     CHECK(config.keymap == "auto");
+    CHECK(config.output_keep.empty()); // Missing keys also reset a previous opt-in.
     write_file(path, "keymap=vendor44\nkeymap=auto\n");
     config.load(path);
     CHECK(config.keymap == "auto");
 
     write_file(path, "# preserved comment\nunknown = keep me\nnot an assignment\n\n"
-                     "keymap=vendor44 # replaced\nkeymap=auto\nthreads=2\n");
+                     "keymap=vendor44 # replaced\nkeymap=auto\nthreads=2\n"
+                     "output_keep=/old/list.txt\noutput_keep=/duplicate/list.txt\n");
     config.model = "roundtrip.gguf";
+    config.output_keep = "/data/r36llm/output-keep-en-fr.txt";
     config.system = "roundtrip system";
     config.usb_gadget_fn = "rndis";
     config.link = "gadget";
@@ -167,6 +186,9 @@ void test_config() {
     const std::string saved = read_file(path);
     CHECK(saved.find("# preserved comment\nunknown = keep me\nnot an assignment\n\n") != std::string::npos);
     CHECK(saved.find("keymap=mainline\n") != std::string::npos);
+    CHECK(saved.find("output_keep=/data/r36llm/output-keep-en-fr.txt\n") != std::string::npos);
+    CHECK(saved.find("output_keep=/old/list.txt") == std::string::npos);
+    CHECK(saved.find("output_keep=/duplicate/list.txt") == std::string::npos);
     CHECK(saved.find("keymap=vendor44") == std::string::npos);
     CHECK(saved.find("keymap=auto") == std::string::npos);
     r36::Config loaded;

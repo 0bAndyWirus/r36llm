@@ -1,0 +1,141 @@
+From: r36llm maintainers
+Subject: [PATCH] qwen35: optional CPU PTQ1_0 restricted output rows
+
+LLAMA_OUTPUT_KEEP selects sorted original token ids for the output head only.
+Reuse the normal Hadamard input transform, Q8_0 activation quantizer, and
+PTQ1_0 dot kernel, leaving the tied embedding and tokenizer untouched.
+Missing ids have -inf logits. The unset/empty environment variable retains
+the existing graph.
+
+Base: PrismML-Eng/llama.cpp 5628c7338963b00a598f2a588fd09a79af6d70db + 0001 + 0002
+Apply after 0001-arm-neon-armv8.0-bonsai-dot.patch and
+0002-arm-neon-bonsai-two-rows.patch; it also applies independently after 0001.
+Upstream-Status: Not submitted [experimental English/French output restriction]
+
+--- a/src/models/models.h
++++ b/src/models/models.h
+@@ -2616,6 +2616,9 @@
+     void load_arch_hparams(llama_model_loader & ml) override;
+     void load_arch_tensors(llama_model_loader & ml) override;
+ 
++    // Original output row ids only; input embeddings and tokenization are unchanged.
++    std::vector<int32_t> output_keep;
++
+     struct graph : public llm_build_delta_net_base {
+         graph(const llama_model & model, const llm_graph_params & params);
+ 
+--- a/src/models/qwen35.cpp
++++ b/src/models/qwen35.cpp
+@@ -2,6 +2,43 @@
+ #include "llama-impl.h"
+ #include "llama-memory-recurrent.h"
+ #include "llama-kv-cache.h"
++#include "ggml-cpu.h"
++
++#include <algorithm>
++#include <cstdlib>
++#include <fstream>
++#include <sstream>
++#include <stdexcept>
++
++// CPU-only restricted PTQ1_0 head. Reuse the normal GEMV's quantizer and dot
++// kernel without copying, reordering, or dequantizing the tied embedding rows.
++static void qwen35_output_keep(
++        ggml_tensor * dst, int ith, int nth, void * userdata) {
++    const auto & ids = *static_cast<const std::vector<int32_t> *>(userdata);
++    const ggml_tensor * weights = dst->src[0];
++    const ggml_tensor * hidden  = dst->src[1];
++    const auto * traits = ggml_get_type_traits_cpu(weights->type);
++    const size_t first = ids.size() * ith / nth;
++    const size_t last  = ids.size() * (ith + 1) / nth;
++    if (first == last) {
++        return;
++    }
++    // Partition by kept rows, but assign each worker its surrounding dropped
++    // rows too. Fill and scatter then touch disjoint spans without a barrier.
++    const int64_t begin = first == 0 ? 0 : ids[first];
++    const int64_t end   = last == ids.size() ? weights->ne[1] : ids[last];
++    for (int64_t col = 0; col < hidden->ne[1]; ++col) {
++        float * logits = reinterpret_cast<float *>(
++                static_cast<char *>(dst->data) + col * dst->nb[1]);
++        std::fill(logits + begin, logits + end, -INFINITY);
++        const char * activation = static_cast<const char *>(hidden->data) + col * hidden->nb[1];
++        for (size_t row = first; row < last; ++row) {
++            const int32_t id = ids[row];
++            const char * weight = static_cast<const char *>(weights->data) + id * weights->nb[1];
++            traits->vec_dot(weights->ne[0], logits + id, 0, weight, 0, activation, 0, 1);
++        }
++    }
++}
+ 
+ void llama_model_qwen35::load_arch_hparams(llama_model_loader & ml) {
+     ml.get_key(LLM_KV_ATTENTION_LAYERNORM_RMS_EPS,       hparams.f_norm_rms_eps);
+@@ -52,6 +89,42 @@
+     // if output is NULL, init from the input tok embed
+     if (output == NULL) {
+         output = create_tensor(tn(LLM_TENSOR_TOKEN_EMBD, "weight"), { n_embd, n_vocab }, TENSOR_DUPLICATED);
++    }
++
++    if (const char * path = std::getenv("LLAMA_OUTPUT_KEEP")) {
++        if (*path != '\0') {
++            if (params.n_gpu_layers != 0 || output->type != GGML_TYPE_PTQ1_0 || output_s) {
++                throw std::runtime_error("LLAMA_OUTPUT_KEEP requires a CPU PTQ1_0 qwen35 head");
++            }
++            std::ifstream file(path);
++            if (!file) {
++                throw std::runtime_error(std::string("Cannot open LLAMA_OUTPUT_KEEP: ") + path);
++            }
++            std::string line;
++            while (std::getline(file, line)) {
++                line.erase(line.find('#') == std::string::npos ? line.size() : line.find('#'));
++                std::istringstream input(line);
++                input >> std::ws;
++                if (input.eof()) {
++                    continue;
++                }
++                int64_t id;
++                if (!(input >> id) || id < 0 || id >= n_vocab ||
++                        (!output_keep.empty() && id <= output_keep.back())) {
++                    throw std::runtime_error("LLAMA_OUTPUT_KEEP ids must be sorted, unique, and in vocabulary");
++                }
++                input >> std::ws;
++                if (!input.eof()) {
++                    throw std::runtime_error("LLAMA_OUTPUT_KEEP expects one token id per line");
++                }
++                output_keep.push_back(static_cast<int32_t>(id));
++            }
++            if (file.bad() || output_keep.empty()) {
++                throw std::runtime_error("LLAMA_OUTPUT_KEEP is empty or unreadable");
++            }
++            LLAMA_LOG_INFO("%s: restricted output head: %zu / %lld original token ids\n",
++                    __func__, output_keep.size(), static_cast<long long>(n_vocab));
++        }
+     }
+ 
+     auto load_block_trunk = [&](int il, int flags) {
+@@ -306,8 +379,23 @@
+         ggml_build_forward_expand(gf, embd);
+     }
+ 
+-    // LM head
+-    cur = build_lora_mm(model.output, cur, model.output_s);
++    // No keep list means the original head graph, including LoRA, is unchanged.
++    const auto & keep = static_cast<const llama_model_qwen35 &>(model).output_keep;
++    if (keep.empty()) {
++        cur = build_lora_mm(model.output, cur, model.output_s);
++    } else {
++        if (!model.loras.empty()) {
++            throw std::runtime_error("LLAMA_OUTPUT_KEEP does not support LoRA adapters");
++        }
++        // The tied Bonsai weights are Hadamard-folded, just as in build_lora_mm.
++        ggml_tensor * head_input = build_hadamard_input(model.output, cur);
++        ggml_tensor * quantized = ggml_cast(ctx0, head_input, GGML_TYPE_Q8_0);
++        cb(quantized, "output_keep_quantize", -1);
++        ggml_tensor * args[] = { model.output, quantized };
++        cur = ggml_custom_4d(ctx0, GGML_TYPE_F32, model.output->ne[1], cur->ne[1], 1, 1,
++                args, 2, qwen35_output_keep, GGML_N_TASKS_MAX,
++                const_cast<std::vector<int32_t> *>(&keep));
++    }
+ 
+     cb(cur, "result_output", -1);
+     res->t_logits = cur;

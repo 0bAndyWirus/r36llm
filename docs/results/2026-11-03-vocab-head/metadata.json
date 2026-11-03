@@ -1,0 +1,28 @@
+{
+  "engine_pin": "5628c7338963b00a598f2a588fd09a79af6d70db",
+  "x86_cpu": "AMD Ryzen 5 5600 6-Core Processor",
+  "x86_environment": "Native x86_64 Linux binaries in Docker on Windows / Microsoft hypervisor; not ARM emulation",
+  "x86_compiler": "GNU C/C++ 12.2.0, Release, -march=native, OpenMP",
+  "threads": 4,
+  "sha256": {
+    "models/Ternary-Bonsai-2-2B-PTQ1_0.gguf": "36061ad406df8a4903a6db005be350c50fabfaf717f9ef0acf4b76adcd9929fa",
+    "card/r36llm/output-keep-en-fr.txt": "c66e113c437dd5d3dc2e778584441c9a9cf2b9a382631a82c672051e828454b0",
+    "br2-external/package/prism-llama-cpp/0001-arm-neon-armv8.0-bonsai-dot.patch": "f08004aecc63f94b061b649f80b4edc94c66def7eb1c0eb2018867131a4afcbc",
+    "br2-external/package/prism-llama-cpp/0002-arm-neon-bonsai-two-rows.patch": "b37a71e66a4ccfa99e705a396278c2c80db170137cd3d9d55a77ae8cb25e5c8b",
+    "br2-external/package/prism-llama-cpp/0003-qwen35-restricted-output-head.patch": "6b193fa7e75bc52b7393b590a0d24a1ca1087c46a59c2a9045b67422a79ae4c1"
+  },
+  "device_build": {
+    "compiler": "Buildroot GCC 13.4.0",
+    "cpu_flags": "-march=armv8-a; no dotprod/i8mm",
+    "patch_stack": [
+      "0001",
+      "0002",
+      "0003"
+    ],
+    "prefix_archive_sha256": "65ce4ab5e979b04d1aa9d1b0cc06eee4ca0e91caa7d15ebd68e5700cb77c0530",
+    "installed_prefix": "/data/r36llm/opt/vocab-head",
+    "installed_app_libraries_switched": false,
+    "app_config_changed_on_device": false,
+    "results_directory": "/data/r36llm/bench-vocab/20261103-101558-100"
+  }
+}

@@ -8,6 +8,8 @@ namespace r36 {
 
 struct Config {
     std::string model = "Ternary-Bonsai-2-2B-PTQ1_0.gguf";
+    // Empty uses the full head; an explicit file only applies to the default model.
+    std::string output_keep;
     std::string system =
         "You are a tiny AI living inside an R36S handheld game console. Answer briefly.";
     std::string usb_gadget_fn = "ncm";
@@ -26,6 +28,7 @@ struct Config {
 
     void load(const std::string &path = "/data/r36llm/config.ini");
     bool save(const std::string &path = "/data/r36llm/config.ini") const;
+    std::string output_keep_for_model(const std::string &path) const;
 };
 
 uint64_t memory_kb(const std::string &field);

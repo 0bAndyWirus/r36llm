@@ -18,6 +18,7 @@ struct LlmState {
     float progress = 0;
     double generation_tps = 0, prompt_tps = 0;
     double first_token_seconds = 0;
+    double tokenize_seconds = 0, prompt_seconds = 0, first_decode_seconds = 0;
     int generated_tokens = 0;
     std::string text, error, model;
     unsigned completed = 0;

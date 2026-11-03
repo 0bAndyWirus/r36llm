@@ -79,5 +79,6 @@ rm -rf "$TARGET_DIR/etc/dropbear"
 ln -sfn /data/r36llm/ssh "$TARGET_DIR/etc/dropbear"
 # Windows bind mounts do not preserve executable bits reliably.
 install -d "$TARGET_DIR/etc/r36llm/defaults"
-install -m 0644 "$REPO/card/r36llm/config.ini" "$REPO/card/r36llm/prompts.txt" "$TARGET_DIR/etc/r36llm/defaults/"
+install -m 0644 "$REPO/card/r36llm/config.ini" "$REPO/card/r36llm/prompts.txt" \
+    "$REPO/card/r36llm/output-keep-en-fr.txt" "$TARGET_DIR/etc/r36llm/defaults/"
 chmod 0755 "$TARGET_DIR"/etc/init.d/S* "$TARGET_DIR"/usr/sbin/r36-*

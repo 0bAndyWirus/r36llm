@@ -1,0 +1,4 @@
+f646f1264a6b12ceec5b10437523ab891f3232e2a8c1c68842b1bc8e58bd09a7  /data/r36llm/prompt-cache-measure/before
+47eeb07662c1daf9682b61beedb73fb6b29e6322e178022e3c94dacba044c6ac  /data/r36llm/prompt-cache-measure/after
+36061ad406df8a4903a6db005be350c50fabfaf717f9ef0acf4b76adcd9929fa  /data/r36llm/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf
+5fc7b0d5665b048ce7802793e65841332923feb43b41431632e6ad8af3478e0f  /data/r36llm/config.ini

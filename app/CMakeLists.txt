@@ -47,4 +47,6 @@ if(R36LLM_BUILD_TESTS)
         set_tests_properties(${suite} PROPERTIES
             ENVIRONMENT "LD_LIBRARY_PATH=${LLAMA_LIB_DIR}:$ENV{LD_LIBRARY_PATH}")
     endforeach()
+    # The optional real-model prompt-cache checks can include model loading.
+    set_tests_properties(prompt_cache PROPERTIES TIMEOUT 1800)
 endif()

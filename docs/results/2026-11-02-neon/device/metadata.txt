@@ -42,7 +42,7 @@ CPU revision	: 2
 
 Hardware	: G80CA-MB V1.3-20251212 Panel 8
 Revision	: 0000
-Serial		: 58ed5091390e908b
+Serial		: [redacted]
 MemTotal:         916848 kB
 MemFree:          251824 kB
 MemAvailable:     712416 kB

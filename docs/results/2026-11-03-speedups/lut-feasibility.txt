@@ -1,0 +1,71 @@
+Activation-LUT feasibility — design only, not implemented
+
+Reference: https://github.com/microsoft/T-MAC describes replacing low-bit
+multiply/dequantization with activation-derived lookup tables. Its published
+speedups are not Cortex-A35 or bit-exact Bonsai measurements. BitNet TL1/TL2
+is another design reference: https://arxiv.org/pdf/2502.11880 .
+
+An exact variant must retain Q8 quantization and integer dots. Requantizing
+table entries or using approximate aggregation would change the contract.
+Apply each Q8_0 scale after its exact 32-element dot, then the PTQ/Q1 block
+scale and scalar additions in the existing order. PQ2/Q8_K instead retains
+the exact 128-element integer dot before its existing scale operation.
+ARMv8.0 TBL is sufficient in principle; dotprod/i8mm is unnecessary.
+
+Q1_0
+----
+Four binary signs give 16 possible sums of four int8 activations. The range
+includes +512, so an int8 table cannot represent all cases exactly. A
+16-entry int16 table occupies 32 bytes. At width 2048, 512 groups require
+16 KiB of tables, amortized across thousands of FFN or vocabulary rows.
+Weight-index nibbles already exist in the packed stream. Two byte-table
+lookups can recover each int16 result without changing Q8 scaling.
+
+Layout is the obstacle: efficient TBL wants one activation table serving
+many output-row indices, but the current weights are row-major. A bounded
+row tile must collect/transpose strided nibbles, or a one-time in-memory
+repack must interleave rows. Such a Q1 repack need not increase bit count.
+Table preparation, row gathering and exact accumulation still cost work.
+
+PTQ1_0
+------
+A pair of ternary weights has nine states. Padded 16-entry int16 tables need
+32 KiB at width 2048, or 96 KiB at width 6144, before other working data.
+The five-trit codec is not a direct nibble index: trits are extracted from
+((uint8)(byte * 3^k) * 3) >> 8, and one packed byte crosses Q8 scale groups.
+A 243-entry five-trit float table both exceeds TBL's small table width and
+changes scale/reduction order. It does not meet bit-exactness. Deriving pair
+indices at runtime retains part of today's decode cost.
+
+A byte index for every pair needs 64 index bytes plus two scale bytes per
+128 weights, versus 28 bytes now (2.36x): too large for a full resident copy.
+Packing two four-bit pair indices per byte needs 32 index bytes plus the
+two-byte scale (1.21x). That is a possible memory-conscious layout, not a
+proof of RAM exhaustion. It trades nibble unpacking for the trit decoder.
+Peak RAM must include the repack, original mapped pages, KV/state, scratch
+and the OS; source pages must become reclaimable. A bounded or selected-
+tensor repack is safer to investigate first.
+
+Recommendation
+--------------
+[INFERENCE] Q1 is the cleaner first LUT experiment. PTQ needs a row-tiled
+layout/kernel and a measured peak-memory budget. Replacing SMLAL with TBL
+inside the current one-row dot is unlikely to reproduce T-MAC's benefit.
+The bandwidth probe supports compute-heavy decode, but no honest t/s
+estimate follows without a prototype. A35 table throughput, cache pressure,
+row gathering and widening may erase the instruction savings.
+
+The current two-row candidate follows the independent-accumulator and
+activation-reuse principles found in no-dotprod in-order schedules, but
+does not copy ruy/gemmlowp code:
+https://github.com/google/ruy/blob/master/ruy/kernel_arm64.cc
+https://github.com/google/gemmlowp/blob/36212ad3651871bc3e9a599f1a6d5324778aea25/standalone/neon-gemm-kernel-benchmark.cc
+
+The proposed byte-lane PTQ decoder from Prism PR290 is already present in
+the pinned source as ggml_ptq1_0_decode_neon; 0001 and 0002 reuse it.
+https://github.com/PrismML-Eng/llama.cpp/pull/290
+The Q1 XOR/subtract alternative is outside this task's default PTQ/PQ focus;
+it also needs careful widening for Q8 -128 before it can replace a multiply.
+https://github.com/ggml-org/llama.cpp/pull/23358
+
+No LUT candidate was implemented or installed.

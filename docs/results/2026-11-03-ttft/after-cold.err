@@ -1,0 +1,11 @@
+r36llm start Nov  3 2026 09:12:51
+system cache: prepared (24 tokens, 20497588 bytes)
+[load_seconds: 4.243]
+[run: 1 ttft_seconds: 0.594 tokens: 16 generation_tps: 25.105376]
+[stages: tokenize_seconds: 0.000146 prompt_seconds: 0.591676 first_decode_seconds: 0.041906]
+system cache: restored (20497588 bytes, 0.004499 seconds)
+[run: 2 ttft_seconds: 0.609 tokens: 16 generation_tps: 24.433120]
+[stages: tokenize_seconds: 0.000226 prompt_seconds: 0.608304 first_decode_seconds: 0.043146]
+system cache: restored (20497588 bytes, 0.002161 seconds)
+[run: 3 ttft_seconds: 0.623 tokens: 16 generation_tps: 23.708818]
+[stages: tokenize_seconds: 0.000138 prompt_seconds: 0.622072 first_decode_seconds: 0.049588]

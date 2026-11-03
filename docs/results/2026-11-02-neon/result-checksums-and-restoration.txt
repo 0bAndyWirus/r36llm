@@ -114,3 +114,4 @@ voluntary_ctxt_switches:	61241
 nonvoluntary_ctxt_switches:	4119
 Filename				Type		Size	Used	Priority
 /dev/mmcblk0p2                          partition	11119376	1720	-1
+NOTE: the published device/metadata.txt has the board serial redacted, so its hash differs from the on-device original listed on line 1.

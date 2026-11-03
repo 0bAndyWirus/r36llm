@@ -44,7 +44,7 @@ Copy-Item (Join-Path $root 'out/boot/*.bmp') "$boot\" -Force
 
 $base = "$data\r36llm"
 foreach ($d in 'models', 'logs', 'ssh', 'bin') { New-Item -ItemType Directory -Force "$base\$d" | Out-Null }
-foreach ($f in 'config.ini', 'prompts.txt', 'autorun.sh.example') {
+foreach ($f in 'config.ini', 'prompts.txt', 'output-keep-en-fr.txt', 'autorun.sh.example') {
     if (-not (Test-Path "$base\$f")) { Copy-Item (Join-Path $root "card/r36llm/$f") "$base\$f" }
 }
 Get-ChildItem (Join-Path $root 'models') -Filter *.gguf -ErrorAction SilentlyContinue | ForEach-Object {

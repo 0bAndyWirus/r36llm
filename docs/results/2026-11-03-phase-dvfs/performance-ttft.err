@@ -1,0 +1,4 @@
+r36llm start Nov  3 2026 09:11:13
+[load_seconds: 3.018]
+[run: 1 ttft_seconds: 35.558 tokens: 1 generation_tps: 0.877537]
+[stages: tokenize_seconds: 0.001884 prompt_seconds: 35.546029 first_decode_seconds: 1.129894]

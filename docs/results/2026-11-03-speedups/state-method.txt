@@ -1,0 +1,83 @@
+Indexed recurrent-state GDN candidate — evaluated, NOT SHIPPING
+
+Release verdict
+---------------
+DROP from tonight's release by orchestrator decision. The measured 1.3%
+generation gain does not justify introducing a cache-lifecycle change
+without full lifecycle qualification. This is not a performance regression.
+The candidate remains only as rejected-state-gather.patch in this evidence
+directory and the local experiment tree. It is not in the Buildroot package
+patch directory, is not default-on and was not installed on the device.
+The shipping recommendation is unchanged: 0001 followed by rows-only 0002.
+
+Design
+------
+Reuse the existing indexed-state GDN K=1 operator only for CPU, one token,
+one sequence, one live recurrent row, no snapshots/replay, fused AR, F32
+contiguous state. Preserve the runtime source-row index, state zeroing and
+normal final-state writeback. Do not assume the source is row zero or the
+destination head. Other configurations retain the gathered path.
+No arithmetic kernel or cache serialization format changes.
+
+Correctness and limitations
+---------------------------
+GCC 12.2 and Buildroot GCC 13.4 each passed 72 complete output/state memcmp
+cases under qemu-aarch64 -cpu cortex-a35, -O2 -march=armv8-a. Cases cover
+head dimensions 16/64/128, 1/4 threads, source rows 0/1/2, raw gates on/off
+and zero/random cache states. See test-state-rows.cpp and correctness.txt.
+Two independent source reviews found no introduced defect in either the
+rows kernel or this guarded graph selection.
+
+These operator checks do not exercise actual cache writeback, graph reset
+ordering, reused graphs following sequence operations or save/restore
+continuation. Source review supports those invariants, but is not an
+end-to-end bit-exact lifecycle test. No additional device lifecycle test
+was run after the device was released to the orchestrator's queue.
+
+Device AB/BA
+------------
+The same state-candidate executable/libraries run both variants. Both use
+the winning 0002 CPU library, SHA256:
+d1fb4ec3417ba63d694157417d9437cbedcd9013acd170546fa4044a950fce7a
+Candidate libllama SHA256:
+cd022a66c6c4909591f125bcfbcc280402e9c4741cc6ac2ecb3ca3ad2fccf7f5
+
+Baseline sets the fork's existing GGML_GDN_STATE_GATHER=1; candidate unsets
+it. Separate processes avoid the environment selection's static cache.
+The two prefixes resolve to identical library bytes: only graph selection
+differs. The runner is bench-state.sh. Model is the default 2B PTQ1_0.
+Use -p 64 -n 32 -t 4 -r 2, normal warmup, two rounds AB/BA, powersave
+cooldown to at most 50 C before every process, then performance.
+
+Workload  Gathered baseline t/s  Indexed candidate t/s  Change
+pp64      1.8125965              1.8098785             -0.1500%
+tg32      1.1138240              1.1285715             +1.3240%
+
+Round generation gains: +1.2360%, +1.4125%.
+Each result averages four timed samples. All runs completed; original
+and restored governors are byte-identical, and the app was resumed.
+All 24 AB/BA evidence files and the profile manifest matched device hashes.
+The published metadata redacts the unique board serial; transfer hashes
+refer to raw pre-redaction metadata.
+
+Profile confirmation, not a speedup estimate
+-------------------------------------------
+The callback profile confirms the branch activates. Median summed decode
+GET_ROWS time changes from 25.428 ms to 1.934 ms. The node count remains
+40: the 18 large state gathers become zero-row tail metadata rather than
+disappearing from the graph. For example, the first recurrent gather
+changes from shape [262144,1] to [262144,0]. Callback dispatch/synchronizing
+inflates small operations; use the AB/BA table, not this timing difference,
+for the measured end-to-end effect.
+
+Other measurement
+-----------------
+The OpenMP disposable-pool probe measured 100000 new/free pairs in
+0.202524583 seconds: 2.025246 microseconds per pair. This directly rules
+out a 10-50 ms pool-allocation explanation for the historical app gap on
+this build. It does not measure all OpenMP region or graph-planning costs.
+
+Device installation stayed unchanged throughout. Its libllama hash was
+573feafba3444935663f16a1b5c272ea08c3a4dea1b771affafe2da10d8aef19
+and libggml-cpu hash was
+6a3119b0d4acca1301d3888a733bbfa5a0eabe0cbe2d1a25edf0cac984f1582a.

@@ -1,0 +1,63 @@
+Tue Nov  3 09:15:11 UTC 2026
+Linux r36llm 4.4.189 #62 SMP Sat Dec 13 08:49:45 CST 2025 aarch64 GNU/Linux
+pin=5628c7338963b00a598f2a588fd09a79af6d70db
+prefix=/data/r36llm/opt/vocab-head
+model=/data/r36llm/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf
+keep=/data/r36llm/opt/vocab-head/output-keep-en-fr.txt
+threads=4
+prompt=64
+generate=128
+rounds=2
+start_ceiling_mC=55000
+ab3ed8e9aa8c7ac83e09bf62056d266ab21c1efeb0a23cc0e76bbd2f7f6844b2  /data/r36llm/opt/vocab-head/bin/llama-bench
+06c971f71851187e2ad373e0d634c50989bffc66839773b2c29c4258b6393e4c  /data/r36llm/opt/vocab-head/lib/libggml-base.so
+06c971f71851187e2ad373e0d634c50989bffc66839773b2c29c4258b6393e4c  /data/r36llm/opt/vocab-head/lib/libggml-base.so.0
+06c971f71851187e2ad373e0d634c50989bffc66839773b2c29c4258b6393e4c  /data/r36llm/opt/vocab-head/lib/libggml-base.so.0.27.0
+2c458b11118ae4fa89c4d93cc834368c51aab06b1ea7634c022c1998326bc461  /data/r36llm/opt/vocab-head/lib/libggml-cpu.so
+2c458b11118ae4fa89c4d93cc834368c51aab06b1ea7634c022c1998326bc461  /data/r36llm/opt/vocab-head/lib/libggml-cpu.so.0
+2c458b11118ae4fa89c4d93cc834368c51aab06b1ea7634c022c1998326bc461  /data/r36llm/opt/vocab-head/lib/libggml-cpu.so.0.27.0
+1dbfa8cee65059fef0f5ad71a1cb570ba9b74793010856b3ab322790d269d42a  /data/r36llm/opt/vocab-head/lib/libggml.so
+1dbfa8cee65059fef0f5ad71a1cb570ba9b74793010856b3ab322790d269d42a  /data/r36llm/opt/vocab-head/lib/libggml.so.0
+1dbfa8cee65059fef0f5ad71a1cb570ba9b74793010856b3ab322790d269d42a  /data/r36llm/opt/vocab-head/lib/libggml.so.0.27.0
+bf8d115d7b28d0f5b45d562962a13264b8a8e9c195c0dc347898dadb27b7e9ec  /data/r36llm/opt/vocab-head/lib/libllama-bench-impl.so
+b055ecddd434d67c3cfd602a4070499605148545e48e5006b08a608914bcc8ac  /data/r36llm/opt/vocab-head/lib/libllama-common.so
+b055ecddd434d67c3cfd602a4070499605148545e48e5006b08a608914bcc8ac  /data/r36llm/opt/vocab-head/lib/libllama-common.so.0
+b055ecddd434d67c3cfd602a4070499605148545e48e5006b08a608914bcc8ac  /data/r36llm/opt/vocab-head/lib/libllama-common.so.0.7.0
+7c6698e93cb12e4668a8f70619ab0316e6e136b4ccc02f8bfe8b30320e2646e8  /data/r36llm/opt/vocab-head/lib/libllama.so
+7c6698e93cb12e4668a8f70619ab0316e6e136b4ccc02f8bfe8b30320e2646e8  /data/r36llm/opt/vocab-head/lib/libllama.so.0
+7c6698e93cb12e4668a8f70619ab0316e6e136b4ccc02f8bfe8b30320e2646e8  /data/r36llm/opt/vocab-head/lib/libllama.so.0.7.0
+c66e113c437dd5d3dc2e778584441c9a9cf2b9a382631a82c672051e828454b0  /data/r36llm/opt/vocab-head/output-keep-en-fr.txt
+MemTotal:         916848 kB
+MemFree:           83440 kB
+MemAvailable:     597120 kB
+Buffers:            1068 kB
+Cached:           642372 kB
+SwapCached:          120 kB
+Active:           527712 kB
+Inactive:         237980 kB
+Active(anon):      68732 kB
+Inactive(anon):   187668 kB
+Active(file):     458980 kB
+Inactive(file):    50312 kB
+Unevictable:       24184 kB
+Mlocked:               0 kB
+SwapTotal:      11119376 kB
+SwapFree:       11105144 kB
+Dirty:             14596 kB
+Writeback:             0 kB
+AnonPages:        146396 kB
+Mapped:             6600 kB
+Shmem:            109964 kB
+Slab:              29288 kB
+SReclaimable:      19584 kB
+SUnreclaim:         9704 kB
+KernelStack:        1728 kB
+PageTables:         1428 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    11577800 kB
+Committed_AS:    1220076 kB
+VmallocTotal:   258867136 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB

@@ -1,0 +1,44 @@
+Shipping recommendation
+-----------------------
+Default-on: 0001-arm-neon-armv8.0-bonsai-dot.patch followed by
+0002-arm-neon-bonsai-two-rows.patch.
+Do not ship the indexed-GDN graph candidate; its patch is archived only in
+this results directory, outside br2-external/package/prism-llama-cpp/.
+
+Buildroot integration
+---------------------
+br2-external/configs/r36llm_defconfig selects BR2_PACKAGE_PRISM_LLAMA_CPP
+and BR2_PACKAGE_R36LLM_APP. The engine's prism-llama-cpp.mk pins
+5628c7338963b00a598f2a588fd09a79af6d70db and ends with
+$(eval $(cmake-package)). Buildroot's package infrastructure automatically
+applies the local package-directory patches in filename order. No new
+configuration flag or explicit PATCH variable is needed: 0001 sorts before
+0002, and 0002 is generated against pin+0001.
+
+An existing .stamp_patched does not notice a newly added patch. Rebuild
+from a clean engine package directory. The local Windows entrypoint can
+refresh the engine and dependent app, then recreate the rootfs/image:
+
+  .\scripts\build.ps1 -Release prism-llama-cpp-dirclean r36llm-app-dirclean
+  .\scripts\build.ps1 -Release all
+
+These are integration instructions, not commands executed by this worker.
+Main owns the final release build and its verification. A previously built
+uInitrd/mainline image does not acquire 0002 merely because the patch file
+was added. CI now applies all ordered package patches in its app and NEON
+jobs and runs both correctness harnesses.
+
+No installed /data library or executable was replaced. No install/rollback
+was performed. The device was released after all assigned measurements,
+with original governors restored and the original app resumed.
+
+Verification limits
+-------------------
+The two-row harness tests the dot entrypoints directly. Dispatcher tails,
+chunk boundaries, broadcast and noncontiguous-column routing were reviewed
+in source, not covered by a dedicated matrix-level regression harness.
+Production ARM code compiled with Buildroot GCC 13.4 and completed both
+models' AB/BA runs. GCC 12.2/13.4 QEMU exactness does not qualify arbitrary
+other compilers or fast-math settings. The main integration check should
+apply 0001+0002 to a fresh pin and run the existing CI jobs once all agents'
+changes are integrated.

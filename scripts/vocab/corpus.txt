@@ -1,0 +1,47 @@
+Hello! How are you today? I hope you are well.
+The small computer fits in my pocket, but it can answer a big question.
+A central processing unit follows instructions, performs calculations, and helps the rest of the machine work together.
+The answer is 42. We counted from 1 to 10, then waited for 3.5 seconds.
+What is the capital of France? Paris is the capital of France.
+Please explain your answer in two short sentences. If you are unsure, say so.
+A quiet morning begins with coffee, fresh bread, and a walk through the park.
+I don't know whether it's going to rain, but we'll take an umbrella just in case.
+First, gather the ingredients. Next, warm the pan; finally, serve the meal.
+The moon rose above the hills — a pale light over the sleeping town.
+She asked, “Can you help me?” He replied, “Yes, of course!”
+One, two, three, four, five, six, seven, eight, nine, ten.
+A tiny screen glows
+Old games come alive again
+Stars above my hands
+Octopuses have eight arms, soft bodies, and remarkable problem-solving abilities.
+A 25% discount on a $20 item saves $5. The result depends on the original price.
+When people disagree, listening carefully can reveal what they have in common.
+The train leaves at 8:30 a.m. on Monday and returns on Friday afternoon.
+We can compare the two options: one is faster, while the other uses less energy.
+Names like Alice, Jean, Marie, and François may appear in a story.
+Bonjour ! Comment allez-vous aujourd'hui ? J'espère que vous allez bien.
+Le petit ordinateur tient dans ma poche, mais il peut répondre à une grande question.
+Un processeur exécute des instructions, effectue des calculs et aide les autres composants à fonctionner ensemble.
+La réponse est 42. Nous avons compté de 1 à 10, puis attendu 3,5 secondes.
+Quelle est la capitale de la France ? Paris est la capitale de la France.
+Veuillez expliquer votre réponse en deux phrases courtes. En cas de doute, dites-le.
+Une matinée tranquille commence par un café, du pain frais et une promenade dans le parc.
+Je ne sais pas s'il va pleuvoir, mais nous prendrons un parapluie au cas où.
+D'abord, rassemblez les ingrédients. Ensuite, chauffez la poêle ; enfin, servez le repas.
+La lune s'est levée au-dessus des collines — une lumière pâle sur la ville endormie.
+Elle a demandé : « Pouvez-vous m'aider ? » Il a répondu : « Oui, bien sûr ! »
+Un, deux, trois, quatre, cinq, six, sept, huit, neuf, dix.
+L'écran s'illumine
+Les vieux jeux reprennent vie
+Étoiles au-dessus
+Les poulpes ont huit bras, un corps souple et une étonnante capacité à résoudre des problèmes.
+Une réduction de 25 % sur un article à 20 euros représente une économie de 5 euros.
+Quand les gens ne sont pas d'accord, une écoute attentive peut révéler leurs points communs.
+Le train part à 8 h 30 le lundi et revient le vendredi après-midi.
+Nous pouvons comparer les deux options : l'une est plus rapide, tandis que l'autre consomme moins d'énergie.
+L'été, Noël, le cœur, l'œuvre, déjà, où, ça et bientôt contiennent des accents ou des ligatures.
+Un cæcum, un curriculum vitæ, une œuvre et un cœur illustrent les ligatures æ et œ.
+Le café est servi… puis arrive le thé — chaud, parfumé et prêt à partager.
+Les formes décomposées café, Noël et français utilisent aussi des accents combinants.
+**Important:** Ordinary prose can use **emphasis** without being computer code.
+**Attention :** Un texte courant peut employer des **mots en gras** sans être du code.

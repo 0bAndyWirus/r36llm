@@ -1,0 +1,513 @@
+{
+  "selection": {
+    "model": "Ternary-Bonsai-2-2B-PTQ1_0.gguf",
+    "tokenizer_model": "gpt2",
+    "tokenizer_pre": "qwen35",
+    "tokenizer_tokens_and_types_sha256": "a2c087bf14fe5b9c87519e194e7d8bc6593602e839eb2c6d30967ea4c61245d4",
+    "vocabulary_size": 248320,
+    "kept": 133951,
+    "dropped": 114369,
+    "category_counts": {
+      "code_syntax": 8974,
+      "invalid_or_other_utf8_fragment": 768,
+      "non_latin_or_symbol": 104627,
+      "prose_or_utf8_fragment": 133419,
+      "single_byte": 256,
+      "special_control_or_byte_fallback": 276
+    },
+    "category_examples_encoded_pieces": {
+      "code_syntax": [
+        {
+          "id": 283,
+          "piece": "Ġ=",
+          "decoded_bytes_hex": "203d",
+          "decoded_utf8_preview": " ="
+        },
+        {
+          "id": 313,
+          "piece": "Ġ{",
+          "decoded_bytes_hex": "207b",
+          "decoded_utf8_preview": " {"
+        },
+        {
+          "id": 320,
+          "piece": "//",
+          "decoded_bytes_hex": "2f2f",
+          "decoded_utf8_preview": "//"
+        },
+        {
+          "id": 333,
+          "piece": "Ġ}",
+          "decoded_bytes_hex": "207d",
+          "decoded_utf8_preview": " }"
+        },
+        {
+          "id": 361,
+          "piece": "Ġ<",
+          "decoded_bytes_hex": "203c",
+          "decoded_utf8_preview": " <"
+        },
+        {
+          "id": 397,
+          "piece": "->",
+          "decoded_bytes_hex": "2d3e",
+          "decoded_utf8_preview": "->"
+        },
+        {
+          "id": 410,
+          "piece": "==",
+          "decoded_bytes_hex": "3d3d",
+          "decoded_utf8_preview": "=="
+        },
+        {
+          "id": 420,
+          "piece": "=\"",
+          "decoded_bytes_hex": "3d22",
+          "decoded_utf8_preview": "=\""
+        },
+        {
+          "id": 434,
+          "piece": "Ġ//",
+          "decoded_bytes_hex": "202f2f",
+          "decoded_utf8_preview": " //"
+        },
+        {
+          "id": 476,
+          "piece": "::",
+          "decoded_bytes_hex": "3a3a",
+          "decoded_utf8_preview": "::"
+        },
+        {
+          "id": 498,
+          "piece": "Ġ[",
+          "decoded_bytes_hex": "205b",
+          "decoded_utf8_preview": " ["
+        },
+        {
+          "id": 510,
+          "piece": "</",
+          "decoded_bytes_hex": "3c2f",
+          "decoded_utf8_preview": "</"
+        }
+      ],
+      "invalid_or_other_utf8_fragment": [
+        {
+          "id": 1232,
+          "piece": "ãĢ",
+          "decoded_bytes_hex": "e380",
+          "decoded_utf8_preview": "�"
+        },
+        {
+          "id": 1233,
+          "piece": "ĠÐ",
+          "decoded_bytes_hex": "20d0",
+          "decoded_utf8_preview": " �"
+        },
+        {
+          "id": 2125,
+          "piece": "ãģ",
+          "decoded_bytes_hex": "e381",
+          "decoded_utf8_preview": "�"
+        },
+        {
+          "id": 2687,
+          "piece": "ãĥ",
+          "decoded_bytes_hex": "e383",
+          "decoded_utf8_preview": "�"
+        },
+        {
+          "id": 2927,
+          "piece": "à¸",
+          "decoded_bytes_hex": "e0b8",
+          "decoded_utf8_preview": "�"
+        },
+        {
+          "id": 3206,
+          "piece": "Ġì",
+          "decoded_bytes_hex": "20ec",
+          "decoded_utf8_preview": " �"
+        },
+        {
+          "id": 3293,
+          "piece": "ãĤ",
+          "decoded_bytes_hex": "e382",
+          "decoded_utf8_preview": "�"
+        },
+        {
+          "id": 4975,
+          "piece": "Ġë",
+          "decoded_bytes_hex": "20eb",
+          "decoded_utf8_preview": " �"
+        },
+        {
+          "id": 5329,
+          "piece": "à¤",
+          "decoded_bytes_hex": "e0a4",
+          "decoded_utf8_preview": "�"
+        },
+        {
+          "id": 5389,
+          "piece": "ï¿",
+          "decoded_bytes_hex": "efbf",
+          "decoded_utf8_preview": "�"
+        },
+        {
+          "id": 5719,
+          "piece": "ìĿ",
+          "decoded_bytes_hex": "ec9d",
+          "decoded_utf8_preview": "�"
+        },
+        {
+          "id": 7084,
+          "piece": "íķ",
+          "decoded_bytes_hex": "ed95",
+          "decoded_utf8_preview": "�"
+        }
+      ],
+      "non_latin_or_symbol": [
+        {
+          "id": 1403,
+          "piece": "Ð¾",
+          "decoded_bytes_hex": "d0be",
+          "decoded_utf8_preview": "о"
+        },
+        {
+          "id": 1424,
+          "piece": "Ð°",
+          "decoded_bytes_hex": "d0b0",
+          "decoded_utf8_preview": "а"
+        },
+        {
+          "id": 1450,
+          "piece": "Ðµ",
+          "decoded_bytes_hex": "d0b5",
+          "decoded_utf8_preview": "е"
+        },
+        {
+          "id": 1710,
+          "piece": "ãĢĤ",
+          "decoded_bytes_hex": "e38082",
+          "decoded_utf8_preview": "。"
+        },
+        {
+          "id": 1729,
+          "piece": "ÑĤ",
+          "decoded_bytes_hex": "d182",
+          "decoded_utf8_preview": "т"
+        },
+        {
+          "id": 1739,
+          "piece": "Ð¸",
+          "decoded_bytes_hex": "d0b8",
+          "decoded_utf8_preview": "и"
+        },
+        {
+          "id": 2040,
+          "piece": "Ð½",
+          "decoded_bytes_hex": "d0bd",
+          "decoded_utf8_preview": "н"
+        },
+        {
+          "id": 2115,
+          "piece": "ÑĢ",
+          "decoded_bytes_hex": "d180",
+          "decoded_utf8_preview": "р"
+        },
+        {
+          "id": 2175,
+          "piece": "Ñģ",
+          "decoded_bytes_hex": "d181",
+          "decoded_utf8_preview": "с"
+        },
+        {
+          "id": 2941,
+          "piece": "Ð»",
+          "decoded_bytes_hex": "d0bb",
+          "decoded_utf8_preview": "л"
+        },
+        {
+          "id": 3121,
+          "piece": "ï»¿",
+          "decoded_bytes_hex": "efbbbf",
+          "decoded_utf8_preview": "﻿"
+        },
+        {
+          "id": 3652,
+          "piece": "Ñĥ",
+          "decoded_bytes_hex": "d183",
+          "decoded_utf8_preview": "у"
+        }
+      ],
+      "prose_or_utf8_fragment": [
+        {
+          "id": 256,
+          "piece": "ĠĠ",
+          "decoded_bytes_hex": "2020",
+          "decoded_utf8_preview": "  "
+        },
+        {
+          "id": 257,
+          "piece": "ĠĠĠĠ",
+          "decoded_bytes_hex": "20202020",
+          "decoded_utf8_preview": "    "
+        },
+        {
+          "id": 258,
+          "piece": "in",
+          "decoded_bytes_hex": "696e",
+          "decoded_utf8_preview": "in"
+        },
+        {
+          "id": 259,
+          "piece": "Ġt",
+          "decoded_bytes_hex": "2074",
+          "decoded_utf8_preview": " t"
+        },
+        {
+          "id": 260,
+          "piece": "ĠĠĠĠĠĠĠĠ",
+          "decoded_bytes_hex": "2020202020202020",
+          "decoded_utf8_preview": "        "
+        },
+        {
+          "id": 261,
+          "piece": "er",
+          "decoded_bytes_hex": "6572",
+          "decoded_utf8_preview": "er"
+        },
+        {
+          "id": 262,
+          "piece": "ĠĠĠ",
+          "decoded_bytes_hex": "202020",
+          "decoded_utf8_preview": "   "
+        },
+        {
+          "id": 263,
+          "piece": "on",
+          "decoded_bytes_hex": "6f6e",
+          "decoded_utf8_preview": "on"
+        },
+        {
+          "id": 264,
+          "piece": "Ġa",
+          "decoded_bytes_hex": "2061",
+          "decoded_utf8_preview": " a"
+        },
+        {
+          "id": 265,
+          "piece": "re",
+          "decoded_bytes_hex": "7265",
+          "decoded_utf8_preview": "re"
+        },
+        {
+          "id": 266,
+          "piece": "at",
+          "decoded_bytes_hex": "6174",
+          "decoded_utf8_preview": "at"
+        },
+        {
+          "id": 267,
+          "piece": "st",
+          "decoded_bytes_hex": "7374",
+          "decoded_utf8_preview": "st"
+        }
+      ],
+      "single_byte": [
+        {
+          "id": 0,
+          "piece": "!",
+          "decoded_bytes_hex": "21",
+          "decoded_utf8_preview": "!"
+        },
+        {
+          "id": 1,
+          "piece": "\"",
+          "decoded_bytes_hex": "22",
+          "decoded_utf8_preview": "\""
+        },
+        {
+          "id": 2,
+          "piece": "#",
+          "decoded_bytes_hex": "23",
+          "decoded_utf8_preview": "#"
+        },
+        {
+          "id": 3,
+          "piece": "$",
+          "decoded_bytes_hex": "24",
+          "decoded_utf8_preview": "$"
+        },
+        {
+          "id": 4,
+          "piece": "%",
+          "decoded_bytes_hex": "25",
+          "decoded_utf8_preview": "%"
+        },
+        {
+          "id": 5,
+          "piece": "&",
+          "decoded_bytes_hex": "26",
+          "decoded_utf8_preview": "&"
+        },
+        {
+          "id": 6,
+          "piece": "'",
+          "decoded_bytes_hex": "27",
+          "decoded_utf8_preview": "'"
+        },
+        {
+          "id": 7,
+          "piece": "(",
+          "decoded_bytes_hex": "28",
+          "decoded_utf8_preview": "("
+        },
+        {
+          "id": 8,
+          "piece": ")",
+          "decoded_bytes_hex": "29",
+          "decoded_utf8_preview": ")"
+        },
+        {
+          "id": 9,
+          "piece": "*",
+          "decoded_bytes_hex": "2a",
+          "decoded_utf8_preview": "*"
+        },
+        {
+          "id": 10,
+          "piece": "+",
+          "decoded_bytes_hex": "2b",
+          "decoded_utf8_preview": "+"
+        },
+        {
+          "id": 11,
+          "piece": ",",
+          "decoded_bytes_hex": "2c",
+          "decoded_utf8_preview": ","
+        }
+      ],
+      "special_control_or_byte_fallback": [
+        {
+          "id": 248044,
+          "piece": "<|endoftext|>"
+        },
+        {
+          "id": 248045,
+          "piece": "<|im_start|>"
+        },
+        {
+          "id": 248046,
+          "piece": "<|im_end|>"
+        },
+        {
+          "id": 248047,
+          "piece": "<|object_ref_start|>"
+        },
+        {
+          "id": 248048,
+          "piece": "<|object_ref_end|>"
+        },
+        {
+          "id": 248049,
+          "piece": "<|box_start|>"
+        },
+        {
+          "id": 248050,
+          "piece": "<|box_end|>"
+        },
+        {
+          "id": 248051,
+          "piece": "<|quad_start|>"
+        },
+        {
+          "id": 248052,
+          "piece": "<|quad_end|>"
+        },
+        {
+          "id": 248053,
+          "piece": "<|vision_start|>"
+        },
+        {
+          "id": 248054,
+          "piece": "<|vision_end|>"
+        },
+        {
+          "id": 248055,
+          "piece": "<|vision_pad|>"
+        }
+      ]
+    },
+    "special_token_ids": [
+      248044,
+      248046
+    ],
+    "limitations": "Latin-compatible character filtering is not English/French language identification. Single bytes and special tokens remain unrestricted; boundary fragments may also compose other scripts. Native tokenizer coverage is not measured here."
+  },
+  "x86": {
+    "threads": 4,
+    "generation_tokens_per_prompt": 128,
+    "prompt_count": 4,
+    "corpus_token_count": 907,
+    "corpus_unique_misses": [],
+    "kept_logit_comparisons": 68582912,
+    "kept_logit_mismatches": 0,
+    "dropped_logit_mismatches": 0,
+    "greedy_differing_prompts": 0,
+    "divergences": [],
+    "full_tokens_per_second": 26.648269848228082,
+    "full_profile_head_share": 0.1942416840672106,
+    "full_profile_head_ms_per_token": 8.618765253937008,
+    "restricted_tokens_per_second": 27.913001674871367,
+    "restricted_profile_head_share": 0.14098060479656283,
+    "restricted_profile_head_ms_per_token": 5.734558433070867
+  },
+  "device": {
+    "runs": [
+      {
+        "round": 1,
+        "variant": "full",
+        "decode_tps": 1.074989,
+        "peak_rss_kib": 537432,
+        "start_temp_mC": 49545,
+        "peak_temp_mC": 83461
+      },
+      {
+        "round": 1,
+        "variant": "restricted",
+        "decode_tps": 1.125312,
+        "peak_rss_kib": 539188,
+        "start_temp_mC": 55000,
+        "peak_temp_mC": 84230
+      },
+      {
+        "round": 2,
+        "variant": "restricted",
+        "decode_tps": 1.118214,
+        "peak_rss_kib": 538564,
+        "start_temp_mC": 53750,
+        "peak_temp_mC": 83461
+      },
+      {
+        "round": 2,
+        "variant": "full",
+        "decode_tps": 1.040665,
+        "peak_rss_kib": 537180,
+        "start_temp_mC": 55000,
+        "peak_temp_mC": 83846
+      }
+    ],
+    "means": {
+      "full": {
+        "decode_tps": 1.057827,
+        "peak_rss_kib": 537306.0
+      },
+      "restricted": {
+        "decode_tps": 1.121763,
+        "peak_rss_kib": 538876.0
+      }
+    },
+    "decode_tps_delta_percent": 6.0440884946215245,
+    "peak_rss_delta_kib": 1570.0,
+    "rss_method": "maximum sampled VmRSS per fresh process; 0.2-second sampling"
+  }
+}

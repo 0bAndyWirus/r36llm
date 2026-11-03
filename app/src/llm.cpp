@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <stdexcept>
 #include <iomanip>
@@ -24,6 +25,34 @@ static double seconds(Clock::time_point start) {
 namespace {
 constexpr size_t MaxSnapshot = 256 * 1024 * 1024;
 constexpr const char *CacheDir = "/data/r36llm/cache";
+
+// The engine reads its opt-in list during model load. Scope this process-wide
+// variable so app-launched benchmark children never inherit a model's setting.
+std::mutex OutputKeepEnvironmentMutex;
+
+class OutputKeepEnvironment {
+  public:
+    explicit OutputKeepEnvironment(const std::string &path) {
+        const char *previous = std::getenv("LLAMA_OUTPUT_KEEP");
+        had_previous_ = previous != nullptr;
+        if (previous)
+            previous_ = previous;
+        const int result = path.empty() ? unsetenv("LLAMA_OUTPUT_KEEP")
+                                        : setenv("LLAMA_OUTPUT_KEEP", path.c_str(), 1);
+        if (result != 0)
+            throw std::runtime_error("Load failed: cannot configure output token list");
+    }
+    ~OutputKeepEnvironment() {
+        if (had_previous_)
+            setenv("LLAMA_OUTPUT_KEEP", previous_.c_str(), 1);
+        else
+            unsetenv("LLAMA_OUTPUT_KEEP");
+    }
+
+  private:
+    bool had_previous_ = false;
+    std::string previous_;
+};
 
 // FNV-1a is an integrity checksum, not an authentication boundary. Cache files
 // are local application data; every byte is checked before entering llama.
@@ -220,7 +249,11 @@ bool Llm::load(const std::string &path, const Config &config) {
                 return !self->stop_.load();
             };
             mp.progress_callback_user_data = this;
-            model_ = llama_model_load_from_file(path.c_str(), mp);
+            {
+                std::lock_guard<std::mutex> environment_lock(OutputKeepEnvironmentMutex);
+                OutputKeepEnvironment output_keep(config.output_keep_for_model(path));
+                model_ = llama_model_load_from_file(path.c_str(), mp);
+            }
             if (!model_)
                 throw std::runtime_error("Load failed: " + path);
             auto cp = llama_context_default_params();
@@ -275,6 +308,9 @@ bool Llm::generate(const std::string &user, const Config &config) {
         state_.generation_tps = 0;
         state_.prompt_tps = 0;
         state_.first_token_seconds = 0;
+        state_.tokenize_seconds = 0;
+        state_.prompt_seconds = 0;
+        state_.first_decode_seconds = 0;
         state_.generated_tokens = 0;
     }
     worker_ = std::thread([this, user, config] {
@@ -322,7 +358,11 @@ void Llm::evaluate(const int32_t *tokens, int count) {
 }
 
 bool Llm::restore_system() {
-    llama_memory_clear(llama_get_memory(context_), true);
+    const auto restore_start = Clock::now();
+    // A sequence snapshot overwrites every live KV/recurrent row. Clear the
+    // bookkeeping, not buffers which are immediately overwritten by the restore.
+    // Without a snapshot, retain the full reset used by uncached new chats.
+    llama_memory_clear(llama_get_memory(context_), system_snapshot_.empty());
     history_.clear();
     evaluated_ = 0;
     if (system_snapshot_.empty())
@@ -337,11 +377,14 @@ bool Llm::restore_system() {
     }
     history_ = system_history_;
     evaluated_ = history_.size();
+    std::fprintf(stderr, "system cache: restored (%zu bytes, %.6f seconds)\n",
+                 system_snapshot_.size(), seconds(restore_start));
     return true;
 }
 
 void Llm::prepare_system(const Config &config) {
     system_history_ = system_history(config);
+    const auto prepare_start = Clock::now();
     auto tokens = tokenize(system_history_, true);
     system_tokens_ = tokens.size();
     const auto filename = prompt_cache_filename(cache_key_);
@@ -368,7 +411,8 @@ void Llm::prepare_system(const Config &config) {
                     if (file && validate_prompt_cache(header, cache_key_, system_tokens_,
                                                        system_snapshot_) &&
                         !stop_ && restore_system()) {
-                        std::fprintf(stderr, "system cache: disk hit (%zu tokens)\n", system_tokens_);
+                        std::fprintf(stderr, "system cache: disk hit (%zu tokens, %.6f seconds)\n",
+                                     system_tokens_, seconds(prepare_start));
                         return;
                     }
                 }
@@ -432,7 +476,9 @@ void Llm::run_generation(const std::string &user, const Config &config) {
     const std::string suffix = history_.substr(evaluated_);
     const auto *vocab = llama_model_get_vocab(model_);
     const bool first = llama_memory_seq_pos_max(llama_get_memory(context_), 0) == -1;
+    const auto tokenize_start = Clock::now();
     auto tokens = tokenize(suffix, first);
+    const double tokenize_seconds = seconds(tokenize_start);
     const int count = static_cast<int>(tokens.size());
     if (sampler_)
         llama_sampler_free(sampler_);
@@ -443,10 +489,13 @@ void Llm::run_generation(const std::string &user, const Config &config) {
     llama_sampler_chain_add(sampler_, llama_sampler_init_dist(seed_));
     auto prompt_start = Clock::now();
     evaluate(tokens.data(), count);
+    const double prompt_seconds = seconds(prompt_start);
     evaluated_ = history_.size();
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        state_.prompt_tps = count / std::max(seconds(prompt_start), 0.000001);
+        state_.tokenize_seconds = tokenize_seconds;
+        state_.prompt_seconds = prompt_seconds;
+        state_.prompt_tps = count / std::max(prompt_seconds, 0.000001);
     }
     std::string reply;
     auto generation_start = Clock::now();
@@ -467,19 +516,27 @@ void Llm::run_generation(const std::string &user, const Config &config) {
             piece.assign(large.data(), static_cast<size_t>(n));
         } else
             piece.assign(buffer, static_cast<size_t>(n));
-        // Evaluate even the final displayed token, so only the true new suffix is tokenized next
-        // turn.
-        evaluate(&token, 1);
         reply += piece;
-        history_ += piece;
-        evaluated_ = history_.size();
         ++generated;
+        // The sampled token is already available. Publish it before computing
+        // logits for the next token, rather than adding a decode step to TTFT.
         {
             std::lock_guard<std::mutex> lock(mutex_);
             state_.text = strip_thinking(reply);
             if (generated == 1)
                 state_.first_token_seconds = seconds(request_start);
             state_.generated_tokens = generated;
+        }
+        const auto decode_start = Clock::now();
+        // Still evaluate the final displayed token: the next turn must resume
+        // from exactly the same sequence state as uninterrupted generation.
+        evaluate(&token, 1);
+        history_ += piece;
+        evaluated_ = history_.size();
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (generated == 1)
+                state_.first_decode_seconds = seconds(decode_start);
             state_.generation_tps = generated / std::max(seconds(generation_start), 0.000001);
         }
     }

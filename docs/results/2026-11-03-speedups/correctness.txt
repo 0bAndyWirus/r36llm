@@ -1,0 +1,35 @@
+Candidate correctness, 2026-11-03
+
+Two-row PTQ1_0/Q8_0 and PQ2_0/Q8_K:
+QEMU cortex-a35; compiler -mcpu=cortex-a35; no dotprod/i8mm.
+Debian GCC12.2.0-14: PASS102656 comparisons per mode.
+Buildroot2025.02.19 GCC13.4.0: PASS102656 comparisons per mode.
+Modes: -O2, -O3 -ffp-contract=off, -O3 (default contraction).
+Total:307968 comparisons per compiler,615936 across both compilers.
+Every float result matched the existing generic reference bit-for-bit.
+Unit-scale results additionally matched the independent integer oracle.
+Maximum absolute/relative error=0.
+
+Coverage:8 random seeds;18 row lengths0..32896 (including FFN2048/6144);
+random finite half scales including subnormal values/both signs;
+every packed byte value including PTQ qh, isolated Q8 sub-blocks;
+maximal packed codes crossed with Q8 -128/+127 at256 weight blocks;
+different adjacent weight rows; padded byte stride; output canaries.
+Odd multiples of128 remain on the existing single-row PQ2/Q8_0 path.
+
+Harness:
+TEST_SOURCE=<repo>/br2-external/package/prism-llama-cpp/tests/test-bonsai-rows.c
+sh br2-external/package/prism-llama-cpp/tests/run-bonsai-neon.sh SOURCE BUILD
+Buildroot additionally sets CC to its aarch64-buildroot-linux-gnu-gcc and
+QEMU_LD_PREFIX to host/aarch64-buildroot-linux-gnu/sysroot.
+QEMU timings are not hardware performance evidence.
+
+Recurrent indexed-state graph candidate:
+No arithmetic kernel was changed. The test compares gathered-state GDN
+against indexed-state GDN K=1, including the entire scores+updated-state
+output buffer via memcmp. PASS72 cases per compiler under cortex-a35:
+GCC12.2 and Buildroot GCC13.4, -O2 -march=armv8-a; dim16/64/128,
+1/4 threads,source row0/1/2,raw gates on/off,zero/random cache state.
+All outputs were bit-identical; max_abs_error=0.
+Full-model graph selection, sequence reset and writeback remain device
+checks; this operator test does not by itself prove those graph semantics.

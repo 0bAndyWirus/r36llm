@@ -1,0 +1,82 @@
+### Optional English/French output head (2026-11-03)
+
+The default model's GGUF and all 248,320 input embedding rows remain intact.
+An optional sorted list of 133,951 original token ids limits only output GEMV;
+excluded logits are negative infinity. With LLAMA_OUTPUT_KEEP unset or empty,
+the original full-head graph is unchanged. The experimental path is CPU-only,
+PTQ1_0 qwen35, without LoRA adapters. It does not change the public llama ABI.
+
+Selection keeps 133,419 Latin-prose/UTF-8-boundary pieces, all 256 single-byte
+pieces, and 276 special/control pieces. It drops 104,627 non-Latin/symbol pieces
+(e.g. Cyrillic letters and 。), 8,974 code-syntax pieces (e.g. " {", "//", "->",
+"=="), and 768 other UTF-8 fragments. French accents, œ/æ, combining accents,
+curly quotes, dashes, ellipses, currency signs, and prose **emphasis** remain.
+An early over-aggressive policy dropped ** and changed all four greedy answers;
+keeping this ordinary prose formatting removed those divergences.
+
+This is a Latin-compatible heuristic, not a language detector: other Latin
+languages remain possible, and preserved byte pieces can compose other scripts
+or code. Native tokenization of the documented, generated 47-line English/French
+corpus produced 907 tokens with zero excluded-token occurrences. This coverage
+check is finite, not a claim that every possible English/French input is covered.
+
+Native x86_64 evidence (AMD Ryzen 5 5600, GCC 12.2.0 Release/-march=native,
+Docker Linux under the Windows hypervisor, four threads; not ARM emulation):
+68,582,912 kept-logit comparisons across four EN/FR chat prompts and 128 greedy
+tokens each were bit-identical. Every excluded logit was -inf. Both tokenizers
+returned the same input ids. Greedy text differed on 0/4 prompts; there was no
+first divergence for either English prompt or either French prompt. Generation
+used a fixed 128-token window, deliberately continuing through EOG for the test.
+
+The x86 head took 8.619 ms/token (19.42% of instrumented decode) with the full
+head versus 5.735 ms/token (14.10%) restricted. Separate uninstrumented decode
+averaged 26.65 versus 27.91 t/s; timings varied between prompts and are indicative
+only, not a device performance claim. The profiler isolates every graph node;
+restricted head timing includes Q8_0 conversion and the original-id scatter.
+The shared Hadamard input transform precedes either head, unchanged.
+
+The selected implementation gathers weight rows in place, quantizes the
+Hadamard-transformed input once, and calls the existing PTQ1_0 dot kernel. It
+allocates no packed weight copy and needs no token-id remap or GGUF rewrite.
+Measured x86 head cost fell about 33.5%, so reordering tied embeddings and
+migrating tokenizer/embedding ids adds complexity without a demonstrated need.
+Samplers still receive the original full-vocabulary index space. The keep-id
+vector is about 523 KiB of logical ids; it is not a claim of model-memory savings.
+
+Reproduction: python scripts/vocab/generate.py; prepare the pinned source with
+scripts/vocab/prepare-source.sh; run scripts/vocab/run-x86.sh in native Linux.
+Evidence is under docs/results/2026-11-03-vocab-head/. The app now accepts
+output_keep= in config.ini, empty by default. Set it to
+/data/r36llm/output-keep-en-fr.txt and reload the default model to opt in.
+The list ships with the image defaults and is copied to the data partition
+without overwriting an existing file. Other models always keep their full head.
+During model load the app scopes LLAMA_OUTPUT_KEEP to the configured list, or
+clears it for an empty setting/other model, then restores the old environment.
+No default app configuration enables the feature.
+
+#### Device AB/BA and resident memory
+
+The same isolated GCC 13.4/ARMv8.0 prefix (0001 + 0002 + 0003) ran full and
+restricted modes side by side, without replacing /data/r36llm/lib or changing
+config.ini. llama-bench used four threads, pp64/tg128, one repetition per mode,
+performance governor, fresh processes, and full/restricted then restricted/full
+order. The app was paused during the trial and resumed; original governors
+were restored. Every process started at or below 55 °C.
+
+| Round/order | Full t/s | Restricted t/s | Full peak RSS KiB | Restricted peak RSS KiB |
+| --- | ---: | ---: | ---: | ---: |
+| 1: full, restricted | 1.074989 | 1.125312 | 537432 | 539188 |
+| 2: restricted, full | 1.040665 | 1.118214 | 537180 | 538564 |
+| Mean | 1.057827 | 1.121763 | 537306 | 538876 |
+
+Mean decode improved 6.04%; sampled process peak RSS increased 1,570 KiB
+(1.53 MiB). This approach is a compute restriction, not a model-memory saving.
+RSS was sampled from /proc/PID/status every 0.2 seconds in each fresh process;
+it includes file-backed mappings and is not private/PSS memory.
+
+Thermal caveat: process starts were 49.545/55.000/53.750/55.000 °C in run order,
+but sampled peaks reached 83.461–84.230 °C. CPU frequency was not recorded, so
+thermal throttling cannot be excluded. Treat these as sustained hot-run AB/BA
+results, not an isolated cold-kernel speedup. Both paired rounds favored the
+restricted head. Raw timing JSON, sampled RSS/temperature CSV, metadata and
+summary are in docs/results/2026-11-03-vocab-head/device/ and summary.json.

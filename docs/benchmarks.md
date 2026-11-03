@@ -73,6 +73,74 @@ per-answer time to the first published token, generated-token count and unrounde
 generation throughput. Load time includes prefix preparation on a cache miss;
 answer TTFT starts after the loaded/busy transition, not at process launch.
 
+### TTFT work, 2026-11-03
+
+The first token was previously sampled and converted to text, then withheld while
+the engine decoded that token to obtain logits for the *next* token. The app now
+publishes the available token before that decode. It still evaluates every
+displayed token, including the last, so subsequent turns resume from the same
+state and reported generation throughput still includes those decode steps.
+
+Snapshot restore now clears sequence metadata without zeroing buffers that the
+snapshot immediately overwrites. Missing or rejected snapshots retain the full
+reset. This changes neither the cache format nor the model state stored in it.
+Disk reads occur during model loading only; starting another chat already used
+the in-memory snapshot. The system prefix is tokenized once during preparation,
+not again for every new chat.
+
+Native x86 measurements isolate the relative costs below; they do not predict
+absolute Cortex-A35 timings. The default 2B model used four threads, context 2048,
+seed 42, `Count from 1 to 100, separated by spaces.`, and a 16-token answer limit.
+The prefix contained 24 tokens and its snapshot occupied 20,497,588 bytes; the
+remaining user/template suffix contained 26 tokens.
+
+|Stage in the original app|Native time|When paid|
+|---|---:|---|
+|System-prefix tokenization|0.17–0.37 ms|Once per model load|
+|System-prefix evaluation on a cache miss|594 ms|During model load|
+|Snapshot serialization|1.96 ms|After prefix preparation|
+|Persisted snapshot read/allocation|16.7–28.4 ms|During model load|
+|Snapshot integrity checksum|19.7–21.9 ms|During model load|
+|Buffer clear before restore|1.9–4.1 ms|Model load or new chat|
+|Sequence restore, including recurrent state|2.1–3.7 ms|Model load or new chat|
+|User/template suffix tokenization|0.12–0.28 ms|Each request|
+|User/template suffix evaluation|630–665 ms|Each request|
+|First sample|0.68–4.00 ms|Each request|
+|First token's decode before publication|36–47 ms|Each request; now after publication|
+
+The snapshot API already writes directly into the retained byte vector and reads
+it directly on restore; there was no second application-side 20 MB state copy to
+remove. The redundant buffer zeroing was avoidable. Native restores after that
+change took 2.1–2.4 ms in the persisted-cache/repeated-chat run.
+
+The three original requests (one disk restore, then two memory restores) reported
+TTFTs of 0.697, 0.684 and 0.711 seconds. The corresponding new run reported 0.645,
+0.647 and 0.636 seconds: means of 0.697 and 0.643 seconds, a 7.8% reduction in this
+ordered native sample. Most of the direct saving is the removed decode-before-
+publication dependency; prompt-evaluation variation also affects this comparison.
+The new disk-cache preparation took 51.5 ms during loading, outside answer TTFT.
+
+On the RK3326, one ordered before/after pair with the default model, four threads, seed 42, context 2048 and the same counting prompt measured TTFT of 20.508 and 18.553 seconds (9.5% lower). Both runs restored a disk snapshot; model loading (3.433 and 3.267 seconds) is excluded. The output filter was disabled, and outputs matched byte-for-byte excluding statistics. Both runs started at 53.3 °C, peaked at 82.3 °C and sampled 1008–1512 MHz. This single ordered pair is not a randomized repeated comparison; differing thermal and frequency histories prevent attributing the entire difference to compute speed. [Device trials and runner](results/2026-11-03-ttft/device/).
+
+Both prompt and generation already use four threads. `n_batch=2048` and the
+engine's default `n_ubatch=512` fit this 26-token suffix in one physical batch.
+Those defaults were left unchanged. Plain-text chat-template fragments were not
+cached separately: tokenization can merge across their boundary with user text.
+
+All five application CTest suites passed. An additional real-model invocation of
+the `prompt_cache` suite passed cache-versus-no-cache checks after contaminating
+and resetting histories, seeded and greedy generation, and continued turns.
+Run that optional coverage with
+`R36LLM_TEST_MODEL=/path/Ternary-Bonsai-2-2B-PTQ1_0.gguf ctest --test-dir <build> -R '^prompt_cache$' --output-on-failure`;
+ordinary CI does not download a model. A separate executable comparison against
+the pre-change code produced byte-identical text and generated-token counts for
+20 turns: five prompts, each with a follow-up, at temperature 0.5 with seed 42 and
+at temperature 0. It included leading whitespace and a literal ChatML special
+token in user input. Both app variants also cross-built with GNU 13.4.0.
+
+Raw timings, exact equality outputs and binary hashes:
+[results/2026-11-03-ttft/](results/2026-11-03-ttft/).
+
 ### Native cache checks
 
 An Ubuntu 24.04 Docker container built the pinned engine
@@ -225,6 +293,27 @@ why the archive builds' banner commit is not the authoritative source pin.
 The benchmark exited successfully, original CPU governors were restored
 byte-for-byte, and the original app process was resumed. No configuration
 file or thermal trip point was changed.
+
+## Two-row NEON kernels
+
+Measured 2026-11-03 on the RK3326, comparing the pinned PrismML engine plus `0001` with `0001` plus the default-on `0002` two-row patch. The kernels share activation loads across adjacent rows without pruning output logits.
+
+| Model | `0001` generation t/s | `0001` + `0002` generation t/s | Change |
+|---|---:|---:|---:|
+| Ternary-Bonsai-2-2B PTQ1_0 | 0.9334 | 1.1217 | +20.17% |
+| Ternary-Bonsai-1.7B PQ2_0 | 1.4069 | 1.5869 | +12.79% |
+
+Each value averages four samples in two AB/BA rounds, using `-p 64 -n 32 -t 4 -r 2`, Buildroot GCC 13.4, `-O2 -march=armv8-a` and OpenMP. Both thermal zones cooled to at most 50 °C before each process; sampled peaks reached 82.7–84.2 °C and clocks ranged from 1008–1512 MHz. GCC 12.2 and Buildroot GCC 13.4 each passed 307,968 bit-identical comparisons against reference dots under Cortex-A35 QEMU. The device measurements used isolated engine prefixes, not the installed libraries. [Method and raw evidence](results/2026-11-03-speedups/).
+
+### App versus llama-bench
+
+An approximately workload-matched app/benchmark/benchmark/app trial with `0001` measured 0.94096 versus 0.94910 t/s, a 0.86% gap. Each process cooled to at most 50 °C and timed 64 generation decodes after 50 prompt/depth tokens. Token IDs and context capacity still differed. The earlier approximately 12% gap compared different prompt depths and thermal histories; a later comparison also had different warmup. Neither establishes a fixed app penalty. See the [measurement method](results/2026-11-03-speedups/method.txt).
+
+## Optional English/French output filter
+
+The opt-in `output_keep=/data/r36llm/output-keep-en-fr.txt` restricts the default PTQ1_0 model's output head to 133,951 of 248,320 token IDs; the full input vocabulary remains available. It targets English/French prose and Markdown, not code output. This is a heuristic, not a language detector: preserved byte pieces can still form other scripts or code. Native x86 checks found kept logits bit-identical and unchanged greedy output on four English/French prompts.
+
+In a hot sustained device AB/BA run with `0001` + `0002` + `0003`, mean decode rose from 1.058 to 1.122 t/s (+6.0%). Peak RSS increased by 1.5 MiB, so this is not a RAM saving. Four-thread `llama-bench` used pp64/tg128 and one repetition per process; starts were at or below 55 °C and peaks reached 83.5–84.2 °C. CPU frequency was not recorded, so throttling cannot be excluded. [Method and evidence](results/2026-11-03-vocab-head/method.txt).
 
 ## Where the time goes
 

@@ -1,0 +1,102 @@
+{
+  "date": "2026-11-03",
+  "platform": "Native x86_64 Linux (Docker on Windows, not ARM emulation)",
+  "engine_build_metadata": "Pinned engine 5628c7338963b00a598f2a588fd09a79af6d70db, GNU 12.2 Release/native/OpenMP; shared native VocabTrim engine, output filter disabled",
+  "model": "Ternary-Bonsai-2-2B-PTQ1_0.gguf",
+  "threads": 4,
+  "ctx": 2048,
+  "seed": 42,
+  "prompt": "Count from 1 to 100, separated by spaces.",
+  "max_tokens_timing": 16,
+  "old_ttft_seconds": [
+    0.697,
+    0.684,
+    0.711
+  ],
+  "new_ttft_seconds": [
+    0.645,
+    0.647,
+    0.636
+  ],
+  "old_ttft_mean_seconds": 0.6973333333333334,
+  "new_ttft_mean_seconds": 0.6426666666666667,
+  "mean_reduction_percent": 7.839388145315485,
+  "x86_equality": {
+    "result": "byte-identical text and token counts",
+    "turns": 20,
+    "temperatures": [
+      0.5,
+      0.0
+    ],
+    "prompts": 5,
+    "turns_per_prompt": 2,
+    "max_tokens": 8
+  },
+  "ctest": {
+    "application_suites_passed": 5,
+    "application_suites_failed": 0,
+    "real_model_prompt_cache_suites_passed": 1,
+    "real_model_prompt_cache_seconds": 80.64
+  },
+  "sha256": {
+    "baseline-app": "fca3ad965b14f629bc23599ae830943ecae4656e73f24829f625b4522b6afbc8",
+    "baseline-profile-app": "53446cc28e76c82f44d4296a9f592a4e0c6679a56d128d906a0ffa11ea12422e",
+    "after-app": "6f7aceeab67004155567852d43d8c96b078f9ebd9acea7ea143ebd38b1f8866c",
+    "compare-baseline": "bc8defe294b2e0ba733e8980cc7502bb1cf625235334729d54cac62a3dda17cd",
+    "compare-after": "ad7a79857f1c0e98f8e9057d7def3d18c6c91c068de94c21444607fa5f4ae631",
+    "device-baseline/r36llm": "f646f1264a6b12ceec5b10437523ab891f3232e2a8c1c68842b1bc8e58bd09a7",
+    "device-after/r36llm": "47eeb07662c1daf9682b61beedb73fb6b29e6322e178022e3c94dacba044c6ac"
+  },
+  "device": {
+    "model": "Ternary-Bonsai-2-2B-PTQ1_0.gguf",
+    "prompt": "Count from 1 to 100, separated by spaces.",
+    "threads": 4,
+    "seed": 42,
+    "ctx": 2048,
+    "max_tokens": 8,
+    "temp": 0.5,
+    "top_k": 20,
+    "top_p": 0.9,
+    "governor": "performance",
+    "output_keep": "disabled",
+    "trials": {
+      "before": {
+        "start_uptime_seconds": 7072.83,
+        "start_celsius": 53.333,
+        "peak_celsius": 82.307,
+        "min_cpu_frequency_khz": 1008000,
+        "max_cpu_frequency_khz": 1512000,
+        "ttft_seconds": 20.508,
+        "load_seconds": 3.433
+      },
+      "after": {
+        "start_uptime_seconds": 7142.06,
+        "start_celsius": 53.333,
+        "peak_celsius": 82.307,
+        "min_cpu_frequency_khz": 1008000,
+        "max_cpu_frequency_khz": 1512000,
+        "ttft_seconds": 18.553,
+        "load_seconds": 3.267
+      }
+    },
+    "ttft_reduction_seconds": 1.9549999999999983,
+    "ttft_reduction_percent": 9.53286522332747,
+    "outputs_byte_identical_excluding_statistics": true,
+    "answer": "1 2 3 4 ",
+    "transfers": "scp -O; both binaries and runner matched SHA-256; all 14 retrieved evidence files matched device hashes",
+    "restoration": {
+      "config_byte_identical": true,
+      "config_restored_sha256": "b7cebcc3f40f7db8e4b57e8f93b027e859d1f24e4fe909d85a94ff95e5c64f9e",
+      "cpu_governors": [
+        "performance",
+        "performance",
+        "performance",
+        "performance"
+      ],
+      "ui_pid": 250,
+      "ui_state_after_resume": "S",
+      "temporary_workspace_removed": true
+    },
+    "limitations": "Single ordered pair, not randomized repetitions; differing thermal/frequency histories prevent interpreting all of the 9.53% difference as a model-compute speedup."
+  }
+}

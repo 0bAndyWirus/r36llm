@@ -28,8 +28,8 @@ Measured on the device on 2026-11-02 with 4 threads, `cpu_mode=performance` and 
 |Ternary-Bonsai-1.7B-PQ2_0|442 MB|1.97|1.40|72 s|
 |**Ternary-Bonsai-2-2B-PTQ1_0** (default)|409 MB|1.45|0.92|109 s|
 
-- The NEON patch makes generation 11 % faster for the ternary models and 40 % faster for Q1_0, with bit-identical results.
-- Long answers heat the passively cooled chip to about 83 °C, and the CPU then throttles by about 5 %. `cpu_mode=saver` stays below 73 °C but is about 27 % slower.
+- Against the clean PrismML pin, the `0001` NEON patch improved generation from 1.04 to 1.46 t/s (+40 %) for Q1_0, 1.26 to 1.40 t/s (+11 %) for PQ2_0, and 0.83 to 0.92 t/s (+11 %) for PTQ1_0. Separate kernel checks found bit-identical results.
+- In a separate sustained sweep using the installed engine, `performance` with four threads averaged 0.843 t/s at a peak 82.7 °C and throttled. `saver` with four threads averaged 0.615 t/s at a peak 72.5 °C without thermal cooling. The sweep did not measure the later NEON optimizations.
 - Bonsai-4B (0.38 t/s) and SmolLM2-135M (10 t/s) were measured only before the patch.
 
 Full methodology and raw data: [benchmarks](docs/benchmarks.md).
@@ -195,7 +195,7 @@ Without an adapter: put a shell script at `r36llm/autorun.sh` on the card. It ru
 |`system`|short persona|System prompt|
 |`brightness`|`80`|Screen brightness in percent|
 |`screen_timeout`|`2`|Minutes until the screen turns off (0 = never)|
-|`cpu_mode`|`performance`|`performance`, `balanced` or `saver`|
+|`cpu_mode`|`performance`|`performance`, `balanced`, or `saver`|
 |`swap_p2`|`1`|Enable the fresh image's preformatted swap partition; on legacy cards, explicitly opting in can format the old p2 rootfs|
 |`link`|`ethernet`|PC link: `ethernet`, `gadget` (experimental) or `off`|
 |`keymap`|`auto`|Gamepad mapping: `auto` picks one from the gamepad's device name, then from the kernel version (6 or newer = mainline). Set `vendor44` or `mainline` to force one|
@@ -224,7 +224,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute and [CHANGELOG.md](
 - [PrismML llama.cpp fork](https://github.com/PrismML-Eng/llama.cpp) (MIT), downloaded at build time.
 - [Buildroot](https://buildroot.org) (GPL-2.0), downloaded at build time. `overlay/etc/inittab` is derived from Buildroot's and stays GPL-2.0.
 - [Spleen](https://github.com/fcambus/spleen) font by Frederic Cambus (BSD-2-Clause), embedded in `app/src/font.h` with its notice.
-- Models: [PrismML Bonsai](https://huggingface.co/prism-ml) and [SmolLM2](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct) (Apache-2.0), downloaded separately.
+- Default model: PrismML's [Ternary-Bonsai-2-2B](https://huggingface.co/prism-ml/Ternary-Bonsai-2-2B-gguf), based on [Qwen/Qwen3.5-2B](https://huggingface.co/Qwen/Qwen3.5-2B) (Apache-2.0). No model is shipped; models, including [SmolLM2](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct) (Apache-2.0), are downloaded separately.
 - Linux BSP and U-Boot: GPL-2.0-family licenses and component-specific notices in their source trees. The release uses source-built binaries, not harvested vendor kernel/modules.
 - Rockchip boot firmware: binary redistribution under the rkbin license; exact filenames, provenance and license text are in [THIRD-PARTY/firmware](THIRD-PARTY/firmware/NOTICE).
 

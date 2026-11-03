@@ -1,0 +1,24 @@
+App configuration integration (implemented, default off):
+
+output_keep= is persisted in config.ini and defaults to an empty string.
+To opt in, set:
+output_keep=/data/r36llm/output-keep-en-fr.txt
+then reload the default model. Clearing the value restores the full head.
+Only the exact model basename Ternary-Bonsai-2-2B-PTQ1_0.gguf uses the list;
+all other models use the full head even if the setting is populated.
+
+The app scopes LLAMA_OUTPUT_KEEP around model load and restores its previous
+value afterward. An empty config setting clears it during load, so an inherited
+environment variable cannot silently enable vocabulary restriction in the app.
+Standalone engine tools can still use LLAMA_OUTPUT_KEEP directly.
+
+The list ships at /etc/r36llm/defaults/output-keep-en-fr.txt in the image.
+S02data copies it to /data/r36llm/output-keep-en-fr.txt if absent, alongside
+config.ini and prompts.txt. scripts/deploy.ps1 also seeds it without overwriting.
+Configuration unit tests cover missing/empty settings, CRLF parsing, saving,
+duplicate-key replacement, reload reset, and default-model-only path selection.
+
+The benchmark stages patched libraries at /data/r36llm/opt/vocab-head/lib;
+it does not replace /data/r36llm/lib or switch the installed app to these libs.
+This character-based list is intended for English/French prose, not language
+enforcement. Preserved byte pieces can compose other scripts or code.

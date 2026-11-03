@@ -1,0 +1,158 @@
+Bonsai decode speedups and app/benchmark gap — 2026-11-03
+
+Target and source
+-----------------
+R36S clone, RK3326, four Cortex-A35 cores, base ARMv8.0 NEON only,
+Linux 4.4.189. Neither dotprod nor i8mm is used.
+Engine source: PrismML-Eng/llama.cpp
+5628c7338963b00a598f2a588fd09a79af6d70db plus 0001. Candidate adds
+0002-arm-neon-bonsai-two-rows.patch. Archive-build banner commits are not
+the source identity: the source was exported from the explicit pin.
+
+The tied output heads are token_embd.weight, not separate F32 heads:
+2048 x 248320 PTQ1_0 (111.25 MB decimal) and 2048 x 151669 PQ2_0 (82.51 MB).
+CPU traits select PTQ1_0/Q8_0 and PQ2_0/Q8_K; width 2048 is divisible by 256.
+There is no Bonsai repack or llamafile override on this base-NEON target.
+Both heads were already parallel over output rows before this change.
+
+The candidate processes two adjacent weight rows against one activation
+column. It shares activation loads and scale conversions and exposes two
+independent multiply-accumulate chains. It keeps packed weights, integer
+reductions, scale placement and per-row floating-point addition order.
+The same path covers FFN projections and the tied vocabulary head.
+It allocates no heap scratch. Odd row tails, PQ2 widths needing Q8_0 and
+newer-ISA paths keep their existing implementation.
+
+Build and correctness
+---------------------
+Device library: Buildroot 2025.02.19 GCC 13.4.0, -O2 -march=armv8-a,
+OpenMP, GGML_NATIVE=OFF, GGML_CPU_ARM_ARCH=armv8-a,
+GGML_BACKEND_DL=OFF, GGML_CPU_ALL_VARIANTS=OFF, shared libraries.
+The rows benchmark keeps the exact baseline executable and all baseline
+libraries except libggml-cpu. This isolates the changed CPU code and avoids
+comparing different benchmark/common-library builds. Both CPU libraries
+have the same ABI and were built from the same pin/toolchain/options.
+
+Baseline libggml-cpu.so.0 SHA256:
+6a3119b0d4acca1301d3888a733bbfa5a0eabe0cbe2d1a25edf0cac984f1582a
+Candidate libggml-cpu.so.0 SHA256:
+d1fb4ec3417ba63d694157417d9437cbedcd9013acd170546fa4044a950fce7a
+
+Cortex-A35 QEMU correctness: GCC 12.2 and Buildroot GCC 13.4 each passed
+307968 bit-identical comparisons against generic reference dots, across
+-O2, -O3 -ffp-contract=off and -O3 default contraction. Unit-scale cases
+also match an independent integer decoder/dot. Coverage includes differing
+rows, padded row stride, output canaries, finite half scales/subnormals,
+all packed byte values, isolated subblocks and Q8 extrema. See
+correctness.txt and the package's test-bonsai-rows.c. CI applies every
+ordered package patch and runs both single-row and two-row harnesses.
+QEMU timings are not performance evidence.
+
+Hardware AB/BA protocol
+-----------------------
+The runner source is bench-rows.sh. It is the existing bench-neon runner
+with the model list restricted to these two checkpoints and app detection
+including both r36llm and r36llm.bin. It suspends the app, saves CPU
+governors, runs at performance and restores governors/resumes the app on
+exit. No config or thermal trip point changes.
+
+Each model runs baseline/candidate in round 1, candidate/baseline in
+round 2. Every process runs -p 64 -n 32 -t 4 -r 2, with normal warmup.
+Before every process, powersave cooling waits until both thermal zones
+are at most 50 C, stricter than the requested 55 C ceiling. Endpoints
+were 48.181-50.000 C. Each table value is the arithmetic mean of four timed
+samples. All runs completed successfully; original/restored governor
+files are byte-identical.
+
+Model        Baseline pp64  Candidate pp64  Change    Baseline tg32  Candidate tg32  Change
+2B PTQ1_0    1.475633       1.824105        +23.62%   0.933394       1.121662        +20.17%
+1.7B PQ2_0   1.984919       2.375618        +19.68%   1.406948       1.586888        +12.79%
+
+Generation gains by round: PTQ +19.20%/+21.16%; PQ +13.05%/+12.53%.
+These are passively cooled end-to-end results, not fixed-frequency kernel
+timings. Per-run peaks were 82.69-84.23 C, clocks 1008-1512 MHz. Memory
+available before processes was 548592-554992 KiB. Do not add a separate
+FFN gain to a head gain: the shared dot optimization affects both.
+
+App overhead and the reversed historical gap
+-------------------------------------------
+No production app source changed. app-gap.patch adds aggregate stage
+timers and optional attached-pool control to an isolated diagnostic build.
+The diagnostic app uses the unchanged baseline engine (pin+0001).
+Four pool trials run app/pool/pool/app with the same real prompt, seed 42,
+64 generated tokens, four threads, ctx 2048, mmap, no prompt cache and
+<=50 C cooldown before every process. Generation starts at position 50
+(after 50 prompt tokens) and ends at position 114. The app's reported token
+positions use last-token indices 49 and 113.
+
+No-pool full t/s: 1.022737, 0.958730. Attached pool: 0.986991, 0.970024.
+The mean pool result is 1.23% lower, but different frequency histories
+prevent interpreting this as a precise regression. It provides no measured
+reason to change the pool policy. Sampling costs 6.14-6.39 ms/token;
+all non-decode stages together consume 0.61-0.63% of generation time.
+Detokenize+text/state publication is below 0.026 ms/token. All displayed
+tokens, including the last, are decoded. All six app answers across the
+pool and matched-workload experiments match after removing rate lines.
+
+The separate matched experiment runs app/bench/bench/app, <=50 C each.
+App settings are unchanged; benchmark uses -p 0 -n 64 -d 50 -t 4 -r 1
+--no-warmup -lm mmap -ngl 0. Both time 64 generation decodes after 50
+prompt/depth tokens, rather than comparing a prompted app with a depth-0
+benchmark, or a fresh app with a benchmark heated by pp64. Token IDs still
+differ, and bench context capacity is 114 (rounded by the engine), versus
+app 2048: this is an approximately workload-matched comparison, not a
+claim of identical full execution paths.
+
+Trial    Full t/s   Decode-only t/s
+app1     0.938119   0.943883
+bench1   0.948846   0.948846
+bench2   0.949354   0.949354
+app2     0.943804   0.949568
+
+Means: app 0.940961 vs bench 0.949100, a 0.858% gap. Excluding measured
+application stages gives app 0.946726, only 0.250% below the benchmark.
+Sampling accounts for approximately 0.61 percentage points; piece conversion
+and publication are negligible. The residual is smaller than trial/thermal
+variation. Matched trials sample 1008-1512 MHz and peaks 82.69-83.08 C.
+This rules out a fixed 12% app decode penalty under these conditions.
+
+The historical 0.74 vs 0.84 comparison heated the app with a real prompt,
+then compared it with a freshly cooled -p 0 -n 64 --no-warmup benchmark.
+Its retained UI observer trace already shows 80 C before the first token.
+Conversely, the 0.918 NEON benchmark follows pp64 warmup and two pp64
+trials, while the old ~1.0 headless numbers follow a shorter real prompt.
+Thermal ordering, depth, token count and warmup policy differ; their sign
+reversal is not evidence that sampling accelerates inference. Exact
+historical percentage attribution is unavailable without matched trials.
+
+Other source-level exclusions: AUTO and explicit MMAP both set use_mmap
+in this Linux loader; F16 K/V and one generation logits vector match.
+The app requests only final-prompt-token logits, not logits for all prompt
+tokens. The sampler creates full-vocabulary candidates and partial-sorts
+top20, then top-p/temp/dist operate on that subset; no full-vocabulary
+softmax follows top-k. swa_full defaults differ, but this model has
+n_swa=0/is_swa_any=0, so sliding-window cache policy is irrelevant here.
+
+Bandwidth probe
+---------------
+64 MiB source and destination, 32 back-and-forth memcpy repetitions,
+start 50 C/performance 1512 MHz. One thread: 1.202 GB/s payload, 2.404 GB/s
+read+write; four threads: 1.877 GB/s payload, 3.754 GB/s read+write. End
+zones 65.38/62.50 C. This supports compute-heavy decode relative
+to estimated 0.4-0.65 GB/s model-weight traffic; STREAM-style copy bandwidth
+is not a proof of an exact inference bottleneck or an achievable t/s bound.
+The probe source is bandwidth.c; LUT feasibility is discussed separately.
+
+Evidence and installation
+-------------------------
+All 44 row-result files and all 17 initial gap-result files matched their
+on-device SHA256 hashes after scp -O. Matched-workload files also matched
+their manifest. Published CPU metadata redacts the unique board serial;
+the transfer manifest records the pre-redaction digest, while the published
+SHA256SUMS records the redacted files. Raw local originals are not replaced.
+
+Per orchestrator instruction, installed libraries and executables remain
+unchanged. The measured candidate is retained as 0002 and isolated tmpfs
+prefixes only. No install or rollback was exercised, and no commit/push was
+made. The current data-partition wrapper and its previous 0001 libraries
+remain the active installation.

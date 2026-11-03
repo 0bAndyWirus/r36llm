@@ -1,0 +1,138 @@
+From: r36llm contributors
+Subject: [PATCH] ggml: reuse activations across two Bonsai rows on ARMv8.0
+
+Apply on top of 0001; retain exact scalar reduction and scale order.
+No model repacking or extra heap scratch.
+The same row pair serves FFN projections and the tied vocabulary head.
+PQ2 rows that need Q8_0 and odd output-row tails keep the existing path.
+Dotprod/i8mm kernels and floating-point reduction order are unchanged.
+
+Base: PrismML-Eng/llama.cpp 5628c7338963b00a598f2a588fd09a79af6d70db + 0001
+Upstream-Status: Not submitted [measured on Cortex-A35]
+
+Cortex-A35 checks passed 307968 bit-identical comparisons per compiler
+with GCC 12.2 and Buildroot GCC 13.4 across three optimization modes.
+Device AB/BA: PTQ1_0 tg32 0.933394 -> 1.121662 t/s (+20.17%);
+PQ2_0 tg32 1.406948 -> 1.586888 (+12.79%).
+Method and raw data: docs/results/2026-11-03-speedups/.
+
+diff --git a/ggml/src/ggml-cpu/arch/arm/quants.c b/ggml/src/ggml-cpu/arch/arm/quants.c
+--- a/ggml/src/ggml-cpu/arch/arm/quants.c
++++ b/ggml/src/ggml-cpu/arch/arm/quants.c
+@@ -1771,6 +1771,75 @@
+     ggml_vec_dot_ptq1_0_q8_0_generic(n, s, bs, vx, bx, vy, by, nrc);
+ #endif
+ }
++
++#if defined(__ARM_NEON) && !defined(__ARM_FEATURE_DOTPROD)
++// Reuse activation loads and half-to-float conversions across adjacent output
++// rows without changing the per-row integer reduction or float addition order.
++void ggml_vec_dot_ptq1_0_q8_0_2rows(int n, float * GGML_RESTRICT s, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy) {
++    assert(n % QK_PTQ1_0 == 0);
++    const block_ptq1_0 * x0 = vx;
++    const block_ptq1_0 * x1 = (const block_ptq1_0 *) ((const char *) vx + bx);
++    const block_q8_0 * y = vy;
++    float sum0 = 0.0f, sum1 = 0.0f;
++    for (int i = 0; i < n / QK_PTQ1_0; ++i) {
++        int8x16_t e0[8], e1[8];
++        ggml_ptq1_0_decode_neon(&x0[i], e0);
++        ggml_ptq1_0_decode_neon(&x1[i], e1);
++        float block0 = 0.0f, block1 = 0.0f;
++        for (int k = 0; k < 4; ++k) {
++            const block_q8_0 * yb = &y[4*i + k];
++            const int8x16_t ya = vld1q_s8(yb->qs);
++            const int8x16_t yb_hi = vld1q_s8(yb->qs + 16);
++            const float dy = GGML_CPU_FP16_TO_FP32(yb->d);
++            const int dot0 = vaddlvq_s16(ggml_bonsai_dot32_neon(e0[2*k], e0[2*k + 1], ya, yb_hi));
++            const int dot1 = vaddlvq_s16(ggml_bonsai_dot32_neon(e1[2*k], e1[2*k + 1], ya, yb_hi));
++            block0 += dy * dot0;
++            block1 += dy * dot1;
++        }
++        sum0 += GGML_CPU_FP16_TO_FP32(x0[i].d) * block0;
++        sum1 += GGML_CPU_FP16_TO_FP32(x1[i].d) * block1;
++    }
++    s[0] = sum0;
++    s[1] = sum1;
++}
++
++void ggml_vec_dot_pq2_0_q8_K_2rows(int n, float * GGML_RESTRICT s, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy) {
++    assert(n % QK_K == 0);
++    const block_pq2_0 * x0 = vx;
++    const block_pq2_0 * x1 = (const block_pq2_0 *) ((const char *) vx + bx);
++    const block_q8_K * y = vy;
++    static const uint8_t indices0[16] = {0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3};
++    static const uint8_t indices1[16] = {4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7};
++    static const int8_t shifts_data[16] = {0,-2,-4,-6,0,-2,-4,-6,0,-2,-4,-6,0,-2,-4,-6};
++    const uint8x16_t idx0 = vld1q_u8(indices0), idx1 = vld1q_u8(indices1);
++    const int8x16_t shifts = vld1q_s8(shifts_data);
++    const uint8x16_t mask = vdupq_n_u8(3);
++    const int8x16_t one = vdupq_n_s8(1);
++    float sum0 = 0.0f, sum1 = 0.0f;
++    for (int i = 0; i < n / QK_PQ2_0; ++i) {
++        const block_q8_K * yb = &y[i >> 1];
++        const int8_t * q8 = yb->qs + 128*(i & 1);
++        int16x8_t acc0 = vdupq_n_s16(0), acc1 = vdupq_n_s16(0);
++        for (int k = 0; k < 4; ++k) {
++            const uint8x8_t raw0 = vld1_u8(x0[i].qs + 8*k);
++            const uint8x8_t raw1 = vld1_u8(x1[i].qs + 8*k);
++            const uint8x16_t r0 = vcombine_u8(raw0, raw0), r1 = vcombine_u8(raw1, raw1);
++            const int8x16_t a0 = vsubq_s8(vreinterpretq_s8_u8(vandq_u8(vshlq_u8(ggml_vqtbl1q_u8(r0, idx0), shifts), mask)), one);
++            const int8x16_t a1 = vsubq_s8(vreinterpretq_s8_u8(vandq_u8(vshlq_u8(ggml_vqtbl1q_u8(r0, idx1), shifts), mask)), one);
++            const int8x16_t b0 = vsubq_s8(vreinterpretq_s8_u8(vandq_u8(vshlq_u8(ggml_vqtbl1q_u8(r1, idx0), shifts), mask)), one);
++            const int8x16_t b1 = vsubq_s8(vreinterpretq_s8_u8(vandq_u8(vshlq_u8(ggml_vqtbl1q_u8(r1, idx1), shifts), mask)), one);
++            const int8x16_t ya = vld1q_s8(q8 + 32*k), yb_hi = vld1q_s8(q8 + 32*k + 16);
++            // As in the one-row kernel, each lane holds at most 16 products.
++            acc0 = vaddq_s16(acc0, ggml_bonsai_dot32_neon(a0, a1, ya, yb_hi));
++            acc1 = vaddq_s16(acc1, ggml_bonsai_dot32_neon(b0, b1, ya, yb_hi));
++        }
++        sum0 += (GGML_CPU_FP16_TO_FP32(x0[i].d) * yb->d) * (float) vaddlvq_s16(acc0);
++        sum1 += (GGML_CPU_FP16_TO_FP32(x1[i].d) * yb->d) * (float) vaddlvq_s16(acc1);
++    }
++    s[0] = sum0;
++    s[1] = sum1;
++}
++#endif
+ 
+ void ggml_vec_dot_tq1_0_q8_K(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc) {
+     assert(nrc == 1);
+diff --git a/ggml/src/ggml-cpu/quants.h b/ggml/src/ggml-cpu/quants.h
+--- a/ggml/src/ggml-cpu/quants.h
++++ b/ggml/src/ggml-cpu/quants.h
+@@ -45,6 +45,11 @@
+ void ggml_vec_dot_pq2_0_q8_0(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc);
+ void ggml_vec_dot_pq2_0_q8_K(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc);
+ void ggml_vec_dot_ptq1_0_q8_0(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc);
++#if defined(__ARM_NEON) && !defined(__ARM_FEATURE_DOTPROD)
++// Two weight rows and one activation column; bx is the byte stride between rows.
++void ggml_vec_dot_ptq1_0_q8_0_2rows(int n, float * GGML_RESTRICT s, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy);
++void ggml_vec_dot_pq2_0_q8_K_2rows(int n, float * GGML_RESTRICT s, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy);
++#endif
+ void ggml_vec_dot_q4_0_q8_0(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc);
+ void ggml_vec_dot_q4_1_q8_1(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc);
+ void ggml_vec_dot_q5_0_q8_0(int n, float * GGML_RESTRICT s, size_t bs, const void * GGML_RESTRICT vx, size_t bx, const void * GGML_RESTRICT vy, size_t by, int nrc);
+diff --git a/ggml/src/ggml-cpu/ggml-cpu.c b/ggml/src/ggml-cpu/ggml-cpu.c
+--- a/ggml/src/ggml-cpu/ggml-cpu.c
++++ b/ggml/src/ggml-cpu/ggml-cpu.c
+@@ -1286,7 +1286,21 @@
+                 //    vec_dot(ne00, &dst_col[ir0], src0_row + ir0*nb01, src1_col);
+                 //}
+ 
+-                for (int64_t ir0 = iir0; ir0 < iir0 + blck_0 && ir0 < ir0_end; ir0 += num_rows_per_vec_dot) {
++                int64_t ir0 = iir0;
++#if defined(__ARM_NEON) && !defined(__ARM_FEATURE_DOTPROD)
++                if (num_rows_per_vec_dot == 1) {
++                    if (src0->type == GGML_TYPE_PTQ1_0) {
++                        for (; ir0 + 1 < MIN(iir0 + blck_0, ir0_end); ir0 += 2) {
++                            ggml_vec_dot_ptq1_0_q8_0_2rows(ne00, &tmp[ir0 - iir0], src0_row + ir0 * nb01, nb01, src1_col);
++                        }
++                    } else if (src0->type == GGML_TYPE_PQ2_0 && vec_dot_type == GGML_TYPE_Q8_K) {
++                        for (; ir0 + 1 < MIN(iir0 + blck_0, ir0_end); ir0 += 2) {
++                            ggml_vec_dot_pq2_0_q8_K_2rows(ne00, &tmp[ir0 - iir0], src0_row + ir0 * nb01, nb01, src1_col);
++                        }
++                    }
++                }
++#endif
++                for (; ir0 < iir0 + blck_0 && ir0 < ir0_end; ir0 += num_rows_per_vec_dot) {
+                     vec_dot(ne00, &tmp[ir0 - iir0], (num_rows_per_vec_dot > 1 ? 16 : 0), src0_row + ir0 * nb01, (num_rows_per_vec_dot > 1 ? nb01 : 0), src1_col, (num_rows_per_vec_dot > 1 ? src1_col_stride : 0), num_rows_per_vec_dot);
+                 }
+ 

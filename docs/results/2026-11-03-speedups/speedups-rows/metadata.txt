@@ -1,0 +1,122 @@
+Tue Nov  3 08:04:06 UTC 2026
+Linux r36llm 4.4.189 #62 SMP Sat Dec 13 08:49:45 CST 2025 aarch64 GNU/Linux
+pin=5628c7338963b00a598f2a588fd09a79af6d70db
+baseline=/tmp/speedups/base
+patched=/tmp/speedups/rows
+threads=4 prompt=64 generate=32 reps=2 rounds=2 cooldown_seconds=30 start_temp_ceiling_mC=50000 governor=performance
+processor	: 0
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x0
+CPU part	: 0xd04
+CPU revision	: 2
+
+processor	: 1
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x0
+CPU part	: 0xd04
+CPU revision	: 2
+
+processor	: 2
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x0
+CPU part	: 0xd04
+CPU revision	: 2
+
+processor	: 3
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x0
+CPU part	: 0xd04
+CPU revision	: 2
+
+Hardware	: G80CA-MB V1.3-20251212 Panel 8
+Revision	: 0000
+Serial		: [redacted]
+MemTotal:         916848 kB
+MemFree:           96292 kB
+MemAvailable:     547764 kB
+Buffers:            1084 kB
+Cached:           623348 kB
+SwapCached:          416 kB
+Active:           518404 kB
+Inactive:         241692 kB
+Active(anon):      97344 kB
+Inactive(anon):   208480 kB
+Active(file):     421060 kB
+Inactive(file):    33212 kB
+Unevictable:       24184 kB
+Mlocked:               0 kB
+SwapTotal:      11119376 kB
+SwapFree:       11118028 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+AnonPages:        159392 kB
+Mapped:           345240 kB
+Shmem:            145976 kB
+Slab:              21664 kB
+SReclaimable:      12396 kB
+SUnreclaim:         9268 kB
+KernelStack:        1696 kB
+PageTables:         1388 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    11577800 kB
+Committed_AS:    1255972 kB
+VmallocTotal:   258867136 kB
+VmallocUsed:           0 kB
+VmallocChunk:          0 kB
+Filename				Type		Size	Used	Priority
+/dev/mmcblk0p2                          partition	11119376	1348	-1
+/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq=1512000
+/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq=1512000
+/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq=1008000
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq=1512000
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq=1512000
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq=1008000
+/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor=performance
+33c644b4c79504ac550a5b4151ba9d9025156c56ad89c9dd99dbe5fb5a4acc89  /tmp/speedups/base/bin/llama-bench
+f544f578b24f06e454efc71fa8ffd5207af3bac8221c09e7abff4a750a27af75  /tmp/speedups/base/lib/libllama-bench-impl.so
+682300888fcb7295c28f592bd53439d237ecdb657e5cedf635038028dca7caad  /tmp/speedups/base/lib/libllama-common.so
+682300888fcb7295c28f592bd53439d237ecdb657e5cedf635038028dca7caad  /tmp/speedups/base/lib/libllama-common.so.0
+682300888fcb7295c28f592bd53439d237ecdb657e5cedf635038028dca7caad  /tmp/speedups/base/lib/libllama-common.so.0.7.0
+573feafba3444935663f16a1b5c272ea08c3a4dea1b771affafe2da10d8aef19  /tmp/speedups/base/lib/libllama.so
+573feafba3444935663f16a1b5c272ea08c3a4dea1b771affafe2da10d8aef19  /tmp/speedups/base/lib/libllama.so.0
+573feafba3444935663f16a1b5c272ea08c3a4dea1b771affafe2da10d8aef19  /tmp/speedups/base/lib/libllama.so.0.7.0
+df120c460f5dac5df4115554928d29b5ed62cffd521f6aada60e7331a25d9f5f  /tmp/speedups/base/lib/libggml-base.so
+df120c460f5dac5df4115554928d29b5ed62cffd521f6aada60e7331a25d9f5f  /tmp/speedups/base/lib/libggml-base.so.0
+df120c460f5dac5df4115554928d29b5ed62cffd521f6aada60e7331a25d9f5f  /tmp/speedups/base/lib/libggml-base.so.0.27.0
+6a3119b0d4acca1301d3888a733bbfa5a0eabe0cbe2d1a25edf0cac984f1582a  /tmp/speedups/base/lib/libggml-cpu.so
+6a3119b0d4acca1301d3888a733bbfa5a0eabe0cbe2d1a25edf0cac984f1582a  /tmp/speedups/base/lib/libggml-cpu.so.0
+6a3119b0d4acca1301d3888a733bbfa5a0eabe0cbe2d1a25edf0cac984f1582a  /tmp/speedups/base/lib/libggml-cpu.so.0.27.0
+b28bea84b4360d8e1c1311c8b4e6999b4c22b4e4076624f352d7958732fec59f  /tmp/speedups/base/lib/libggml.so
+b28bea84b4360d8e1c1311c8b4e6999b4c22b4e4076624f352d7958732fec59f  /tmp/speedups/base/lib/libggml.so.0
+b28bea84b4360d8e1c1311c8b4e6999b4c22b4e4076624f352d7958732fec59f  /tmp/speedups/base/lib/libggml.so.0.27.0
+33c644b4c79504ac550a5b4151ba9d9025156c56ad89c9dd99dbe5fb5a4acc89  /tmp/speedups/rows/bin/llama-bench
+f544f578b24f06e454efc71fa8ffd5207af3bac8221c09e7abff4a750a27af75  /tmp/speedups/rows/lib/libllama-bench-impl.so
+682300888fcb7295c28f592bd53439d237ecdb657e5cedf635038028dca7caad  /tmp/speedups/rows/lib/libllama-common.so
+682300888fcb7295c28f592bd53439d237ecdb657e5cedf635038028dca7caad  /tmp/speedups/rows/lib/libllama-common.so.0
+682300888fcb7295c28f592bd53439d237ecdb657e5cedf635038028dca7caad  /tmp/speedups/rows/lib/libllama-common.so.0.7.0
+573feafba3444935663f16a1b5c272ea08c3a4dea1b771affafe2da10d8aef19  /tmp/speedups/rows/lib/libllama.so
+573feafba3444935663f16a1b5c272ea08c3a4dea1b771affafe2da10d8aef19  /tmp/speedups/rows/lib/libllama.so.0
+573feafba3444935663f16a1b5c272ea08c3a4dea1b771affafe2da10d8aef19  /tmp/speedups/rows/lib/libllama.so.0.7.0
+df120c460f5dac5df4115554928d29b5ed62cffd521f6aada60e7331a25d9f5f  /tmp/speedups/rows/lib/libggml-base.so
+df120c460f5dac5df4115554928d29b5ed62cffd521f6aada60e7331a25d9f5f  /tmp/speedups/rows/lib/libggml-base.so.0
+df120c460f5dac5df4115554928d29b5ed62cffd521f6aada60e7331a25d9f5f  /tmp/speedups/rows/lib/libggml-base.so.0.27.0
+d1fb4ec3417ba63d694157417d9437cbedcd9013acd170546fa4044a950fce7a  /tmp/speedups/rows/lib/libggml-cpu.so
+d1fb4ec3417ba63d694157417d9437cbedcd9013acd170546fa4044a950fce7a  /tmp/speedups/rows/lib/libggml-cpu.so.0
+d1fb4ec3417ba63d694157417d9437cbedcd9013acd170546fa4044a950fce7a  /tmp/speedups/rows/lib/libggml-cpu.so.0.27.0
+b28bea84b4360d8e1c1311c8b4e6999b4c22b4e4076624f352d7958732fec59f  /tmp/speedups/rows/lib/libggml.so
+b28bea84b4360d8e1c1311c8b4e6999b4c22b4e4076624f352d7958732fec59f  /tmp/speedups/rows/lib/libggml.so.0
+b28bea84b4360d8e1c1311c8b4e6999b4c22b4e4076624f352d7958732fec59f  /tmp/speedups/rows/lib/libggml.so.0.27.0

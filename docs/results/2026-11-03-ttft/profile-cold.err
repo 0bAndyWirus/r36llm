@@ -1,0 +1,12 @@
+r36llm start Nov  3 2026 09:11:22
+profile prepare_tokenize_seconds=0.000373700
+profile prepare_evaluate_seconds=0.594030344 tokens=24
+profile snapshot_get_size_seconds=0.000025531
+profile snapshot_serialize_seconds=0.001956894 bytes=20497588
+system cache: prepared (24 tokens, 20497588 bytes)
+[load_seconds: 4.444]
+profile generation_tokenize_seconds=0.000143378 tokens=26
+profile generation_prompt_evaluate_seconds=0.630383609 tokens=26
+profile first_sample_seconds=0.003010270
+profile first_evaluate_seconds=0.035981785
+[run: 1 ttft_seconds: 0.673 tokens: 16 generation_tps: 24.602074]

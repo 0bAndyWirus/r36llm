@@ -2,7 +2,8 @@
 # Usage: sh run-bonsai-neon.sh /path/to/patched/llama.cpp [build-directory]
 # Requires aarch64-linux-gnu-gcc and qemu-aarch64 (Debian gcc-aarch64-linux-gnu,
 # libc6-dev-arm64-cross, qemu-user). QEMU verifies correctness, not throughput.
-# Apply ../0001-arm-neon-armv8.0-bonsai-dot.patch to the package's pinned source first.
+# Apply the package patches to the pinned source first. TEST_SOURCE can select
+# test-bonsai-rows.c instead of the default single-row correctness harness.
 set -eu
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
     echo "usage: $0 PATCHED_LLAMA_SOURCE [BUILD_DIRECTORY]" >&2
@@ -14,6 +15,7 @@ BUILD=${2:-${TMPDIR:-/tmp}/r36-bonsai-neon}
 CC=${CC:-aarch64-linux-gnu-gcc}
 QEMU=${QEMU:-qemu-aarch64}
 SYSROOT=${QEMU_LD_PREFIX:-/usr/aarch64-linux-gnu}
+TEST_SOURCE=${TEST_SOURCE:-$HERE/test-bonsai-neon.c}
 mkdir -p "$BUILD"
 CPUS=$($QEMU -cpu help 2>&1 || true)
 case "$CPUS" in
@@ -32,7 +34,7 @@ for mode in o2-default o3-no-contract o3-default; do
         o3-default) FLAGS='-O3' ;;
     esac
     printf '\nMode: %s (-mcpu=cortex-a35 %s)\n' "$mode" "$FLAGS"
-    for source in "$GGML/src/ggml-cpu/quants.c" "$GGML/src/ggml-cpu/arch/arm/quants.c" "$HERE/test-bonsai-neon.c"; do
+    for source in "$GGML/src/ggml-cpu/quants.c" "$GGML/src/ggml-cpu/arch/arm/quants.c" "$TEST_SOURCE"; do
         case "$source" in
             */arch/arm/*) object=arm.o ;;
             */ggml-cpu/quants.c) object=generic.o ;;

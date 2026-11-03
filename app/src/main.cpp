@@ -119,6 +119,10 @@ int main(int argc, char **argv) {
             std::fprintf(stderr, "[run: %d ttft_seconds: %.3f tokens: %d generation_tps: %.6f]\n",
                          run + 1, state.first_token_seconds, state.generated_tokens,
                          state.generation_tps);
+            std::fprintf(stderr,
+                         "[stages: tokenize_seconds: %.6f prompt_seconds: %.6f "
+                         "first_decode_seconds: %.6f]\n",
+                         state.tokenize_seconds, state.prompt_seconds, state.first_decode_seconds);
             if (!state.error.empty())
                 throw std::runtime_error(state.error);
         }

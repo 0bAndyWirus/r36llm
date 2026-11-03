@@ -1,0 +1,27 @@
+r36llm start Nov  3 2026 09:11:22
+profile prepare_tokenize_seconds=0.000208296
+profile disk_read_seconds=0.016677374 bytes=20497588
+profile disk_validate_checksum_seconds=0.021899592
+profile restore_clear_seconds=0.001927040
+profile restore_deserialize_seconds=0.002144932
+system cache: disk hit (24 tokens)
+[load_seconds: 3.679]
+profile generation_tokenize_seconds=0.000122969 tokens=26
+profile generation_prompt_evaluate_seconds=0.646324133 tokens=26
+profile first_sample_seconds=0.002486678
+profile first_evaluate_seconds=0.044701624
+[run: 1 ttft_seconds: 0.697 tokens: 16 generation_tps: 22.536697]
+profile restore_clear_seconds=0.001896312
+profile restore_deserialize_seconds=0.002082276
+profile generation_tokenize_seconds=0.000132110 tokens=26
+profile generation_prompt_evaluate_seconds=0.633948485 tokens=26
+profile first_sample_seconds=0.000843644
+profile first_evaluate_seconds=0.046804161
+[run: 2 ttft_seconds: 0.684 tokens: 16 generation_tps: 20.287196]
+profile restore_clear_seconds=0.004070347
+profile restore_deserialize_seconds=0.003742182
+profile generation_tokenize_seconds=0.000279321 tokens=26
+profile generation_prompt_evaluate_seconds=0.664767290 tokens=26
+profile first_sample_seconds=0.000682642
+profile first_evaluate_seconds=0.043146917
+[run: 3 ttft_seconds: 0.711 tokens: 16 generation_tps: 19.141769]

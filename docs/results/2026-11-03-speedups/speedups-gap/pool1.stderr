@@ -1,0 +1,4 @@
+r36llm start Nov  3 2026 07:52:28
+[load_seconds: 3.064]
+GAP generated=64 prompt_tokens=50 initial_pos=49 final_pos=113 ctx=2048 sample_s=0.395950328 decode_s=64.445733951 piece_s=0.000441879 publish_s=0.001046795 full_s=64.843550364 first_decode_s=0.975793875 last_decode_s=1.026691459
+[run: 1 ttft_seconds: 32.573 tokens: 64 generation_tps: 0.986991]

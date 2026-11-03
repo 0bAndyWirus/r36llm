@@ -1,0 +1,4 @@
+0f5e41a462cde146bbc5e0a9d48e3c06166f88806ec065e9652719af4dcdc35b  /usr/bin/llama-bench
+36061ad406df8a4903a6db005be350c50fabfaf717f9ef0acf4b76adcd9929fa  /data/r36llm/models/Ternary-Bonsai-2-2B-PTQ1_0.gguf
+f9682bae9c66d753c3371afece866a1f4de90a8417050c2115d6261f1b2939cc  /tmp/phase-dvfs-r36llm
+b7cebcc3f40f7db8e4b57e8f93b027e859d1f24e4fe909d85a94ff95e5c64f9e  /data/r36llm/config.ini

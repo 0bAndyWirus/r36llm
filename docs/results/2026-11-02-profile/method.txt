@@ -6,7 +6,7 @@ Profiler executable SHA-256: c478611392a7efc9f9a1a6633cc3259fe5ae2d08950c747e240
 Benchmark executable SHA-256: 8332b20432f1c33337d38adf7111c7dfc9e5f1cdf302b34d79f13024f1ec4cdf
 
 Build command (Windows host):
-docker run --rm --name r36-op-profile-build -v "C:/Users/AndyWirus/Documents/Project/RS36SAI:/src" -v r36llm-br:/home/br/work:ro r36-neon-tools:latest sh /src/out/profile/build.sh
+docker run --rm --name r36-op-profile-build -v "<repo>:/src" -v r36llm-br:/home/br/work:ro r36-neon-tools:latest sh /src/out/profile/build.sh
 Only /src/out/profile is a build destination. Buildroot's toolchain/sysroot volume is read-only; no Buildroot make was run.
 GNU C/C++ 13.4.0, Buildroot flags -O2 -g0, -march=armv8-a, OpenMP enabled, shared libraries. See build.sh for full configuration.
 The first attempt failed because ninja could not find ccache on PATH. Adding the toolchain bin directory to PATH fixed that build-environment issue; the next complete build succeeded.

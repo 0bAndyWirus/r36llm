@@ -1,0 +1,106 @@
+Diagnostic-only aggregate generation timers and optional attached pool.
+Do not apply to the production application package.
+
+diff --git a/app/src/llm.cpp b/app/src/llm.cpp
+--- a/app/src/llm.cpp
++++ b/app/src/llm.cpp
+@@ -1,6 +1,8 @@
+ // Load models and generate incremental ChatML replies on a worker thread.
+ #include "llm.h"
+ #include "llama.h"
++#include "ggml-cpu.h"
++#include <cstdlib>
+ #include <algorithm>
+ #include <chrono>
+ #include <cstdio>
+@@ -151,6 +153,9 @@
+         llama_sampler_free(sampler_);
+     if (context_)
+         llama_free(context_);
++    if (gap_pool_)
++        ggml_threadpool_free(gap_pool_);
++    gap_pool_ = nullptr;
+     if (model_)
+         llama_model_free(model_);
+     batch_ = nullptr;
+@@ -235,6 +240,12 @@
+             context_ = llama_init_from_model(model_, cp);
+             if (!context_)
+                 throw std::runtime_error("Load failed: context allocation");
++            if (std::getenv("R36_GAP_POOL")) {
++                auto pp = ggml_threadpool_params_default(config.threads);
++                gap_pool_ = ggml_threadpool_new(&pp);
++                if (!gap_pool_) throw std::runtime_error("Diagnostic pool allocation failed");
++                llama_attach_threadpool(context_, gap_pool_, nullptr);
++            }
+             batch_ = llama_batch_ext_init(context_);
+             if (!batch_)
+                 throw std::runtime_error("Load failed: batch allocation");
+@@ -450,12 +461,18 @@
+     }
+     std::string reply;
+     auto generation_start = Clock::now();
++    const int initial_pos = llama_memory_seq_pos_max(llama_get_memory(context_), 0);
++    double sample_s = 0, decode_s = 0, piece_s = 0, publish_s = 0;
++    double decode_first = 0, decode_last = 0;
+     int generated = 0;
+     for (int i = 0; i < config.max_tokens && !stop_; ++i) {
++        auto stage = Clock::now();
+         llama_token token = llama_sampler_sample(sampler_, context_, -1);
++        sample_s += seconds(stage);
+         if (llama_vocab_is_eog(vocab, token))
+             break;
+         char buffer[256];
++        stage = Clock::now();
+         int n = llama_token_to_piece(vocab, token, buffer, sizeof(buffer), 0, true);
+         std::string piece;
+         if (n < 0) {
+@@ -467,9 +484,16 @@
+             piece.assign(large.data(), static_cast<size_t>(n));
+         } else
+             piece.assign(buffer, static_cast<size_t>(n));
++        piece_s += seconds(stage);
++        stage = Clock::now();
+         // Evaluate even the final displayed token, so only the true new suffix is tokenized next
+         // turn.
+         evaluate(&token, 1);
++        const double decode_token_s = seconds(stage);
++        decode_s += decode_token_s;
++        if (i == 0) decode_first = decode_token_s;
++        decode_last = decode_token_s;
++        stage = Clock::now();
+         reply += piece;
+         history_ += piece;
+         evaluated_ = history_.size();
+@@ -482,7 +506,11 @@
+             state_.generated_tokens = generated;
+             state_.generation_tps = generated / std::max(seconds(generation_start), 0.000001);
+         }
+-    }
++        publish_s += seconds(stage);
++    }
++    std::fprintf(stderr, "GAP generated=%d prompt_tokens=%d initial_pos=%d final_pos=%d ctx=%u sample_s=%.9f decode_s=%.9f piece_s=%.9f publish_s=%.9f full_s=%.9f first_decode_s=%.9f last_decode_s=%.9f\n",
++                 generated, count, initial_pos, llama_memory_seq_pos_max(llama_get_memory(context_), 0), llama_n_ctx(context_),
++                 sample_s, decode_s, piece_s, publish_s, seconds(generation_start), decode_first, decode_last);
+     history_ += "<|im_end|>\n";
+ }
+ } // namespace r36
+diff --git a/app/src/llm.h b/app/src/llm.h
+--- a/app/src/llm.h
++++ b/app/src/llm.h
+@@ -11,6 +11,7 @@
+ struct llama_context;
+ struct llama_sampler;
+ struct llama_batch_ext;
++struct ggml_threadpool;
+ 
+ namespace r36 {
+ struct LlmState {
+@@ -53,6 +54,7 @@
+     llama_context *context_ = nullptr;
+     llama_sampler *sampler_ = nullptr;
+     llama_batch_ext *batch_ = nullptr;
++    ggml_threadpool *gap_pool_ = nullptr;
+     std::string history_;
+     size_t evaluated_ = 0;
+     bool think_ = false;

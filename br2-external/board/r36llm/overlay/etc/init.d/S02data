@@ -22,7 +22,7 @@ if ! mountpoint -q /data; then
     echo "r36llm: data partition not mounted; logs are in RAM" >> "$BOOTLOG"
 fi
 for name in models logs ssh bin; do mkdir -p "/data/r36llm/$name"; done
-for name in config.ini prompts.txt; do
+for name in config.ini prompts.txt output-keep-en-fr.txt; do
     [ -e "/data/r36llm/$name" ] || cp "/etc/r36llm/defaults/$name" "/data/r36llm/$name"
 done
 chmod 0700 /data/r36llm/ssh 2>/dev/null || :

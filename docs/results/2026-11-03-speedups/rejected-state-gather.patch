@@ -1,0 +1,91 @@
+From: r36llm contributors
+Subject: [PATCH] llama: avoid a recurrent-state gather for single CPU decode
+
+Candidate atop 0001. Reuse indexed GDN K=1 for one live state row,
+without rollback or GPU execution. Preserve normal state writeback.
+
+diff --git a/src/models/models.h b/src/models/models.h
+--- a/src/models/models.h
++++ b/src/models/models.h
+@@ -56,7 +56,7 @@
+                 ggml_tensor * s,
+                 int           il);
+ 
+-    // use the ggml_gated_delta_net fused operator (K=1; state has shape [S_v, S_v, H_v, n_seqs])
++    // Fused K=1; optionally read the initial state from indexed cache rows.
+     std::pair<ggml_tensor *, ggml_tensor *> build_delta_net_fused(
+                 ggml_tensor * q,
+                 ggml_tensor * k,
+@@ -64,7 +64,8 @@
+                 ggml_tensor * g,
+                 ggml_tensor * b,
+                 ggml_tensor * s,
+-                        int   il);
++                        int   il,
++                ggml_tensor * state_rows = nullptr);
+ 
+     // choose one of two implementations above based on the number of tokens
+     std::pair<ggml_tensor *, ggml_tensor *> build_delta_net(
+diff --git a/src/models/delta-net-base.cpp b/src/models/delta-net-base.cpp
+--- a/src/models/delta-net-base.cpp
++++ b/src/models/delta-net-base.cpp
+@@ -374,7 +374,8 @@
+         ggml_tensor * g,
+         ggml_tensor * b,
+         ggml_tensor * s,
+-        int           il) {
++        int           il,
++        ggml_tensor * state_rows) {
+     const int64_t S_k      = q->ne[0];
+     const int64_t H_k      = q->ne[1];
+     const int64_t n_tokens = q->ne[2];
+@@ -393,12 +394,14 @@
+     GGML_ASSERT(g->ne[0] == 1   || g->ne[0] == S_v);
+     GGML_ASSERT(                   g->ne[1] == H_v && g->ne[2] == n_tokens && g->ne[3] == n_seqs);
+     GGML_ASSERT(b->ne[0] == 1   && b->ne[1] == H_v && b->ne[2] == n_tokens && b->ne[3] == n_seqs);
+-    GGML_ASSERT(s->ne[0] == S_v && s->ne[1] == S_v && s->ne[2] == H_v      && s->ne[3] == n_seqs);
++    GGML_ASSERT(state_rows || (s->ne[0] == S_v && s->ne[1] == S_v && s->ne[2] == H_v && s->ne[3] == n_seqs));
+ 
+     // K=1: output carries the final state only. state s is 4D [S_v, S_v, H_v, n_seqs].
+     const bool raw = gdn_raw_beta && gdn_raw_alpha && gdn_raw_dt_bias && gdn_raw_a;
+ 
+-    ggml_tensor * result = ggml_gated_delta_net(ctx0, q, k, v, raw ? gdn_raw_alpha : g, raw ? gdn_raw_beta : b, s, /*K=*/1);
++    ggml_tensor * result = state_rows
++        ? ggml_gated_delta_net_rows(ctx0, q, k, v, raw ? gdn_raw_alpha : g, raw ? gdn_raw_beta : b, s, state_rows, /*K=*/1)
++        : ggml_gated_delta_net(ctx0, q, k, v, raw ? gdn_raw_alpha : g, raw ? gdn_raw_beta : b, s, /*K=*/1);
+     if (raw) {
+         ggml_gated_delta_net_set_raw_gates(result, gdn_raw_dt_bias, gdn_raw_a);
+     }
+@@ -550,10 +553,12 @@
+ 
+     const bool keep = cparams.n_rs_seq > 0;
+ 
+-    GGML_ASSERT(state_rows == nullptr || keep); // rows mode is a ring-path optimization
++    GGML_ASSERT(state_rows == nullptr || keep || (n_seq_tokens == 1 && n_seqs == 1 && cparams.fused_gdn_ar));
+ 
+     if (!keep) {
+-        auto attn_out = build_delta_net(q, k, v, g, b, s, il);
++        auto attn_out = state_rows
++            ? build_delta_net_fused(q, k, v, g, b, s, il, state_rows)
++            : build_delta_net(q, k, v, g, b, s, il);
+         ggml_tensor * output    = attn_out.first;
+         ggml_tensor * new_state = attn_out.second;
+         cb(output, "attn_output", il);
+diff --git a/src/models/qwen35.cpp b/src/models/qwen35.cpp
+--- a/src/models/qwen35.cpp
++++ b/src/models/qwen35.cpp
+@@ -504,7 +504,13 @@
+     // row in plane 0, gathered with its own row indices (s_copy carries the conv rollback plane)
+     const bool gdn_rpl = inp->s_rpl_ctrl != nullptr;
+ 
+-    const bool gdn_state_rows = gdn_state_rows_env && gdn_state_rows_dev_ok && cparams.n_rs_seq > 0 && !gdn_rpl;
++    // With a single live row and no rollback, no relocation can overwrite the
++    // deferred source. Retain the indexed source (not the destination head).
++    const bool single_cpu_row = model.devices.empty() && n_seq_tokens == 1 && n_seqs == 1 &&
++        mctx_cur->get_n_rs() == 1 && cparams.n_rs_seq == 0 && cparams.fused_gdn_ar &&
++        ssm_states_all->type == GGML_TYPE_F32 && ggml_is_contiguous(ssm_states_all);
++    const bool gdn_state_rows = gdn_state_rows_env && gdn_state_rows_dev_ok &&
++        (cparams.n_rs_seq > 0 || single_cpu_row) && !gdn_rpl;
+ 
+     ggml_tensor * state;
+     if (gdn_rpl) {
