@@ -12,6 +12,10 @@ This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - CI for native application builds, shell and Python checks, and Cortex-A35 NEON correctness; release workflow for image and source artifacts; Dependabot for GitHub Actions.
 - README SSH instructions that retain host-key checking and use a dedicated known-hosts file.
 
+### Fixed
+
+- Release legal-info collection for the Linux 4.4 kernel headers.
+
 ## Initial public state — 2026-11-02
 
 Commit `d4ef376` established the initial repository state; it was not a tagged release.

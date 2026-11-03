@@ -1,0 +1,4 @@
+# From https://cdn.kernel.org/pub/linux/kernel/v4.x/sha256sums.asc
+sha256  974239a3b7713de2ed46da06446cf0a87e97c871d89a87a71f3521fe84d98859  linux-4.4.189.tar.xz
+# Linux 4.4 COPYING; ./ distinguishes it from Buildroot's newer COPYING hash.
+sha256  af8067302947c01fd9eee72befa54c7e3ef8a48fecde7fd71277f2290b2bf0f7  ./COPYING
