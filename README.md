@@ -1,8 +1,14 @@
 # R36LLM: a tiny AI in your pocket
 
-A minimal Linux OS for the **R36S** retro handheld (RK3326, 4× Cortex-A35, 1 GB RAM) that boots straight into an offline LLM chat app. You type with the gamepad, and the console answers using [PrismML Bonsai](https://huggingface.co/prism-ml) 1-bit and ternary models running on the CPU through PrismML's [llama.cpp fork](https://github.com/PrismML-Eng/llama.cpp).
+A minimal Linux OS for the **R36S** retro handheld (RK3326, 4× Cortex-A35, 1 GB RAM) that boots straight into a **fully offline** LLM chat app. You type with the gamepad, and the console answers using [PrismML Bonsai](https://huggingface.co/prism-ml) ternary and 1-bit models running on the CPU through PrismML's [llama.cpp fork](https://github.com/PrismML-Eng/llama.cpp).
 
-It is a fun proof of concept, not a fast assistant. The default model is [Ternary-Bonsai-2-2B](https://huggingface.co/prism-ml/Ternary-Bonsai-2-2B-gguf) (file `Ternary-Bonsai-2-2B-PTQ1_0.gguf`, 409 MB). It writes about 0.9 tokens per second (about 41 words per minute, so a 100-token answer takes just under 2 minutes). The fastest Bonsai, Bonsai-1.7B (Q1_0), reaches 1.5 t/s. See [Performance](#performance).
+![Framebuffer capture of a chat on R36LLM](docs/media/demo.gif)
+
+*Real screen capture at **4× speed**: “Explain what a CPU does in two sentences.”, answered by Ternary-Bonsai-2-2B on the device (recorded 2026-11-03 with the previous app build, about 0.9 tokens/s).*
+
+It is a fun proof of concept, not a fast assistant. With v0.1.0, the default model [Ternary-Bonsai-2-2B](https://huggingface.co/prism-ml/Ternary-Bonsai-2-2B-gguf) (a separate 409 MB download) generates **about 1.2 tokens per second**, with the first word after **about 12 seconds**, measured on the device. See [Performance](#performance) and [benchmarks](docs/benchmarks.md) for methods and limits.
+
+[Features](#features) · [Performance](#performance) · [Hardware](#hardware) · [Build and install](#build-and-install) · [Add a model](#3-add-a-model) · [References and credits](docs/REFERENCES.md)
 
 |Home|Chat|Device info|
 |---|---|---|
@@ -28,6 +34,7 @@ Measured on the device on 2026-11-02 with 4 threads, `cpu_mode=performance` and 
 |Ternary-Bonsai-1.7B-PQ2_0|442 MB|1.97|1.40|72 s|
 |**Ternary-Bonsai-2-2B-PTQ1_0** (default)|409 MB|1.45|0.92|109 s|
 
+- **v0.1.0** adds two-row NEON kernels on top (+20 % generation for PTQ1_0, +13 % for PQ2_0 in AB/BA tests). With the release image, the default model generated **1.19 t/s** (prompt 1.95 t/s) on the device; the release app answered a first question after 12.2 s at 1.17 t/s ([details](docs/results/2026-11-03-release-test/summary.txt)).
 - Against the clean PrismML pin, the `0001` NEON patch improved generation from 1.04 to 1.46 t/s (+40 %) for Q1_0, 1.26 to 1.40 t/s (+11 %) for PQ2_0, and 0.83 to 0.92 t/s (+11 %) for PTQ1_0. Separate kernel checks found bit-identical results.
 - In a separate sustained sweep using the installed engine, `performance` with four threads averaged 0.843 t/s at a peak 82.7 °C and throttled. `saver` with four threads averaged 0.615 t/s at a peak 72.5 °C without thermal cooling. The sweep did not measure the later NEON optimizations.
 - Bonsai-4B (0.38 t/s) and SmolLM2-135M (10 t/s) were measured only before the patch.

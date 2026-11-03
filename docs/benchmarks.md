@@ -14,6 +14,10 @@ Engine: PrismML llama.cpp fork, CPU only, 4 threads. `llama-bench -p 64 -n 32 -r
 Words/min assumes ~0.75 English words per token. "Fits" means generation stays above 0.3 t/s (no swap thrashing). Peak temp is the hottest thermal zone sampled once per second during the run (passive cooling, no fan).
 Raw data: [results/2026-11-02/bench.json](results/2026-11-02/bench.json).
 
+## v0.1.0 release image
+
+Measured 2026-11-03 on the device with the v0.1.0 release kernel, DTB and initramfs (booted once from the existing card; the loader area is byte-identical to that card). Release `llama-bench` and libraries, `Ternary-Bonsai-2-2B-PTQ1_0.gguf`, 4 threads, `-p 64 -n 32 -r 1`, UI paused, start 47 °C: **prompt 1.95 t/s, generation 1.19 t/s**. Release app, headless, one French question, seed 42: time to first token 12.2 s, generation 1.17 t/s, model load 15.8 s. Single runs, not AB/BA comparisons. Details: [results/2026-11-03-release-test/summary.txt](results/2026-11-03-release-test/summary.txt).
+
 ## Sustained performance
 
 Measured 2026-11-02 on the default `Ternary-Bonsai-2-2B-PTQ1_0.gguf`, using the installed PrismML CPU benchmark (GNU 13.4.0, version `0.7.0-dev`, build/commit unknown). Binary and model SHA-256 hashes are recorded in [device.txt](results/2026-11-02-thermal/device.txt); these results describe that binary, not later kernel optimizations.

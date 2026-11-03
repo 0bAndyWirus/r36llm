@@ -1,0 +1,46 @@
+Release v0.1.0 hardware test, 2026-11-03, G80CA-MB V1.3-20251212 Panel 8 (RK3326)
+
+Method
+- Boot chain: the release image's loader area (sectors 64-32767, SHA-256
+  ebd1848bd7c2a03620b5ebaf2acfdef0ec0ef2a11ebd1610a45c5ff527508063) is byte-identical
+  to the working card that ran this test, so the loaders were not swapped.
+- Kernel, Linux DTB and initramfs from the release candidate were booted once from the
+  card's BOOT partition through a one-shot boot.ini wrapper (self-clearing flag), on the
+  card's existing data partition. Kernel cmdline contained r36llm.oneshot=1.
+  Image   96ad197a7d64821f0462e1f81fc825858f55afb9f01eb0da0455add8e2b7ef71
+  DTB     f1aab0ee847f7df80df2788cb72f38a339eabca730c2b3d93a8e9d349e3b882a
+  uInitrd 8bb8df7031c76aacff504d819954b7709dbc99535497304a782fc598837c1b6e
+- First-boot partition growth was NOT exercised on hardware (it only runs on a freshly
+  flashed card). It was tested offline instead: the release initramfs's own ARM64
+  BusyBox, sfdisk, blockdev and mkfs.fat (via QEMU user mode) ran the unchanged
+  r36-grow-data/S02data against loop-backed copies of the release image enlarged to
+  8 GiB, with /dev/mmcblk7* aliases and mirrored sysfs geometry. 8/8 cases passed:
+  normal first boot (p3 start 1343488, 15431680 sectors, 1 MiB left unused; defaults
+  created; persistence across a simulated reboot), Windows "System Volume Information"
+  accepted, a user file refused and kept, recovery after SIGKILL at each of three
+  state points, too-small disk and changed layout refused. Torn writes and SD-card
+  caches were not simulated.
+
+Hardware checks (release kernel 4.4.189)
+- USB Ethernet: ASIX 0b95:1790 on usb1, eth0 10.36.0.1, SSH login OK
+- Swap on mmcblk0p2 active; data partition (exFAT) mounted on /data
+- Battery 100 %, charger detected; input: rk8xx_pwrkey, GO-Super Gamepad, rk29-keypad
+- Framebuffer 640x480, 32 bpp, backlight 255; ALSA card rockchip,rk817-codec
+- Screen and buttons confirmed by the user in the running app
+- dmesg: only known BSP messages (loader logo offset, DMC leakage, ASoC routes)
+
+Engine (release /usr/bin/llama-bench, release libraries), UI paused, start 47.3 C:
+  llama-bench -m Ternary-Bonsai-2-2B-PTQ1_0.gguf -t 4 -p 64 -n 32 -r 1 -o md
+  | qwen35 2B PTQ1_0 - 1.75 bpw ternary (group 128) | 398.81 MiB | 1.88 B | CPU | 4 | pp64 | 1.95 +- 0.00 |
+  | qwen35 2B PTQ1_0 - 1.75 bpw ternary (group 128) | 398.81 MiB | 1.88 B | CPU | 4 | tg32 | 1.19 +- 0.00 |
+  end 74.2 C. Single run (-r 1), not an AB/BA comparison.
+
+App (release /usr/bin/r36llm, headless), UI paused:
+  r36llm --headless --model Ternary-Bonsai-2-2B-PTQ1_0.gguf
+         --prompt 'Explique en deux phrases pourquoi le ciel est bleu.'
+         --threads 4 --max-tokens 64 --seed 42
+  system cache: prepared (24 tokens)
+  load_seconds: 15.818
+  ttft_seconds: 12.229, tokens: 18, generation_tps: 1.166750, prompt 1.88 t/s
+  Output: "Les particules d'air dispersent la lumière rouge, laissant le ciel appear bleu."
+  (The answer is factually wrong and mixes languages: model quality, not a runtime issue.)
